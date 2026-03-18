@@ -2664,67 +2664,6 @@ Components.Tab = (function()
 			}),
 		})
 
-		-- Tab badge: a small accent-coloured circle in the top-right of the tab button
-		local TabBadgeLabel = New("TextLabel", {
-			Text = "",
-			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
-			TextSize = 9,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextXAlignment = Enum.TextXAlignment.Center,
-			TextYAlignment = Enum.TextYAlignment.Center,
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			ZIndex = 13,
-		})
-
-		local TabBadgeFrame = New("Frame", {
-			Size = UDim2.fromOffset(16, 16),
-			Position = UDim2.new(1, -7, 0, 5),
-			AnchorPoint = Vector2.new(1, 0),
-			BackgroundTransparency = 0,
-			ZIndex = 12,
-			Visible = false,
-			Parent = Tab.Frame,
-			ThemeTag = {
-				BackgroundColor3 = "Accent",
-			},
-		}, {
-			New("UICorner", {
-				CornerRadius = UDim.new(1, 0),
-			}),
-			TabBadgeLabel,
-		})
-
-		function Tab:SetBadge(Count)
-			if Count == nil or Count == false or Count == 0 then
-				TabBadgeFrame.Visible = false
-				TabBadgeLabel.Text = ""
-			else
-				TabBadgeFrame.Visible = true
-				if type(Count) == "number" then
-					local display = Count > 99 and "99+" or tostring(math.floor(Count))
-					TabBadgeLabel.Text = display
-					local textWidth = TextService:GetTextSize(
-						display, 9,
-						Enum.Font.GothamBold,
-						Vector2.new(math.huge, math.huge)
-					).X
-					TabBadgeFrame.Size = UDim2.fromOffset(math.max(16, textWidth + 8), 16)
-				elseif type(Count) == "string" and Count ~= "" then
-					TabBadgeLabel.Text = Count
-					local textWidth = TextService:GetTextSize(
-						Count, 9,
-						Enum.Font.GothamBold,
-						Vector2.new(math.huge, math.huge)
-					).X
-					TabBadgeFrame.Size = UDim2.fromOffset(math.max(16, textWidth + 8), 16)
-				else
-					TabBadgeLabel.Text = "!"
-					TabBadgeFrame.Size = UDim2.fromOffset(16, 16)
-				end
-			end
-		end
-
 		local ContainerLayout = New("UIListLayout", {
 			Padding = UDim.new(0, 5),
 			SortOrder = Enum.SortOrder.LayoutOrder,
@@ -7453,6 +7392,13 @@ ElementsTable.Separator = (function()
 
 	-- API: Section:AddSeparator("Optional label") or Section:AddSeparator()
 	-- The first arg from the Elements loop arrives as "Idx" (the label string or nil).
+	--
+	-- IMPORTANT: the root frame is named "TextButton" intentionally.
+	-- Section.Layout sorts children by Name (default UIListLayout SortOrder).
+	-- All other elements use New("TextButton") so their root name is "TextButton".
+	-- Equal names are ordered by insertion order, which is what we want.
+	-- Without this, a Frame-named root would sort alphabetically before TextButton
+	-- and always appear at the top of the section regardless of code order.
 	function Element:New(Label, Config)
 		local LabelText = (type(Label) == "string" and Label ~= "") and Label or nil
 
@@ -7506,7 +7452,10 @@ ElementsTable.Separator = (function()
 				},
 			})
 
+			-- Name = "TextButton" keeps this in the same sort group as all other
+			-- section elements so insertion order determines its position.
 			SeparatorHolder = New("Frame", {
+				Name = "TextButton",
 				Size = UDim2.new(1, 0, 0, 20),
 				BackgroundTransparency = 1,
 				LayoutOrder = 7,
@@ -7519,6 +7468,7 @@ ElementsTable.Separator = (function()
 		else
 			-- Plain separator: single full-width 1px line with vertical padding
 			SeparatorHolder = New("Frame", {
+				Name = "TextButton",
 				Size = UDim2.new(1, 0, 0, 14),
 				BackgroundTransparency = 1,
 				LayoutOrder = 7,
