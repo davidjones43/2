@@ -4640,18 +4640,18 @@ Components.Window = (function()
 		
 		table.insert(rootChildren, Window.AcrylicPaint.Frame)
 
-		-- ── LIQUID GLASS OVERLAY LAYERS ─────────────────────────────────────
+		-- - LIQUID GLASS OVERLAY LAYERS -
 		-- Built regardless of whether LiquidGlass is currently active.
 		-- All layers start fully transparent so there is zero cost when disabled.
 		-- Library:ToggleLiquidGlass(true/false) fades them in/out via Flipper.
 		--
-		-- Layer stack (bottom → top):
-		--   1. Tint base   – milky white fill that desaturates the background
-		--   2. Radial specular – bright oval gradient mimicking light concentration
-		--   3. Edge rim     – thin top/left highlight catching ambient light
-		--   4. Diagonal sweep – angled gradient that shifts on Camera motion
-		--   5. Surface sheen  – subtle noise texture over the glass face
-		--   6. Chromatic rim  – faint coloured border refraction tint
+		-- Layer stack (bottom -> top):
+		--   1. Tint base   - milky white fill that desaturates the background
+		--   2. Radial specular - bright oval gradient mimicking light concentration
+		--   3. Edge rim     - thin top/left highlight catching ambient light
+		--   4. Diagonal sweep - angled gradient that shifts on Camera motion
+		--   5. Surface sheen  - subtle noise texture over the glass face
+		--   6. Chromatic rim  - faint coloured border refraction tint
 
 		local LGBase = New("Frame", {
 			Name = "LGBase",
@@ -4778,7 +4778,7 @@ Components.Window = (function()
 		table.insert(rootChildren, LGRim)
 		table.insert(rootChildren, LGSheen)
 		table.insert(rootChildren, LGChroma)
-		-- ─────────────────────────────────────────────────────────────────────
+		-- -
 
 		table.insert(rootChildren, Window.TabDisplay)
 		table.insert(rootChildren, Window.ContainerCanvas)
@@ -4797,7 +4797,7 @@ Components.Window = (function()
 			CenterWindow()
 		end)
 
-		-- ── LIQUID GLASS CAMERA MOTION SWEEP ──────────────────────────────────
+		-- - LIQUID GLASS CAMERA MOTION SWEEP -
 		-- Every render step when LiquidGlass is active, the diagonal sweep gradient
 		-- rotates slightly based on Camera CFrame yaw, giving the specular
 		-- "light-catching" quality real glass has as the device/camera moves.
@@ -4820,7 +4820,7 @@ Components.Window = (function()
 			local specShift = math.sin(tick() * 0.4) * 0.04
 			Window.LGLayers.Specular.Position = UDim2.new(-0.2 + specShift, 0, -0.1, 0)
 		end)
-		-- ─────────────────────────────────────────────────────────────────────
+		-- -
 
 		-- Auto-enable if LiquidGlass was set in config
 		if Library.UseLiquidGlass then
@@ -7458,14 +7458,14 @@ ElementsTable.Colorpicker = (function()
 
 			Display()
 
-			-- ── PALETTE SWATCHES ─────────────────────────────────────────────
+			-- - PALETTE SWATCHES -
 			-- Rendered only when Config.Palette = { Color3, Color3, ... } is set.
 			-- Each swatch is a small clickable square that instantly applies that
 			-- color to the picker without closing the dialog.
 			if Config.Palette and #Config.Palette > 0 then
 				local swatchSize = 20
 				local swatchGap  = 4
-				-- Last fixed control ends at Y≈244 (color preview frames).
+				-- Last fixed control ends at Y~244 (color preview frames).
 				-- paletteTopY gives 8px breathing room below that.
 				-- Dialog expands by 30px so the button strip (always pinned 70px
 				-- from the bottom) stays clear.
@@ -7524,7 +7524,7 @@ ElementsTable.Colorpicker = (function()
 					end
 				end
 			end
-			-- ─────────────────────────────────────────────────────────────────
+			-- -
 
 			Dialog:Button("Done", function()
 				Colorpicker:SetValue({ Hue, Sat, Vib }, Transparency)
@@ -7665,7 +7665,7 @@ ElementsTable.Input = (function()
 
 	return Element
 end)()
--- ──────────────────────────────────────────────────────────────────────────────
+-- -
 -- PROGRESS BAR
 -- API:
 --   Section:AddProgressBar("MyBar", {
@@ -7677,7 +7677,7 @@ end)()
 --   })
 --   bar:SetValue(75)      -- animate fill to 75
 --   bar:OnChanged(func)   -- fired after SetValue
--- ──────────────────────────────────────────────────────────────────────────────
+-- -
 ElementsTable.ProgressBar = (function()
 	local Element = {}
 	Element.__index = Element
@@ -11011,7 +11011,7 @@ function Library:ToggleLiquidGlass(Value)
 	local layers = Library.Window.LGLayers
 	if not layers then return end
 
-	-- Use TweenService throughout — consistent with TweenService usage elsewhere
+	-- Use TweenService throughout - consistent with TweenService usage elsewhere
 	-- in ToggleLiquidGlass and avoids orphaned Flipper motors being GC'd mid-tween.
 	local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -11025,7 +11025,7 @@ function Library:ToggleLiquidGlass(Value)
 		ImageTransparency = Value and 0.0 or 1,
 	}):Play()
 
-	-- Diagonal sweep — the gradient handles visual falloff; just reveal the frame
+	-- Diagonal sweep - the gradient handles visual falloff; just reveal the frame
 	TweenService:Create(layers.Sweep, tweenInfo, {
 		BackgroundTransparency = Value and 0.0 or 1,
 	}):Play()
@@ -11051,7 +11051,7 @@ function Library:ToggleLiquidGlass(Value)
 		}):Play()
 	end
 
-	-- ── ELEMENT-LEVEL GLASS TREATMENT ─────────────────────────────────────
+	-- - ELEMENT-LEVEL GLASS TREATMENT -
 	-- Walk every registered ThemeTag object. When LiquidGlass is on, element
 	-- frames get a raised corner radius and slightly more translucent background
 	-- so they read as individual floating glass chips rather than flat panels.
