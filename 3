@@ -4693,18 +4693,17 @@ Components.Window = (function()
 			})
 
 			local avatarSize = 28
-			local avatarOffset = 2 -- small left margin so the accent stroke isn't clipped by the frame edge
 			local Avatar = New("ImageLabel", {
 				Name = "Avatar",
 				BackgroundTransparency = 1,
 				Size = UDim2.fromOffset(avatarSize, avatarSize),
-				Position = UDim2.new(0, avatarOffset, 0.5, 0),
+				Position = UDim2.new(0, 0, 0.5, 0),
 				AnchorPoint = Vector2.new(0, 0.5),
 				Image = "rbxassetid://0",
 				Parent = UserInfoSection,
 			}, {
 				New("UICorner", { CornerRadius = UDim.new(1, 0) }),
-				New("UIStroke", { Transparency = 0.4, Thickness = 1, ThemeTag = { Color = "Accent" } }),
+				New("UIStroke", { Transparency = 0.6, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, ThemeTag = { Color = "InElementBorder" } }),
 			})
 
 			pcall(function()
@@ -4726,8 +4725,8 @@ Components.Window = (function()
 				FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
 				TextSize = 13,
 				Text = titleText,
-				Size = UDim2.new(1, -(avatarSize + avatarOffset + 12), 0.5, 0),
-				Position = UDim2.new(0, avatarSize + avatarOffset + 10, 0, -2),
+				Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
+				Position = UDim2.new(0, avatarSize + 12, 0, -2),
 				Parent = UserInfoSection,
 				ThemeTag = { TextColor3 = "Text" },
 			})
@@ -4742,8 +4741,8 @@ Components.Window = (function()
 				TextTransparency = 0.2,
 				Text = subtitleText,
 				TextColor3 = parseColor(Config.UserInfoSubtitleColor),
-				Size = UDim2.new(1, -(avatarSize + avatarOffset + 12), 0.5, 0),
-				Position = UDim2.new(0, avatarSize + avatarOffset + 10, 0.5, 2),
+				Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
+				Position = UDim2.new(0, avatarSize + 12, 0.5, 2),
 				Parent = UserInfoSection,
 			})
 
