@@ -3562,10 +3562,29 @@ Components.Notification = (function()
 			Closed = false,
 		}
 
+		-- Resolve optional lucide icon
+		local NotifIconAsset = nil
+		if Config.Icon then
+			if not fischbypass then
+				pcall(function()
+					if Library and Library.GetIcon then
+						NotifIconAsset = Library:GetIcon(Config.Icon)
+					end
+				end)
+			end
+			if not NotifIconAsset and type(Config.Icon) == "string" and Config.Icon:match("^rbxassetid://") then
+				NotifIconAsset = Config.Icon
+			end
+		end
+
+		-- When an icon is present the title shifts right by 20px (16px icon + 4px gap)
+		local titleXOffset = NotifIconAsset and 34 or 14
+		local titleWidthOffset = NotifIconAsset and -32 or -12
+
 		NewNotification.AcrylicPaint = Acrylic.AcrylicPaint()
 
 		NewNotification.Title = New("TextLabel", {
-			Position = UDim2.new(0, 14, 0, 17),
+			Position = UDim2.new(0, titleXOffset, 0, 17),
 			Text = Config.Title,
 			RichText = true,
 			TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -3574,7 +3593,7 @@ Components.Notification = (function()
 			TextSize = 13,
 			TextXAlignment = "Left",
 			TextYAlignment = "Center",
-			Size = UDim2.new(1, -12, 0, 12),
+			Size = UDim2.new(1, titleWidthOffset, 0, 12),
 			TextWrapped = true,
 			BackgroundTransparency = 1,
 			ThemeTag = {
@@ -3655,6 +3674,15 @@ Components.Notification = (function()
 			Position = UDim2.fromScale(1, 0),
 		}, {
 			NewNotification.AcrylicPaint.Frame,
+			NotifIconAsset and New("ImageLabel", {
+				Image = NotifIconAsset,
+				Size = UDim2.fromOffset(16, 16),
+				Position = UDim2.new(0, 14, 0, 10),
+				BackgroundTransparency = 1,
+				ThemeTag = {
+					ImageColor3 = "Text",
+				},
+			}) or nil,
 			NewNotification.Title,
 			NewNotification.CloseButton,
 			NewNotification.LabelHolder,
@@ -4223,32 +4251,38 @@ Components.Window = (function()
 					if normalizedQuery == "" then
 						element.Visible = true
 					else
-						local title = tostring(data.title or "")
-						local desc = tostring(data.description or "")
-						local matchesTitle = checkMatch(title, normalizedQuery)
-						local matchesDesc = checkMatch(desc, normalizedQuery)
-						local matchesValues = false
-						
-						local elementValues = getElementValues(element)
-						for _, value in ipairs(elementValues) do
-							if checkMatch(value, normalizedQuery) then
-								matchesValues = true
-								break
-							end
-						end
-						
-						local matchesSection = elementsInMatchedSections[element] == true
-						
-						if not matchesSection and data.section then
-							for sectionFrame, _ in pairs(matchedSectionFrames) do
-								if data.section == sectionFrame then
-									matchesSection = true
+						-- Separators are purely visual; always hide them during search
+						-- so they never appear as orphaned lines in filtered results.
+						if data.type == "Separator" then
+							element.Visible = false
+						else
+							local title = tostring(data.title or "")
+							local desc = tostring(data.description or "")
+							local matchesTitle = checkMatch(title, normalizedQuery)
+							local matchesDesc = checkMatch(desc, normalizedQuery)
+							local matchesValues = false
+							
+							local elementValues = getElementValues(element)
+							for _, value in ipairs(elementValues) do
+								if checkMatch(value, normalizedQuery) then
+									matchesValues = true
 									break
 								end
 							end
+							
+							local matchesSection = elementsInMatchedSections[element] == true
+							
+							if not matchesSection and data.section then
+								for sectionFrame, _ in pairs(matchedSectionFrames) do
+									if data.section == sectionFrame then
+										matchesSection = true
+										break
+									end
+								end
+							end
+							
+							element.Visible = matchesTitle or matchesDesc or matchesValues or matchesSection
 						end
-						
-						element.Visible = matchesTitle or matchesDesc or matchesValues or matchesSection
 					end
 				end
 			end
@@ -4669,7 +4703,7 @@ Components.Window = (function()
 				Parent = UserInfoSection,
 			}, {
 				New("UICorner", { CornerRadius = UDim.new(1, 0) }),
-				New("UIStroke", { Transparency = 0.7, Thickness = 1, ThemeTag = { Color = "ElementBorder" } }),
+				New("UIStroke", { Transparency = 0.4, Thickness = 1.5, ThemeTag = { Color = "Accent" } }),
 			})
 
 			pcall(function()
@@ -7390,29 +7424,50 @@ ElementsTable.Separator = (function()
 	Element.__index = Element
 	Element.__type = "Separator"
 
-	-- API: Section:AddSeparator("Optional label") or Section:AddSeparator()
-	-- The first arg from the Elements loop arrives as "Idx" (the label string or nil).
+	-- API:
+	--   Section:AddSeparator()                          plain line
+	--   Section:AddSeparator("Label")                   line with centred label
+	--   Section:AddSeparator("Label", { Icon = "home" }) line with icon + label
 	--
-	-- IMPORTANT: the root frame is named "TextButton" intentionally.
-	-- Section.Layout sorts children by Name (default UIListLayout SortOrder).
-	-- All other elements use New("TextButton") so their root name is "TextButton".
-	-- Equal names are ordered by insertion order, which is what we want.
-	-- Without this, a Frame-named root would sort alphabetically before TextButton
-	-- and always appear at the top of the section regardless of code order.
+	-- Root frame is named "TextButton" so the UIListLayout in the section container
+	-- (which sorts by Name, then insertion order for ties) places it exactly where
+	-- it appears in code relative to the other "TextButton" elements.
 	function Element:New(Label, Config)
+		Config = Config or {}
 		local LabelText = (type(Label) == "string" and Label ~= "") and Label or nil
+
+		-- Resolve optional lucide icon (only meaningful when a label is also present)
+		local IconAsset = nil
+		if LabelText and Config.Icon then
+			if not fischbypass then
+				pcall(function()
+					if Library and Library.GetIcon then
+						IconAsset = Library:GetIcon(Config.Icon)
+					end
+				end)
+			end
+			-- Allow raw rbxassetid strings as a fallback
+			if not IconAsset and type(Config.Icon) == "string" and Config.Icon:match("^rbxassetid://") then
+				IconAsset = Config.Icon
+			end
+		end
 
 		local SeparatorHolder
 
 		if LabelText then
-			-- Measure the label width up-front using TextService so we never depend on render
+			local iconSize   = IconAsset and 14 or 0
+			local iconGap    = IconAsset and 4  or 0
+			local labelPadding = 12
+
 			local measuredWidth = TextService:GetTextSize(
 				LabelText, 11,
 				Enum.Font.Gotham,
 				Vector2.new(math.huge, math.huge)
 			).X
-			local labelPadding = 12
-			local halfGap = math.floor((measuredWidth + labelPadding) / 2) + 4
+
+			-- Total width of the centre block (icon + gap + label + horizontal padding)
+			local centerTotalWidth = iconSize + iconGap + measuredWidth + labelPadding
+			local halfGap = math.floor(centerTotalWidth / 2) + 4
 
 			local LeftLine = New("Frame", {
 				Size = UDim2.new(0.5, -halfGap, 0, 1),
@@ -7436,24 +7491,51 @@ ElementsTable.Separator = (function()
 				},
 			})
 
-			local CenterLabel = New("TextLabel", {
+			-- Centre container holds optional icon + text in a horizontal list
+			local CenterChildren = {}
+
+			if IconAsset then
+				table.insert(CenterChildren, New("ImageLabel", {
+					Image = IconAsset,
+					Size = UDim2.fromOffset(iconSize, iconSize),
+					BackgroundTransparency = 1,
+					LayoutOrder = 1,
+					ThemeTag = {
+						ImageColor3 = "SubText",
+					},
+				}))
+			end
+
+			table.insert(CenterChildren, New("TextLabel", {
 				Text = LabelText,
 				FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
 				TextSize = 11,
 				TextXAlignment = Enum.TextXAlignment.Center,
 				TextYAlignment = Enum.TextYAlignment.Center,
 				TextTruncate = Enum.TextTruncate.AtEnd,
-				Size = UDim2.new(0, measuredWidth + labelPadding, 1, 0),
-				Position = UDim2.new(0.5, 0, 0, 0),
-				AnchorPoint = Vector2.new(0.5, 0),
+				Size = UDim2.new(0, measuredWidth, 1, 0),
 				BackgroundTransparency = 1,
+				LayoutOrder = 2,
 				ThemeTag = {
 					TextColor3 = "SubText",
 				},
-			})
+			}))
 
-			-- Name = "TextButton" keeps this in the same sort group as all other
-			-- section elements so insertion order determines its position.
+			table.insert(CenterChildren, New("UIListLayout", {
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, iconGap),
+			}))
+
+			local CenterContainer = New("Frame", {
+				Size = UDim2.new(0, centerTotalWidth, 1, 0),
+				Position = UDim2.new(0.5, 0, 0, 0),
+				AnchorPoint = Vector2.new(0.5, 0),
+				BackgroundTransparency = 1,
+			}, CenterChildren)
+
 			SeparatorHolder = New("Frame", {
 				Name = "TextButton",
 				Size = UDim2.new(1, 0, 0, 20),
@@ -7463,7 +7545,7 @@ ElementsTable.Separator = (function()
 			}, {
 				LeftLine,
 				RightLine,
-				CenterLabel,
+				CenterContainer,
 			})
 		else
 			-- Plain separator: single full-width 1px line with vertical padding
@@ -7485,6 +7567,18 @@ ElementsTable.Separator = (function()
 					},
 				}),
 			})
+		end
+
+		-- Register with the search system as type "Separator".
+		-- UpdateElementVisibility always hides separators when a query is active
+		-- so they never appear as stray dividers in filtered results.
+		if Library.Window and Library.Window.RegisterElement then
+			Library.Window.RegisterElement(SeparatorHolder, "", "Separator", "")
+		elseif Library.Windows and #Library.Windows > 0 then
+			local currentWindow = Library.Windows[#Library.Windows]
+			if currentWindow and currentWindow.RegisterElement then
+				currentWindow.RegisterElement(SeparatorHolder, "", "Separator", "")
+			end
 		end
 
 		local Separator = {
