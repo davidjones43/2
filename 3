@@ -56,7 +56,9 @@ local Themes = {
 		"Cloud",
 		"Grape",
 		"Bloody",
-		"Arctic"
+		"Arctic",
+		"Gold",
+		"Crimson"
 	},
 	Dark = {
 		Name = "Dark",
@@ -761,6 +763,84 @@ local Themes = {
 		SubText = Color3.fromRGB(180, 200, 220),
 		Hover = Color3.fromRGB(90, 140, 180),
 		HoverChange = 0.04
+	},
+	-- Light theme with warm gold accent — creamy off-white background, rich gold highlights
+	Gold = {
+		Name = "Gold",
+		Accent = Color3.fromRGB(212, 160, 20),
+		AcrylicMain = Color3.fromRGB(245, 240, 228),
+		AcrylicBorder = Color3.fromRGB(200, 185, 150),
+		AcrylicGradient = ColorSequence.new(Color3.fromRGB(252, 248, 238), Color3.fromRGB(245, 238, 218)),
+		AcrylicNoise = 0.97,
+		TitleBarLine = Color3.fromRGB(210, 190, 140),
+		Tab = Color3.fromRGB(130, 105, 50),
+		Element = Color3.fromRGB(145, 118, 55),
+		ElementBorder = Color3.fromRGB(200, 175, 115),
+		InElementBorder = Color3.fromRGB(210, 185, 130),
+		ElementTransparency = 0.88,
+		ToggleSlider = Color3.fromRGB(160, 130, 65),
+		ToggleToggled = Color3.fromRGB(245, 238, 218),
+		SliderRail = Color3.fromRGB(160, 130, 65),
+		DropdownFrame = Color3.fromRGB(180, 150, 80),
+		DropdownHolder = Color3.fromRGB(240, 232, 210),
+		DropdownBorder = Color3.fromRGB(200, 175, 115),
+		DropdownOption = Color3.fromRGB(130, 105, 50),
+		Keybind = Color3.fromRGB(140, 112, 50),
+		Input = Color3.fromRGB(180, 150, 80),
+		InputFocused = Color3.fromRGB(252, 248, 238),
+		InputIndicator = Color3.fromRGB(160, 130, 60),
+		InputIndicatorFocus = Color3.fromRGB(212, 160, 20),
+		Dialog = Color3.fromRGB(242, 235, 215),
+		DialogHolder = Color3.fromRGB(235, 226, 203),
+		DialogHolderLine = Color3.fromRGB(220, 205, 170),
+		DialogButton = Color3.fromRGB(242, 235, 215),
+		DialogButtonBorder = Color3.fromRGB(200, 175, 115),
+		DialogBorder = Color3.fromRGB(195, 168, 105),
+		DialogInput = Color3.fromRGB(238, 228, 205),
+		DialogInputLine = Color3.fromRGB(212, 160, 20),
+		Text = Color3.fromRGB(55, 42, 18),
+		SubText = Color3.fromRGB(110, 88, 42),
+		Hover = Color3.fromRGB(145, 118, 55),
+		HoverChange = 0.06
+	},
+	-- Dark theme with deep blood-red accent on near-black background
+	Crimson = {
+		Name = "Crimson",
+		Accent = Color3.fromRGB(180, 28, 42),
+		AcrylicMain = Color3.fromRGB(12, 6, 8),
+		AcrylicBorder = Color3.fromRGB(60, 18, 22),
+		AcrylicGradient = ColorSequence.new(Color3.fromRGB(10, 4, 6), Color3.fromRGB(14, 6, 8)),
+		AcrylicNoise = 0.94,
+		TitleBarLine = Color3.fromRGB(55, 15, 20),
+		Tab = Color3.fromRGB(160, 50, 60),
+		Element = Color3.fromRGB(140, 45, 55),
+		ElementBorder = Color3.fromRGB(25, 8, 10),
+		InElementBorder = Color3.fromRGB(70, 22, 28),
+		ElementTransparency = 0.86,
+		ToggleSlider = Color3.fromRGB(150, 50, 60),
+		ToggleToggled = Color3.fromRGB(12, 4, 6),
+		SliderRail = Color3.fromRGB(140, 45, 55),
+		DropdownFrame = Color3.fromRGB(175, 60, 72),
+		DropdownHolder = Color3.fromRGB(18, 8, 10),
+		DropdownBorder = Color3.fromRGB(30, 10, 14),
+		DropdownOption = Color3.fromRGB(155, 50, 62),
+		Keybind = Color3.fromRGB(150, 48, 58),
+		Input = Color3.fromRGB(160, 52, 64),
+		InputFocused = Color3.fromRGB(8, 4, 5),
+		InputIndicator = Color3.fromRGB(120, 38, 48),
+		InputIndicatorFocus = Color3.fromRGB(180, 28, 42),
+		Dialog = Color3.fromRGB(22, 8, 10),
+		DialogHolder = Color3.fromRGB(16, 6, 8),
+		DialogHolderLine = Color3.fromRGB(12, 4, 6),
+		DialogButton = Color3.fromRGB(22, 8, 10),
+		DialogButtonBorder = Color3.fromRGB(55, 18, 22),
+		DialogBorder = Color3.fromRGB(50, 16, 20),
+		DialogInput = Color3.fromRGB(28, 10, 13),
+		DialogInputLine = Color3.fromRGB(160, 52, 64),
+		Text = Color3.fromRGB(240, 225, 228),
+		SubText = Color3.fromRGB(160, 110, 118),
+		Hover = Color3.fromRGB(140, 45, 55),
+		HoverChange = 0.05
 	}
 
 }
@@ -782,8 +862,6 @@ local Library = {
 	DialogOpen = false,
 	UseAcrylic = false,
 	Acrylic = false,
-	UseLiquidGlass = false,
-	LiquidGlass = false,
 	Transparency = true,
 	MinimizeKeybind = nil,
 	MinimizeKey = Enum.KeyCode.LeftControl,
@@ -4640,57 +4718,6 @@ Components.Window = (function()
 		
 		table.insert(rootChildren, Window.AcrylicPaint.Frame)
 
-		-- LIQUID GLASS LAYERS
-		-- Two subtle layers only. Both start fully transparent (zero cost when off).
-		-- The real glass feel comes from ToggleLiquidGlass adjusting the existing
-		-- AcrylicPaint background transparency and element properties, not from
-		-- piling colored overlays on top.
-		--
-		-- LGRim: a thin edge highlight using the theme's own AcrylicBorder color,
-		-- identical in construction to the existing AcrylicPaint border stroke but
-		-- brighter. Shows catching light at the window edge.
-		-- LGSheen: the same noise texture the Acrylic system already uses, rendered
-		-- at very high transparency just to break up the flat surface slightly.
-
-		local LGRim = New("Frame", {
-			Name = "LGRim",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			ZIndex = 4,
-			BorderSizePixel = 0,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-			New("UIStroke", {
-				Name = "LGRimStroke",
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Transparency = 1,
-				Thickness = 1,
-				ThemeTag = { Color = "AcrylicBorder" },
-			}),
-		})
-
-		local LGSheen = New("ImageLabel", {
-			Name = "LGSheen",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Image = "rbxassetid://9968344227",
-			ImageTransparency = 1,
-			ScaleType = Enum.ScaleType.Tile,
-			TileSize = UDim2.fromOffset(128, 128),
-			ZIndex = 5,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-		})
-
-		Window.LGLayers = {
-			Rim   = LGRim,
-			Sheen = LGSheen,
-		}
-		Window.LGActive = false
-
-		table.insert(rootChildren, LGRim)
-		table.insert(rootChildren, LGSheen)
-
 		table.insert(rootChildren, Window.TabDisplay)
 		table.insert(rootChildren, Window.ContainerCanvas)
 		table.insert(rootChildren, TabFrame)
@@ -4707,11 +4734,6 @@ Components.Window = (function()
 		Creator.AddSignal(Camera:GetPropertyChangedSignal("ViewportSize"), function()
 			CenterWindow()
 		end)
-
-		-- Auto-enable if LiquidGlass was set in config
-		if Library.UseLiquidGlass then
-			Library:ToggleLiquidGlass(true)
-		end
 
 
 		Window.TitleBar = Components.TitleBar({
@@ -9123,7 +9145,7 @@ local SaveManager = {} do
 		self:SetIgnoreIndexes({ 
 
 
-			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind", "LiquidGlassToggle"
+			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"
 
 
 		})
@@ -9714,9 +9736,6 @@ local InterfaceManager = {} do
 		Acrylic = true,
 
 
-		LiquidGlass = false,
-
-
 		Transparency = true,
 
 
@@ -9987,28 +10006,6 @@ local InterfaceManager = {} do
 		end
 
 
-		section:AddToggle("LiquidGlassToggle", {
-
-			Title = "Liquid Glass",
-
-			Description = "Dynamic glass material with specular highlights and motion.",
-
-			Default = Settings.LiquidGlass,
-
-			Callback = function(Value)
-
-				Library:ToggleLiquidGlass(Value)
-
-				Settings.LiquidGlass = Value
-
-				InterfaceManager:SaveSettings()
-
-			end
-
-		})
-
-
-
 
 
 		section:AddSlider("WindowTransparency", {
@@ -10108,12 +10105,6 @@ Library.CreateWindow = function(self, Config)
 
 
 	Library.Acrylic = Config.Acrylic or false
-
-
-	Library.UseLiquidGlass = Config.LiquidGlass or false
-
-
-	Library.LiquidGlass = Config.LiquidGlass or false
 
 
 	Library.Theme = Config.Theme or "Dark"
@@ -10791,12 +10782,6 @@ function Library:SetTheme(Value)
 
 		end
 
-		-- Re-apply liquid glass element treatment so corner radii and
-		-- transparencies stay consistent after a theme colour update
-		if Library.LiquidGlass then
-			Library:ToggleLiquidGlass(true)
-		end
-
 
 	end
 
@@ -10885,75 +10870,6 @@ function Library:ToggleTransparency(Value)
 	end
 
 
-end
-
-
-function Library:ToggleLiquidGlass(Value)
-	if not Library.Window then return end
-
-	Library.LiquidGlass = Value
-	Library.Window.LGActive = Value
-
-	local layers = Library.Window.LGLayers
-	if not layers then return end
-
-	local tweenInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-	-- Rim: reveal the theme's AcrylicBorder color as a subtle edge highlight.
-	-- Using the theme color means it adapts to every theme automatically.
-	local rimStroke = layers.Rim:FindFirstChild("LGRimStroke")
-	if rimStroke then
-		TweenService:Create(rimStroke, tweenInfo, {
-			Transparency = Value and 0.45 or 1,
-		}):Play()
-	end
-
-	-- Sheen: the same noise texture Acrylic uses, just barely visible.
-	-- Adds micro-texture that breaks up the flat surface without adding color.
-	TweenService:Create(layers.Sheen, tweenInfo, {
-		ImageTransparency = Value and 0.95 or 1,
-	}):Play()
-
-	-- AcrylicPaint background: the primary glass feel comes from making this
-	-- significantly more transparent so the game world shows through more.
-	-- This is what real glass does - it reveals what is behind it.
-	-- Restore to theme default on disable.
-	local bg = Library.Window.AcrylicPaint.Frame:FindFirstChild("Background")
-	if bg then
-		TweenService:Create(bg, tweenInfo, {
-			BackgroundTransparency = Value and 0.65 or 0.45,
-		}):Play()
-	end
-
-	-- ELEMENT TREATMENT
-	-- Elements become slightly more translucent and have larger corner radii
-	-- so they look like individual frosted glass panels rather than solid tiles.
-	-- We use theme colors throughout so no hardcoded values clash with any theme.
-	local elementTransparency = Creator.GetThemeProperty("ElementTransparency") or 0.87
-	for instance, data in next, Creator.Registry do
-		if data.Properties and data.Properties.BackgroundColor3 == "Element" then
-			pcall(function()
-				-- Rounder corners feel more like glass chips
-				local corner = instance:FindFirstChildOfClass("UICorner")
-				if corner then
-					TweenService:Create(corner, tweenInfo, {
-						CornerRadius = Value and UDim.new(0, 6) or UDim.new(0, 4),
-					}):Play()
-				end
-				-- Slightly more visible border catches the light like a glass edge
-				local stroke = instance:FindFirstChildOfClass("UIStroke")
-				if stroke then
-					TweenService:Create(stroke, tweenInfo, {
-						Transparency = Value and 0.35 or 0.5,
-					}):Play()
-				end
-				-- More transparent so the glass background shows through elements too
-				TweenService:Create(instance, tweenInfo, {
-					BackgroundTransparency = Value and math.min(elementTransparency + 0.06, 0.95) or elementTransparency,
-				}):Play()
-			end)
-		end
-	end
 end
 
 
