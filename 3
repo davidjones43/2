@@ -4640,79 +4640,17 @@ Components.Window = (function()
 		
 		table.insert(rootChildren, Window.AcrylicPaint.Frame)
 
-		-- - LIQUID GLASS OVERLAY LAYERS -
-		-- Built regardless of whether LiquidGlass is currently active.
-		-- All layers start fully transparent so there is zero cost when disabled.
-		-- Library:ToggleLiquidGlass(true/false) fades them in/out via Flipper.
+		-- LIQUID GLASS LAYERS
+		-- Two subtle layers only. Both start fully transparent (zero cost when off).
+		-- The real glass feel comes from ToggleLiquidGlass adjusting the existing
+		-- AcrylicPaint background transparency and element properties, not from
+		-- piling colored overlays on top.
 		--
-		-- Layer stack (bottom -> top):
-		--   1. Tint base   - milky white fill that desaturates the background
-		--   2. Radial specular - bright oval gradient mimicking light concentration
-		--   3. Edge rim     - thin top/left highlight catching ambient light
-		--   4. Diagonal sweep - angled gradient that shifts on Camera motion
-		--   5. Surface sheen  - subtle noise texture over the glass face
-		--   6. Chromatic rim  - faint coloured border refraction tint
-
-		local LGBase = New("Frame", {
-			Name = "LGBase",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-			BackgroundTransparency = 1,
-			ZIndex = 1,
-			BorderSizePixel = 0,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-		})
-
-		local LGSpecular = New("ImageLabel", {
-			Name = "LGSpecular",
-			Size = UDim2.new(1.4, 0, 0.8, 0),
-			Position = UDim2.new(-0.2, 0, -0.1, 0),
-			BackgroundTransparency = 1,
-			Image = "rbxassetid://0",
-			ImageTransparency = 1,
-			ZIndex = 2,
-		}, {
-			New("UIGradient", {
-				Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-					ColorSequenceKeypoint.new(0.35, Color3.fromRGB(220, 235, 255)),
-					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-				}),
-				Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 1),
-					NumberSequenceKeypoint.new(0.25, 0),
-					NumberSequenceKeypoint.new(0.5, 0),
-					NumberSequenceKeypoint.new(1, 1),
-				}),
-				Rotation = 130,
-			}),
-		})
-
-		local LGSweep = New("Frame", {
-			Name = "LGSweep",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			ZIndex = 3,
-			BorderSizePixel = 0,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-			New("UIGradient", {
-				Name = "LGSweepGradient",
-				Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-					ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 220, 255)),
-					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-				}),
-				Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 1),
-					NumberSequenceKeypoint.new(0.3, 0.6),
-					NumberSequenceKeypoint.new(0.7, 0.6),
-					NumberSequenceKeypoint.new(1, 1),
-				}),
-				Rotation = 45,
-			}),
-		})
+		-- LGRim: a thin edge highlight using the theme's own AcrylicBorder color,
+		-- identical in construction to the existing AcrylicPaint border stroke but
+		-- brighter. Shows catching light at the window edge.
+		-- LGSheen: the same noise texture the Acrylic system already uses, rendered
+		-- at very high transparency just to break up the flat surface slightly.
 
 		local LGRim = New("Frame", {
 			Name = "LGRim",
@@ -4725,9 +4663,9 @@ Components.Window = (function()
 			New("UIStroke", {
 				Name = "LGRimStroke",
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Color = Color3.fromRGB(255, 255, 255),
 				Transparency = 1,
 				Thickness = 1,
+				ThemeTag = { Color = "AcrylicBorder" },
 			}),
 		})
 
@@ -4744,41 +4682,14 @@ Components.Window = (function()
 			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
 		})
 
-		local LGChroma = New("Frame", {
-			Name = "LGChroma",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			ZIndex = 6,
-			BorderSizePixel = 0,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-			New("UIStroke", {
-				Name = "LGChromaStroke",
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Color = Color3.fromRGB(180, 220, 255),
-				Transparency = 1,
-				Thickness = 2,
-			}),
-		})
-
-		-- Store all layers on Window for toggling and sweep animation
 		Window.LGLayers = {
-			Base     = LGBase,
-			Specular = LGSpecular,
-			Sweep    = LGSweep,
-			Rim      = LGRim,
-			Sheen    = LGSheen,
-			Chroma   = LGChroma,
+			Rim   = LGRim,
+			Sheen = LGSheen,
 		}
 		Window.LGActive = false
 
-		table.insert(rootChildren, LGBase)
-		table.insert(rootChildren, LGSpecular)
-		table.insert(rootChildren, LGSweep)
 		table.insert(rootChildren, LGRim)
 		table.insert(rootChildren, LGSheen)
-		table.insert(rootChildren, LGChroma)
-		-- -
 
 		table.insert(rootChildren, Window.TabDisplay)
 		table.insert(rootChildren, Window.ContainerCanvas)
@@ -4796,31 +4707,6 @@ Components.Window = (function()
 		Creator.AddSignal(Camera:GetPropertyChangedSignal("ViewportSize"), function()
 			CenterWindow()
 		end)
-
-		-- - LIQUID GLASS CAMERA MOTION SWEEP -
-		-- Every render step when LiquidGlass is active, the diagonal sweep gradient
-		-- rotates slightly based on Camera CFrame yaw, giving the specular
-		-- "light-catching" quality real glass has as the device/camera moves.
-		local lastSweepAngle = 45
-		Creator.AddSignal(RenderStepped, function()
-			if not Window.LGActive then return end
-			if not Window.LGLayers or not Window.LGLayers.Sweep.Parent then return end
-
-			local camCF = Camera.CFrame
-			local _, yaw, _ = camCF:ToEulerAnglesYXZ()
-			local targetAngle = 45 + math.deg(yaw) * 0.15
-			lastSweepAngle = lastSweepAngle + (targetAngle - lastSweepAngle) * 0.04
-
-			local sweepGrad = Window.LGLayers.Sweep:FindFirstChild("LGSweepGradient")
-			if sweepGrad then
-				sweepGrad.Rotation = lastSweepAngle
-			end
-
-			-- Specular oval also shifts slightly
-			local specShift = math.sin(tick() * 0.4) * 0.04
-			Window.LGLayers.Specular.Position = UDim2.new(-0.2 + specShift, 0, -0.1, 0)
-		end)
-		-- -
 
 		-- Auto-enable if LiquidGlass was set in config
 		if Library.UseLiquidGlass then
@@ -11011,78 +10897,62 @@ function Library:ToggleLiquidGlass(Value)
 	local layers = Library.Window.LGLayers
 	if not layers then return end
 
-	-- Use TweenService throughout - consistent with TweenService usage elsewhere
-	-- in ToggleLiquidGlass and avoids orphaned Flipper motors being GC'd mid-tween.
-	local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local tweenInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-	-- Base milky tint
-	TweenService:Create(layers.Base, tweenInfo, {
-		BackgroundTransparency = Value and 0.82 or 1,
-	}):Play()
-
-	-- Specular oval
-	TweenService:Create(layers.Specular, tweenInfo, {
-		ImageTransparency = Value and 0.0 or 1,
-	}):Play()
-
-	-- Diagonal sweep - the gradient handles visual falloff; just reveal the frame
-	TweenService:Create(layers.Sweep, tweenInfo, {
-		BackgroundTransparency = Value and 0.0 or 1,
-	}):Play()
-
-	-- Edge rim UIStroke
+	-- Rim: reveal the theme's AcrylicBorder color as a subtle edge highlight.
+	-- Using the theme color means it adapts to every theme automatically.
 	local rimStroke = layers.Rim:FindFirstChild("LGRimStroke")
 	if rimStroke then
 		TweenService:Create(rimStroke, tweenInfo, {
-			Transparency = Value and 0.55 or 1,
+			Transparency = Value and 0.45 or 1,
 		}):Play()
 	end
 
-	-- Noise sheen
+	-- Sheen: the same noise texture Acrylic uses, just barely visible.
+	-- Adds micro-texture that breaks up the flat surface without adding color.
 	TweenService:Create(layers.Sheen, tweenInfo, {
-		ImageTransparency = Value and 0.92 or 1,
+		ImageTransparency = Value and 0.95 or 1,
 	}):Play()
 
-	-- Chromatic border UIStroke
-	local chromaStroke = layers.Chroma:FindFirstChild("LGChromaStroke")
-	if chromaStroke then
-		TweenService:Create(chromaStroke, tweenInfo, {
-			Transparency = Value and 0.70 or 1,
-		}):Play()
-	end
-
-	-- - ELEMENT-LEVEL GLASS TREATMENT -
-	-- Walk every registered ThemeTag object. When LiquidGlass is on, element
-	-- frames get a raised corner radius and slightly more translucent background
-	-- so they read as individual floating glass chips rather than flat panels.
-	for instance, data in next, Creator.Registry do
-		if data.Properties and data.Properties.BackgroundColor3 == "Element" then
-			pcall(function()
-				local corner = instance:FindFirstChildOfClass("UICorner")
-				if corner then
-					TweenService:Create(corner, tweenInfo, {
-						CornerRadius = Value and UDim.new(0, 7) or UDim.new(0, 4),
-					}):Play()
-				end
-				local stroke = instance:FindFirstChildOfClass("UIStroke")
-				if stroke then
-					TweenService:Create(stroke, tweenInfo, {
-						Transparency = Value and 0.3 or 0.5,
-					}):Play()
-				end
-				TweenService:Create(instance, tweenInfo, {
-					BackgroundTransparency = Value and 0.78 or (Creator.GetThemeProperty("ElementTransparency") or 0.87),
-				}):Play()
-			end)
-		end
-	end
-
-	-- Lighten the AcrylicPaint background so the LG layers show through
+	-- AcrylicPaint background: the primary glass feel comes from making this
+	-- significantly more transparent so the game world shows through more.
+	-- This is what real glass does - it reveals what is behind it.
+	-- Restore to theme default on disable.
 	local bg = Library.Window.AcrylicPaint.Frame:FindFirstChild("Background")
 	if bg then
 		TweenService:Create(bg, tweenInfo, {
-			BackgroundTransparency = Value and 0.72 or 0.45,
+			BackgroundTransparency = Value and 0.65 or 0.45,
 		}):Play()
+	end
+
+	-- ELEMENT TREATMENT
+	-- Elements become slightly more translucent and have larger corner radii
+	-- so they look like individual frosted glass panels rather than solid tiles.
+	-- We use theme colors throughout so no hardcoded values clash with any theme.
+	local elementTransparency = Creator.GetThemeProperty("ElementTransparency") or 0.87
+	for instance, data in next, Creator.Registry do
+		if data.Properties and data.Properties.BackgroundColor3 == "Element" then
+			pcall(function()
+				-- Rounder corners feel more like glass chips
+				local corner = instance:FindFirstChildOfClass("UICorner")
+				if corner then
+					TweenService:Create(corner, tweenInfo, {
+						CornerRadius = Value and UDim.new(0, 6) or UDim.new(0, 4),
+					}):Play()
+				end
+				-- Slightly more visible border catches the light like a glass edge
+				local stroke = instance:FindFirstChildOfClass("UIStroke")
+				if stroke then
+					TweenService:Create(stroke, tweenInfo, {
+						Transparency = Value and 0.35 or 0.5,
+					}):Play()
+				end
+				-- More transparent so the glass background shows through elements too
+				TweenService:Create(instance, tweenInfo, {
+					BackgroundTransparency = Value and math.min(elementTransparency + 0.06, 0.95) or elementTransparency,
+				}):Play()
+			end)
+		end
 	end
 end
 
