@@ -7290,12 +7290,15 @@ ElementsTable.Colorpicker = (function()
 			-- Each swatch is a small clickable square that instantly applies that
 			-- color to the picker without closing the dialog.
 			if Config.Palette and #Config.Palette > 0 then
-				local swatchSize  = 20
-				local swatchGap   = 4
-				local paletteTopY = 295  -- sits below the existing controls
-				local paletteH    = swatchSize + 10
+				local swatchSize = 20
+				local swatchGap  = 4
+				-- Last fixed control ends at Y≈244 (color preview frames).
+				-- paletteTopY gives 8px breathing room below that.
+				-- Dialog expands by 30px so the button strip (always pinned 70px
+				-- from the bottom) stays clear.
+				local paletteTopY = 252
+				local paletteH    = 30  -- 10px top gap + 20px swatches
 
-				-- Expand the dialog root to fit
 				Dialog.Root.Size = UDim2.fromOffset(430, 330 + paletteH)
 
 				local PaletteHolder = New("Frame", {
@@ -7340,7 +7343,6 @@ ElementsTable.Colorpicker = (function()
 							}),
 						})
 
-						-- clicking a swatch applies it to the live picker immediately
 						local SwatchBtn = SwatchBG:FindFirstChildOfClass("TextButton")
 						Creator.AddSignal(SwatchBtn.MouseButton1Click, function()
 							Hue, Sat, Vib = Color3.toHSV(swatchColor)
@@ -7642,8 +7644,8 @@ ElementsTable.Table = (function()
 	Element.__index = Element
 	Element.__type = "Table"
 
-	local ROW_HEIGHT  = 26
-	local HEADER_H    = 22
+	local ROW_HEIGHT = 26
+	local HEADER_H   = 22
 
 	function Element:New(Idx, Config)
 		assert(Config.Title, "Table - Missing Title")
@@ -7656,27 +7658,29 @@ ElementsTable.Table = (function()
 		}
 
 		local TblFrame = Components.Element(Config.Title, Config.Description, self.Container, false, Config)
-		TblFrame.DescLabel.Size = UDim2.new(1, 0, 0, 14)
 		Tbl.SetTitle = TblFrame.SetTitle
 		Tbl.SetDesc  = TblFrame.SetDesc
 		Tbl.Visible  = TblFrame.Visible
 		Tbl.Elements = TblFrame
 
-		local colCount = math.max(1, #Tbl.Headers > 0 and #Tbl.Headers or
-			(#Tbl.Rows > 0 and #Tbl.Rows[1] or 1))
+		local colCount = math.max(1,
+			#Tbl.Headers > 0 and #Tbl.Headers or
+			(#Tbl.Rows > 0 and type(Tbl.Rows[1]) == "table" and #Tbl.Rows[1] or 1)
+		)
 		local colWidth = UDim2.new(1 / colCount, 0, 1, 0)
 
-		-- Outer container inside the element frame, below the label holder
-		local hasHeaders = #Tbl.Headers > 0
-		local containerTopPad = hasHeaders and HEADER_H or 0
+		local hasHeaders   = #Tbl.Headers > 0
 		local visibleHeight = Tbl.MaxVisible * ROW_HEIGHT
+		local tableHeight  = (hasHeaders and HEADER_H or 0) + visibleHeight
 
+		-- TableOuter sits INSIDE LabelHolder as a layout child (LayoutOrder 10).
+		-- LabelHolder uses AutomaticSize Y + UIListLayout, so the element frame
+		-- grows automatically to fit — no manual size override needed.
 		local TableOuter = New("Frame", {
-			Size = UDim2.new(1, -20, 0, containerTopPad + visibleHeight),
-			Position = UDim2.new(0, 10, 1, 6),
-			AnchorPoint = Vector2.new(0, 0),
+			Size = UDim2.new(1, 0, 0, tableHeight),
 			BackgroundTransparency = 0.85,
-			Parent = TblFrame.Frame,
+			LayoutOrder = 10,
+			Parent = TblFrame.LabelHolder,
 			ThemeTag = {
 				BackgroundColor3 = "Element",
 			},
@@ -7684,16 +7688,10 @@ ElementsTable.Table = (function()
 			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
 			New("UIStroke", {
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Transparency = 0.7,
+				Transparency = 0.6,
 				ThemeTag = { Color = "InElementBorder" },
 			}),
 		})
-
-		-- Extend element frame height to fit the table
-		TblFrame.Frame.AutomaticSize = Enum.AutomaticSize.None
-		TblFrame.Frame.Size = UDim2.new(
-			1, 0, 0, 40 + containerTopPad + visibleHeight + 10
-		)
 
 		-- Header row
 		if hasHeaders then
@@ -7707,6 +7705,7 @@ ElementsTable.Table = (function()
 				New("UIListLayout", {
 					FillDirection = Enum.FillDirection.Horizontal,
 					SortOrder = Enum.SortOrder.LayoutOrder,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
 				}),
 			})
 			for i, header in ipairs(Tbl.Headers) do
@@ -7733,7 +7732,7 @@ ElementsTable.Table = (function()
 
 		local RowContainer = New("ScrollingFrame", {
 			Size = UDim2.new(1, 0, 0, visibleHeight),
-			Position = UDim2.new(0, 0, 0, containerTopPad),
+			Position = UDim2.new(0, 0, 0, hasHeaders and HEADER_H or 0),
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
 			BottomImage = "rbxassetid://6889812791",
@@ -7795,7 +7794,6 @@ ElementsTable.Table = (function()
 			end
 		end
 
-		-- Populate initial rows
 		for i, row in ipairs(Tbl.Rows) do
 			BuildRow(row, i)
 		end
