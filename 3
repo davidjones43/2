@@ -3579,12 +3579,14 @@ Components.Notification = (function()
 
 		-- When an icon is present the title shifts right by 20px (16px icon + 4px gap)
 		local titleXOffset = NotifIconAsset and 34 or 14
-		local titleWidthOffset = NotifIconAsset and -32 or -12
+		local titleWidthOffset = NotifIconAsset and -52 or -32
 
 		NewNotification.AcrylicPaint = Acrylic.AcrylicPaint()
 
 		NewNotification.Title = New("TextLabel", {
-			Position = UDim2.new(0, titleXOffset, 0, 17),
+			-- Vertically centred in the 40px header strip (AnchorPoint 0.5 on Y)
+			Position = UDim2.new(0, titleXOffset, 0, 20),
+			AnchorPoint = Vector2.new(0, 0.5),
 			Text = Config.Title,
 			RichText = true,
 			TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -3593,7 +3595,7 @@ Components.Notification = (function()
 			TextSize = 13,
 			TextXAlignment = "Left",
 			TextYAlignment = "Center",
-			Size = UDim2.new(1, titleWidthOffset, 0, 12),
+			Size = UDim2.new(1, titleWidthOffset, 0, 14),
 			TextWrapped = true,
 			BackgroundTransparency = 1,
 			ThemeTag = {
@@ -3677,7 +3679,10 @@ Components.Notification = (function()
 			NotifIconAsset and New("ImageLabel", {
 				Image = NotifIconAsset,
 				Size = UDim2.fromOffset(16, 16),
-				Position = UDim2.new(0, 14, 0, 10),
+				-- AnchorPoint (0, 0.5) + Y=20 vertically centres the icon in the header strip,
+				-- matching the title label above.
+				Position = UDim2.new(0, 14, 0, 20),
+				AnchorPoint = Vector2.new(0, 0.5),
 				BackgroundTransparency = 1,
 				ThemeTag = {
 					ImageColor3 = "Text",
@@ -4697,7 +4702,7 @@ Components.Window = (function()
 				Name = "Avatar",
 				BackgroundTransparency = 1,
 				Size = UDim2.fromOffset(avatarSize, avatarSize),
-				Position = UDim2.new(0, 0, 0.5, 0),
+				Position = UDim2.new(0, 2, 0.5, 0),
 				AnchorPoint = Vector2.new(0, 0.5),
 				Image = "rbxassetid://0",
 				Parent = UserInfoSection,
@@ -4725,8 +4730,8 @@ Components.Window = (function()
 				FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
 				TextSize = 13,
 				Text = titleText,
-				Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
-				Position = UDim2.new(0, avatarSize + 12, 0, -2),
+				Size = UDim2.new(1, -avatarSize - 14, 0.5, 0),
+				Position = UDim2.new(0, avatarSize + 14, 0, -2),
 				Parent = UserInfoSection,
 				ThemeTag = { TextColor3 = "Text" },
 			})
@@ -4741,8 +4746,8 @@ Components.Window = (function()
 				TextTransparency = 0.2,
 				Text = subtitleText,
 				TextColor3 = parseColor(Config.UserInfoSubtitleColor),
-				Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
-				Position = UDim2.new(0, avatarSize + 12, 0.5, 2),
+				Size = UDim2.new(1, -avatarSize - 14, 0.5, 0),
+				Position = UDim2.new(0, avatarSize + 14, 0.5, 2),
 				Parent = UserInfoSection,
 			})
 
