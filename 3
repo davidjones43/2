@@ -7285,6 +7285,72 @@ ElementsTable.Colorpicker = (function()
 
 			Display()
 
+			-- ── PALETTE SWATCHES ─────────────────────────────────────────────
+			-- Rendered only when Config.Palette = { Color3, Color3, ... } is set.
+			-- Each swatch is a small clickable square that instantly applies that
+			-- color to the picker without closing the dialog.
+			if Config.Palette and #Config.Palette > 0 then
+				local swatchSize  = 20
+				local swatchGap   = 4
+				local paletteTopY = 295  -- sits below the existing controls
+				local paletteH    = swatchSize + 10
+
+				-- Expand the dialog root to fit
+				Dialog.Root.Size = UDim2.fromOffset(430, 330 + paletteH)
+
+				local PaletteHolder = New("Frame", {
+					Size = UDim2.new(1, -40, 0, swatchSize),
+					Position = UDim2.fromOffset(20, paletteTopY),
+					BackgroundTransparency = 1,
+					Parent = Dialog.Root,
+				}, {
+					New("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, swatchGap),
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+					}),
+				})
+
+				for i, swatchColor in ipairs(Config.Palette) do
+					if typeof(swatchColor) == "Color3" then
+						local SwatchBG = New("ImageLabel", {
+							Size = UDim2.fromOffset(swatchSize, swatchSize),
+							BackgroundTransparency = 1,
+							Image = "http://www.roblox.com/asset/?id=14204231522",
+							ImageTransparency = 0.45,
+							ScaleType = Enum.ScaleType.Tile,
+							TileSize = UDim2.fromOffset(40, 40),
+							LayoutOrder = i,
+							Parent = PaletteHolder,
+						}, {
+							New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+							New("UIStroke", {
+								ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+								Transparency = 0.5,
+								ThemeTag = { Color = "InElementBorder" },
+							}),
+							New("TextButton", {
+								Size = UDim2.fromScale(1, 1),
+								BackgroundColor3 = swatchColor,
+								Text = "",
+								AutoButtonColor = false,
+							}, {
+								New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+							}),
+						})
+
+						-- clicking a swatch applies it to the live picker immediately
+						local SwatchBtn = SwatchBG:FindFirstChildOfClass("TextButton")
+						Creator.AddSignal(SwatchBtn.MouseButton1Click, function()
+							Hue, Sat, Vib = Color3.toHSV(swatchColor)
+							Display()
+						end)
+					end
+				end
+			end
+			-- ─────────────────────────────────────────────────────────────────
+
 			Dialog:Button("Done", function()
 				Colorpicker:SetValue({ Hue, Sat, Vib }, Transparency)
 			end)
@@ -7420,6 +7486,343 @@ ElementsTable.Input = (function()
 
 		Library.Options[Idx] = Input
 		return Input
+	end
+
+	return Element
+end)()
+-- ──────────────────────────────────────────────────────────────────────────────
+-- PROGRESS BAR
+-- API:
+--   Section:AddProgressBar("MyBar", {
+--       Title   = "Loading",
+--       Min     = 0,      -- default 0
+--       Max     = 100,    -- default 100
+--       Default = 0,      -- starting value
+--       Suffix  = "%",    -- optional unit appended to display text
+--   })
+--   bar:SetValue(75)      -- animate fill to 75
+--   bar:OnChanged(func)   -- fired after SetValue
+-- ──────────────────────────────────────────────────────────────────────────────
+ElementsTable.ProgressBar = (function()
+	local Element = {}
+	Element.__index = Element
+	Element.__type = "ProgressBar"
+
+	function Element:New(Idx, Config)
+		assert(Config.Title, "ProgressBar - Missing Title")
+
+		local Bar = {
+			Value   = Config.Default or 0,
+			Min     = Config.Min    or 0,
+			Max     = Config.Max    or 100,
+			Suffix  = Config.Suffix or "",
+			Type    = "ProgressBar",
+		}
+
+		local BarFrame = Components.Element(Config.Title, Config.Description, self.Container, false, Config)
+		BarFrame.DescLabel.Size = UDim2.new(1, -170, 0, 14)
+
+		Bar.SetTitle = BarFrame.SetTitle
+		Bar.SetDesc  = BarFrame.SetDesc
+		Bar.Visible  = BarFrame.Visible
+		Bar.Elements = BarFrame
+
+		-- Value label sits at the right of the rail, same pattern as Slider
+		local BarDisplay = New("TextLabel", {
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			Text = "",
+			TextSize = 12,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0, 60, 0, 14),
+			Position = UDim2.new(0, -4, 0.5, 0),
+			AnchorPoint = Vector2.new(1, 0.5),
+			ThemeTag = {
+				TextColor3 = "SubText",
+			},
+		})
+
+		-- Fill uses Accent, same as Slider
+		local BarFill = New("Frame", {
+			Size = UDim2.new(0, 0, 1, 0),
+			ThemeTag = {
+				BackgroundColor3 = "Accent",
+			},
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(1, 0),
+			}),
+		})
+
+		-- Rail: same dimensions and theme color as SliderInner
+		local BarInner = New("Frame", {
+			Size = UDim2.new(1, 0, 0, 4),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -10, 0.5, 0),
+			BackgroundTransparency = 0.4,
+			Parent = BarFrame.Frame,
+			ThemeTag = {
+				BackgroundColor3 = "SliderRail",
+			},
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(1, 0),
+			}),
+			New("UISizeConstraint", {
+				MaxSize = Vector2.new(150, math.huge),
+			}),
+			BarDisplay,
+			BarFill,
+		})
+
+		-- Flipper spring motor so fill animates smoothly on SetValue
+		local FillMotor, SetFill = Creator.SpringMotor(0, BarFill, "Size")
+		-- Override: we need to drive Size.X scale, not a transparency
+		-- Re-implement with SingleMotor driving the Scale directly
+		local FillScaleMotor = Flipper.SingleMotor.new(0)
+		FillScaleMotor:onStep(function(v)
+			BarFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
+		end)
+
+		local function UpdateDisplay(value)
+			BarDisplay.Text = tostring(value) .. Bar.Suffix
+		end
+
+		function Bar:SetValue(Value)
+			Value = math.clamp(tonumber(Value) or Bar.Min, Bar.Min, Bar.Max)
+			Bar.Value = Value
+			local scale = (Bar.Max - Bar.Min) > 0
+				and (Value - Bar.Min) / (Bar.Max - Bar.Min)
+				or 0
+			FillScaleMotor:setGoal(Flipper.Spring.new(scale, { frequency = 5, dampingRatio = 1 }))
+			UpdateDisplay(Value)
+			Library:SafeCallback(Bar.Changed, Value)
+		end
+
+		function Bar:OnChanged(Func)
+			Bar.Changed = Func
+			Func(Bar.Value)
+		end
+
+		function Bar:Destroy()
+			BarFrame:Destroy()
+		end
+
+		-- Initial state without animation
+		Bar:SetValue(Bar.Value)
+		FillScaleMotor:setGoal(Flipper.Instant.new(
+			(Bar.Max - Bar.Min) > 0
+				and (Bar.Value - Bar.Min) / (Bar.Max - Bar.Min)
+				or 0
+		))
+
+		return Bar
+	end
+
+	return Element
+end)()
+-- ──────────────────────────────────────────────────────────────────────────────
+-- TABLE / LIST
+-- API:
+--   Section:AddTable("MyTable", {
+--       Title   = "Players",
+--       Headers = { "Name", "Score" },   -- optional column headers
+--       Rows    = {                       -- initial rows
+--           { "PlayerOne", "120" },
+--           { "PlayerTwo", "80" },
+--       },
+--       MaxVisible = 5,                   -- how many rows show before scrolling (default 5)
+--   })
+--   tbl:SetRows({ {"A","1"}, {"B","2"} }) -- replace all rows
+--   tbl:AddRow({ "PlayerThree", "50" })   -- append a single row
+--   tbl:Clear()                           -- remove all rows
+-- ──────────────────────────────────────────────────────────────────────────────
+ElementsTable.Table = (function()
+	local Element = {}
+	Element.__index = Element
+	Element.__type = "Table"
+
+	local ROW_HEIGHT  = 26
+	local HEADER_H    = 22
+
+	function Element:New(Idx, Config)
+		assert(Config.Title, "Table - Missing Title")
+
+		local Tbl = {
+			Rows       = Config.Rows or {},
+			Headers    = Config.Headers or {},
+			MaxVisible = Config.MaxVisible or 5,
+			Type       = "Table",
+		}
+
+		local TblFrame = Components.Element(Config.Title, Config.Description, self.Container, false, Config)
+		TblFrame.DescLabel.Size = UDim2.new(1, 0, 0, 14)
+		Tbl.SetTitle = TblFrame.SetTitle
+		Tbl.SetDesc  = TblFrame.SetDesc
+		Tbl.Visible  = TblFrame.Visible
+		Tbl.Elements = TblFrame
+
+		local colCount = math.max(1, #Tbl.Headers > 0 and #Tbl.Headers or
+			(#Tbl.Rows > 0 and #Tbl.Rows[1] or 1))
+		local colWidth = UDim2.new(1 / colCount, 0, 1, 0)
+
+		-- Outer container inside the element frame, below the label holder
+		local hasHeaders = #Tbl.Headers > 0
+		local containerTopPad = hasHeaders and HEADER_H or 0
+		local visibleHeight = Tbl.MaxVisible * ROW_HEIGHT
+
+		local TableOuter = New("Frame", {
+			Size = UDim2.new(1, -20, 0, containerTopPad + visibleHeight),
+			Position = UDim2.new(0, 10, 1, 6),
+			AnchorPoint = Vector2.new(0, 0),
+			BackgroundTransparency = 0.85,
+			Parent = TblFrame.Frame,
+			ThemeTag = {
+				BackgroundColor3 = "Element",
+			},
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+			New("UIStroke", {
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				Transparency = 0.7,
+				ThemeTag = { Color = "InElementBorder" },
+			}),
+		})
+
+		-- Extend element frame height to fit the table
+		TblFrame.Frame.AutomaticSize = Enum.AutomaticSize.None
+		TblFrame.Frame.Size = UDim2.new(
+			1, 0, 0, 40 + containerTopPad + visibleHeight + 10
+		)
+
+		-- Header row
+		if hasHeaders then
+			local HeaderRow = New("Frame", {
+				Size = UDim2.new(1, 0, 0, HEADER_H),
+				BackgroundTransparency = 0.7,
+				Parent = TableOuter,
+				ThemeTag = { BackgroundColor3 = "Tab" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+				New("UIListLayout", {
+					FillDirection = Enum.FillDirection.Horizontal,
+					SortOrder = Enum.SortOrder.LayoutOrder,
+				}),
+			})
+			for i, header in ipairs(Tbl.Headers) do
+				New("TextLabel", {
+					Size = colWidth,
+					Text = tostring(header),
+					FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize = 11,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					LayoutOrder = i,
+					Parent = HeaderRow,
+					ThemeTag = { TextColor3 = "SubText" },
+				}, {
+					New("UIPadding", { PaddingLeft = UDim.new(0, 6) }),
+				})
+			end
+		end
+
+		-- Scrolling body
+		local RowLayout = New("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		})
+
+		local RowContainer = New("ScrollingFrame", {
+			Size = UDim2.new(1, 0, 0, visibleHeight),
+			Position = UDim2.new(0, 0, 0, containerTopPad),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			BottomImage = "rbxassetid://6889812791",
+			MidImage    = "rbxassetid://6889812721",
+			TopImage    = "rbxassetid://6276641225",
+			ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
+			ScrollBarImageTransparency = 0.8,
+			ScrollBarThickness = 3,
+			CanvasSize = UDim2.fromScale(0, 0),
+			ScrollingDirection = Enum.ScrollingDirection.Y,
+			Parent = TableOuter,
+		}, {
+			RowLayout,
+		})
+
+		Creator.AddSignal(RowLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+			RowContainer.CanvasSize = UDim2.new(0, 0, 0, RowLayout.AbsoluteContentSize.Y)
+		end)
+
+		local function BuildRow(rowData, index)
+			local isEven = (index % 2 == 0)
+			local RowFrame = New("Frame", {
+				Size = UDim2.new(1, 0, 0, ROW_HEIGHT),
+				BackgroundTransparency = isEven and 0.94 or 1,
+				LayoutOrder = index,
+				Parent = RowContainer,
+				ThemeTag = { BackgroundColor3 = "Element" },
+			}, {
+				New("UIListLayout", {
+					FillDirection = Enum.FillDirection.Horizontal,
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+				}),
+			})
+			local cells = type(rowData) == "table" and rowData or { tostring(rowData) }
+			for i = 1, colCount do
+				New("TextLabel", {
+					Size = colWidth,
+					Text = tostring(cells[i] or ""),
+					FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+					TextSize = 12,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					BackgroundTransparency = 1,
+					LayoutOrder = i,
+					Parent = RowFrame,
+					ThemeTag = { TextColor3 = "Text" },
+				}, {
+					New("UIPadding", { PaddingLeft = UDim.new(0, 6) }),
+				})
+			end
+		end
+
+		local function ClearRows()
+			for _, child in ipairs(RowContainer:GetChildren()) do
+				if not child:IsA("UIListLayout") then
+					child:Destroy()
+				end
+			end
+		end
+
+		-- Populate initial rows
+		for i, row in ipairs(Tbl.Rows) do
+			BuildRow(row, i)
+		end
+
+		function Tbl:SetRows(NewRows)
+			ClearRows()
+			Tbl.Rows = NewRows or {}
+			for i, row in ipairs(Tbl.Rows) do
+				BuildRow(row, i)
+			end
+		end
+
+		function Tbl:AddRow(RowData)
+			table.insert(Tbl.Rows, RowData)
+			BuildRow(RowData, #Tbl.Rows)
+		end
+
+		function Tbl:Clear()
+			ClearRows()
+			Tbl.Rows = {}
+		end
+
+		function Tbl:Destroy()
+			TblFrame:Destroy()
+		end
+
+		return Tbl
 	end
 
 	return Element
