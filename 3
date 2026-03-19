@@ -782,6 +782,8 @@ local Library = {
 	DialogOpen = false,
 	UseAcrylic = false,
 	Acrylic = false,
+	UseLiquidGlass = false,
+	LiquidGlass = false,
 	Transparency = true,
 	MinimizeKeybind = nil,
 	MinimizeKey = Enum.KeyCode.LeftControl,
@@ -4637,6 +4639,147 @@ Components.Window = (function()
 		end
 		
 		table.insert(rootChildren, Window.AcrylicPaint.Frame)
+
+		-- ── LIQUID GLASS OVERLAY LAYERS ─────────────────────────────────────
+		-- Built regardless of whether LiquidGlass is currently active.
+		-- All layers start fully transparent so there is zero cost when disabled.
+		-- Library:ToggleLiquidGlass(true/false) fades them in/out via Flipper.
+		--
+		-- Layer stack (bottom → top):
+		--   1. Tint base   – milky white fill that desaturates the background
+		--   2. Radial specular – bright oval gradient mimicking light concentration
+		--   3. Edge rim     – thin top/left highlight catching ambient light
+		--   4. Diagonal sweep – angled gradient that shifts on Camera motion
+		--   5. Surface sheen  – subtle noise texture over the glass face
+		--   6. Chromatic rim  – faint coloured border refraction tint
+
+		local LGBase = New("Frame", {
+			Name = "LGBase",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+			BackgroundTransparency = 1,
+			ZIndex = 1,
+			BorderSizePixel = 0,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		})
+
+		local LGSpecular = New("ImageLabel", {
+			Name = "LGSpecular",
+			Size = UDim2.new(1.4, 0, 0.8, 0),
+			Position = UDim2.new(-0.2, 0, -0.1, 0),
+			BackgroundTransparency = 1,
+			Image = "rbxassetid://0",
+			ImageTransparency = 1,
+			ZIndex = 2,
+		}, {
+			New("UIGradient", {
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+					ColorSequenceKeypoint.new(0.35, Color3.fromRGB(220, 235, 255)),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+				}),
+				Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.25, 0),
+					NumberSequenceKeypoint.new(0.5, 0),
+					NumberSequenceKeypoint.new(1, 1),
+				}),
+				Rotation = 130,
+			}),
+		})
+
+		local LGSweep = New("Frame", {
+			Name = "LGSweep",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ZIndex = 3,
+			BorderSizePixel = 0,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("UIGradient", {
+				Name = "LGSweepGradient",
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 220, 255)),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+				}),
+				Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.3, 0.6),
+					NumberSequenceKeypoint.new(0.7, 0.6),
+					NumberSequenceKeypoint.new(1, 1),
+				}),
+				Rotation = 45,
+			}),
+		})
+
+		local LGRim = New("Frame", {
+			Name = "LGRim",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ZIndex = 4,
+			BorderSizePixel = 0,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("UIStroke", {
+				Name = "LGRimStroke",
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				Color = Color3.fromRGB(255, 255, 255),
+				Transparency = 1,
+				Thickness = 1,
+			}),
+		})
+
+		local LGSheen = New("ImageLabel", {
+			Name = "LGSheen",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Image = "rbxassetid://9968344227",
+			ImageTransparency = 1,
+			ScaleType = Enum.ScaleType.Tile,
+			TileSize = UDim2.fromOffset(128, 128),
+			ZIndex = 5,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		})
+
+		local LGChroma = New("Frame", {
+			Name = "LGChroma",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ZIndex = 6,
+			BorderSizePixel = 0,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("UIStroke", {
+				Name = "LGChromaStroke",
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				Color = Color3.fromRGB(180, 220, 255),
+				Transparency = 1,
+				Thickness = 2,
+			}),
+		})
+
+		-- Store all layers on Window for toggling and sweep animation
+		Window.LGLayers = {
+			Base     = LGBase,
+			Specular = LGSpecular,
+			Sweep    = LGSweep,
+			Rim      = LGRim,
+			Sheen    = LGSheen,
+			Chroma   = LGChroma,
+		}
+		Window.LGActive = false
+
+		table.insert(rootChildren, LGBase)
+		table.insert(rootChildren, LGSpecular)
+		table.insert(rootChildren, LGSweep)
+		table.insert(rootChildren, LGRim)
+		table.insert(rootChildren, LGSheen)
+		table.insert(rootChildren, LGChroma)
+		-- ─────────────────────────────────────────────────────────────────────
+
 		table.insert(rootChildren, Window.TabDisplay)
 		table.insert(rootChildren, Window.ContainerCanvas)
 		table.insert(rootChildren, TabFrame)
@@ -4653,6 +4796,36 @@ Components.Window = (function()
 		Creator.AddSignal(Camera:GetPropertyChangedSignal("ViewportSize"), function()
 			CenterWindow()
 		end)
+
+		-- ── LIQUID GLASS CAMERA MOTION SWEEP ──────────────────────────────────
+		-- Every render step when LiquidGlass is active, the diagonal sweep gradient
+		-- rotates slightly based on Camera CFrame yaw, giving the specular
+		-- "light-catching" quality real glass has as the device/camera moves.
+		local lastSweepAngle = 45
+		Creator.AddSignal(RenderStepped, function()
+			if not Window.LGActive then return end
+			if not Window.LGLayers or not Window.LGLayers.Sweep.Parent then return end
+
+			local camCF = Camera.CFrame
+			local _, yaw, _ = camCF:ToEulerAnglesYXZ()
+			local targetAngle = 45 + math.deg(yaw) * 0.15
+			lastSweepAngle = lastSweepAngle + (targetAngle - lastSweepAngle) * 0.04
+
+			local sweepGrad = Window.LGLayers.Sweep:FindFirstChild("LGSweepGradient")
+			if sweepGrad then
+				sweepGrad.Rotation = lastSweepAngle
+			end
+
+			-- Specular oval also shifts slightly
+			local specShift = math.sin(tick() * 0.4) * 0.04
+			Window.LGLayers.Specular.Position = UDim2.new(-0.2 + specShift, 0, -0.1, 0)
+		end)
+		-- ─────────────────────────────────────────────────────────────────────
+
+		-- Auto-enable if LiquidGlass was set in config
+		if Library.UseLiquidGlass then
+			Library:ToggleLiquidGlass(true)
+		end
 
 
 		Window.TitleBar = Components.TitleBar({
@@ -9067,7 +9240,7 @@ local SaveManager = {} do
 		self:SetIgnoreIndexes({ 
 
 
-			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"
+			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind", "LiquidGlassToggle"
 
 
 		})
@@ -9658,6 +9831,9 @@ local InterfaceManager = {} do
 		Acrylic = true,
 
 
+		LiquidGlass = false,
+
+
 		Transparency = true,
 
 
@@ -9928,6 +10104,27 @@ local InterfaceManager = {} do
 		end
 
 
+		section:AddToggle("LiquidGlassToggle", {
+
+			Title = "Liquid Glass",
+
+			Description = "Dynamic glass material with specular highlights and motion.",
+
+			Default = Settings.LiquidGlass,
+
+			Callback = function(Value)
+
+				Library:ToggleLiquidGlass(Value)
+
+				Settings.LiquidGlass = Value
+
+				InterfaceManager:SaveSettings()
+
+			end
+
+		})
+
+
 
 
 
@@ -10028,6 +10225,12 @@ Library.CreateWindow = function(self, Config)
 
 
 	Library.Acrylic = Config.Acrylic or false
+
+
+	Library.UseLiquidGlass = Config.LiquidGlass or false
+
+
+	Library.LiquidGlass = Config.LiquidGlass or false
 
 
 	Library.Theme = Config.Theme or "Dark"
@@ -10705,6 +10908,12 @@ function Library:SetTheme(Value)
 
 		end
 
+		-- Re-apply liquid glass element treatment so corner radii and
+		-- transparencies stay consistent after a theme colour update
+		if Library.LiquidGlass then
+			Library:ToggleLiquidGlass(true)
+		end
+
 
 	end
 
@@ -10796,7 +11005,132 @@ function Library:ToggleTransparency(Value)
 end
 
 
-function Library:SetWindowTransparency(Value)
+function Library:ToggleLiquidGlass(Value)
+	if not Library.Window then return end
+
+	Library.LiquidGlass = Value
+	Library.Window.LGActive = Value
+
+	local layers = Library.Window.LGLayers
+	if not layers then return end
+
+	-- Spring-animate every layer transparency value in/out so the effect
+	-- transitions fluidly rather than snapping. Each layer has a distinct
+	-- target transparency to build the correct visual stack.
+	local targets = Value and {
+		BaseT      = 0.82,   -- milky tint
+		SpecularT  = 0.0,    -- specular ImageLabel driven purely by gradient
+		SweepT     = 0.0,    -- sweep driven purely by gradient
+		RimStroke  = 0.55,   -- edge rim, subtle
+		SheenT     = 0.92,   -- fine noise very faint
+		ChromaT    = 0.70,   -- chromatic border tint
+	} or {
+		BaseT     = 1,
+		SpecularT = 1,
+		SweepT    = 1,
+		RimStroke = 1,
+		SheenT    = 1,
+		ChromaT   = 1,
+	}
+
+	-- Base tint
+	local BaseMotor = Flipper.SingleMotor.new(layers.Base.BackgroundTransparency)
+	BaseMotor:onStep(function(v)
+		if layers.Base and layers.Base.Parent then
+			layers.Base.BackgroundTransparency = v
+		end
+	end)
+	BaseMotor:setGoal(Flipper.Spring.new(targets.BaseT, { frequency = 4, dampingRatio = 1 }))
+
+	-- Specular image (background is already transparent; we animate its ImageTransparency)
+	local SpecMotor = Flipper.SingleMotor.new(layers.Specular.ImageTransparency)
+	SpecMotor:onStep(function(v)
+		if layers.Specular and layers.Specular.Parent then
+			layers.Specular.ImageTransparency = v
+		end
+	end)
+	SpecMotor:setGoal(Flipper.Spring.new(targets.SpecularT, { frequency = 4, dampingRatio = 1 }))
+
+	-- Sweep frame (we animate BackgroundTransparency; gradient transparency handles falloff)
+	local SweepMotor = Flipper.SingleMotor.new(layers.Sweep.BackgroundTransparency)
+	SweepMotor:onStep(function(v)
+		if layers.Sweep and layers.Sweep.Parent then
+			layers.Sweep.BackgroundTransparency = v
+		end
+	end)
+	SweepMotor:setGoal(Flipper.Spring.new(targets.SweepT, { frequency = 4, dampingRatio = 1 }))
+
+	-- Rim UIStroke transparency
+	local rimStroke = layers.Rim:FindFirstChild("LGRimStroke")
+	if rimStroke then
+		local RimMotor = Flipper.SingleMotor.new(rimStroke.Transparency)
+		RimMotor:onStep(function(v)
+			if rimStroke and rimStroke.Parent then
+				rimStroke.Transparency = v
+			end
+		end)
+		RimMotor:setGoal(Flipper.Spring.new(targets.RimStroke, { frequency = 4, dampingRatio = 1 }))
+	end
+
+	-- Sheen noise
+	local SheenMotor = Flipper.SingleMotor.new(layers.Sheen.ImageTransparency)
+	SheenMotor:onStep(function(v)
+		if layers.Sheen and layers.Sheen.Parent then
+			layers.Sheen.ImageTransparency = v
+		end
+	end)
+	SheenMotor:setGoal(Flipper.Spring.new(targets.SheenT, { frequency = 4, dampingRatio = 1 }))
+
+	-- Chroma border UIStroke
+	local chromaStroke = layers.Chroma:FindFirstChild("LGChromaStroke")
+	if chromaStroke then
+		local ChromaMotor = Flipper.SingleMotor.new(chromaStroke.Transparency)
+		ChromaMotor:onStep(function(v)
+			if chromaStroke and chromaStroke.Parent then
+				chromaStroke.Transparency = v
+			end
+		end)
+		ChromaMotor:setGoal(Flipper.Spring.new(targets.ChromaT, { frequency = 4, dampingRatio = 1 }))
+	end
+
+	-- ── ELEMENT-LEVEL GLASS TREATMENT ─────────────────────────────────────
+	-- Walk every registered ThemeTag object. When LiquidGlass is on, element
+	-- frames get a raised corner radius (6px vs 4px) and a brighter, slightly
+	-- more opaque look — mimicking individual glass chips floating over the
+	-- surface rather than flat panels.
+	for instance, data in next, Creator.Registry do
+		if data.Properties and data.Properties.BackgroundColor3 == "Element" then
+			pcall(function()
+				local corner = instance:FindFirstChildOfClass("UICorner")
+				if corner then
+					local targetR = Value and UDim.new(0, 7) or UDim.new(0, 4)
+					TweenService:Create(corner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						CornerRadius = targetR,
+					}):Play()
+				end
+				local stroke = instance:FindFirstChildOfClass("UIStroke")
+				if stroke then
+					TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Transparency = Value and 0.3 or 0.5,
+					}):Play()
+				end
+				-- Raise transparency slightly so elements feel more glassy
+				TweenService:Create(instance, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					BackgroundTransparency = Value and 0.78 or (Creator.GetThemeProperty("ElementTransparency") or 0.87),
+				}):Play()
+			end)
+		end
+	end
+
+	-- AcrylicPaint background: when LiquidGlass is on, lighten the base layer
+	-- so the glass sits on a less-opaque background (letting the LG layers show)
+	local bg = Library.Window.AcrylicPaint.Frame:FindFirstChild("Background")
+	if bg then
+		TweenService:Create(bg, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = Value and 0.72 or 0.45,
+		}):Play()
+	end
+end
 
 
 	if Library.Window and Library.UseAcrylic then
