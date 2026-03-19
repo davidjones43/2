@@ -7750,10 +7750,7 @@ ElementsTable.ProgressBar = (function()
 			BarFill,
 		})
 
-		-- Flipper spring motor so fill animates smoothly on SetValue
-		local FillMotor, SetFill = Creator.SpringMotor(0, BarFill, "Size")
-		-- Override: we need to drive Size.X scale, not a transparency
-		-- Re-implement with SingleMotor driving the Scale directly
+		-- SingleMotor drives BarFill.Size.X scale directly
 		local FillScaleMotor = Flipper.SingleMotor.new(0)
 		FillScaleMotor:onStep(function(v)
 			BarFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
@@ -11014,119 +11011,76 @@ function Library:ToggleLiquidGlass(Value)
 	local layers = Library.Window.LGLayers
 	if not layers then return end
 
-	-- Spring-animate every layer transparency value in/out so the effect
-	-- transitions fluidly rather than snapping. Each layer has a distinct
-	-- target transparency to build the correct visual stack.
-	local targets = Value and {
-		BaseT      = 0.82,   -- milky tint
-		SpecularT  = 0.0,    -- specular ImageLabel driven purely by gradient
-		SweepT     = 0.0,    -- sweep driven purely by gradient
-		RimStroke  = 0.55,   -- edge rim, subtle
-		SheenT     = 0.92,   -- fine noise very faint
-		ChromaT    = 0.70,   -- chromatic border tint
-	} or {
-		BaseT     = 1,
-		SpecularT = 1,
-		SweepT    = 1,
-		RimStroke = 1,
-		SheenT    = 1,
-		ChromaT   = 1,
-	}
+	-- Use TweenService throughout — consistent with TweenService usage elsewhere
+	-- in ToggleLiquidGlass and avoids orphaned Flipper motors being GC'd mid-tween.
+	local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-	-- Base tint
-	local BaseMotor = Flipper.SingleMotor.new(layers.Base.BackgroundTransparency)
-	BaseMotor:onStep(function(v)
-		if layers.Base and layers.Base.Parent then
-			layers.Base.BackgroundTransparency = v
-		end
-	end)
-	BaseMotor:setGoal(Flipper.Spring.new(targets.BaseT, { frequency = 4, dampingRatio = 1 }))
+	-- Base milky tint
+	TweenService:Create(layers.Base, tweenInfo, {
+		BackgroundTransparency = Value and 0.82 or 1,
+	}):Play()
 
-	-- Specular image (background is already transparent; we animate its ImageTransparency)
-	local SpecMotor = Flipper.SingleMotor.new(layers.Specular.ImageTransparency)
-	SpecMotor:onStep(function(v)
-		if layers.Specular and layers.Specular.Parent then
-			layers.Specular.ImageTransparency = v
-		end
-	end)
-	SpecMotor:setGoal(Flipper.Spring.new(targets.SpecularT, { frequency = 4, dampingRatio = 1 }))
+	-- Specular oval
+	TweenService:Create(layers.Specular, tweenInfo, {
+		ImageTransparency = Value and 0.0 or 1,
+	}):Play()
 
-	-- Sweep frame (we animate BackgroundTransparency; gradient transparency handles falloff)
-	local SweepMotor = Flipper.SingleMotor.new(layers.Sweep.BackgroundTransparency)
-	SweepMotor:onStep(function(v)
-		if layers.Sweep and layers.Sweep.Parent then
-			layers.Sweep.BackgroundTransparency = v
-		end
-	end)
-	SweepMotor:setGoal(Flipper.Spring.new(targets.SweepT, { frequency = 4, dampingRatio = 1 }))
+	-- Diagonal sweep — the gradient handles visual falloff; just reveal the frame
+	TweenService:Create(layers.Sweep, tweenInfo, {
+		BackgroundTransparency = Value and 0.0 or 1,
+	}):Play()
 
-	-- Rim UIStroke transparency
+	-- Edge rim UIStroke
 	local rimStroke = layers.Rim:FindFirstChild("LGRimStroke")
 	if rimStroke then
-		local RimMotor = Flipper.SingleMotor.new(rimStroke.Transparency)
-		RimMotor:onStep(function(v)
-			if rimStroke and rimStroke.Parent then
-				rimStroke.Transparency = v
-			end
-		end)
-		RimMotor:setGoal(Flipper.Spring.new(targets.RimStroke, { frequency = 4, dampingRatio = 1 }))
+		TweenService:Create(rimStroke, tweenInfo, {
+			Transparency = Value and 0.55 or 1,
+		}):Play()
 	end
 
-	-- Sheen noise
-	local SheenMotor = Flipper.SingleMotor.new(layers.Sheen.ImageTransparency)
-	SheenMotor:onStep(function(v)
-		if layers.Sheen and layers.Sheen.Parent then
-			layers.Sheen.ImageTransparency = v
-		end
-	end)
-	SheenMotor:setGoal(Flipper.Spring.new(targets.SheenT, { frequency = 4, dampingRatio = 1 }))
+	-- Noise sheen
+	TweenService:Create(layers.Sheen, tweenInfo, {
+		ImageTransparency = Value and 0.92 or 1,
+	}):Play()
 
-	-- Chroma border UIStroke
+	-- Chromatic border UIStroke
 	local chromaStroke = layers.Chroma:FindFirstChild("LGChromaStroke")
 	if chromaStroke then
-		local ChromaMotor = Flipper.SingleMotor.new(chromaStroke.Transparency)
-		ChromaMotor:onStep(function(v)
-			if chromaStroke and chromaStroke.Parent then
-				chromaStroke.Transparency = v
-			end
-		end)
-		ChromaMotor:setGoal(Flipper.Spring.new(targets.ChromaT, { frequency = 4, dampingRatio = 1 }))
+		TweenService:Create(chromaStroke, tweenInfo, {
+			Transparency = Value and 0.70 or 1,
+		}):Play()
 	end
 
 	-- ── ELEMENT-LEVEL GLASS TREATMENT ─────────────────────────────────────
 	-- Walk every registered ThemeTag object. When LiquidGlass is on, element
-	-- frames get a raised corner radius (6px vs 4px) and a brighter, slightly
-	-- more opaque look — mimicking individual glass chips floating over the
-	-- surface rather than flat panels.
+	-- frames get a raised corner radius and slightly more translucent background
+	-- so they read as individual floating glass chips rather than flat panels.
 	for instance, data in next, Creator.Registry do
 		if data.Properties and data.Properties.BackgroundColor3 == "Element" then
 			pcall(function()
 				local corner = instance:FindFirstChildOfClass("UICorner")
 				if corner then
-					local targetR = Value and UDim.new(0, 7) or UDim.new(0, 4)
-					TweenService:Create(corner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						CornerRadius = targetR,
+					TweenService:Create(corner, tweenInfo, {
+						CornerRadius = Value and UDim.new(0, 7) or UDim.new(0, 4),
 					}):Play()
 				end
 				local stroke = instance:FindFirstChildOfClass("UIStroke")
 				if stroke then
-					TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					TweenService:Create(stroke, tweenInfo, {
 						Transparency = Value and 0.3 or 0.5,
 					}):Play()
 				end
-				-- Raise transparency slightly so elements feel more glassy
-				TweenService:Create(instance, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				TweenService:Create(instance, tweenInfo, {
 					BackgroundTransparency = Value and 0.78 or (Creator.GetThemeProperty("ElementTransparency") or 0.87),
 				}):Play()
 			end)
 		end
 	end
 
-	-- AcrylicPaint background: when LiquidGlass is on, lighten the base layer
-	-- so the glass sits on a less-opaque background (letting the LG layers show)
+	-- Lighten the AcrylicPaint background so the LG layers show through
 	local bg = Library.Window.AcrylicPaint.Frame:FindFirstChild("Background")
 	if bg then
-		TweenService:Create(bg, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TweenService:Create(bg, tweenInfo, {
 			BackgroundTransparency = Value and 0.72 or 0.45,
 		}):Play()
 	end
