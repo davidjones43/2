@@ -10171,8 +10171,7 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	local KsRoot = New("Frame", {
 		BackgroundTransparency = 1,
-		Size          = UDim2.fromOffset(ksW, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
+		Size          = UDim2.fromOffset(ksW, 200),
 		Position      = UDim2.fromOffset(
 			math.floor((vpSize.X - ksW) / 2),
 			math.floor(vpSize.Y / 2)
@@ -10326,6 +10325,12 @@ local function _ks_Run(ksConfig, windowConfig)
 	end
 
 	-- ── Content area ─────────────────────────────────────────
+	local ContentListLayout = New("UIListLayout", {
+		SortOrder           = Enum.SortOrder.LayoutOrder,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Padding             = UDim.new(0, 10),
+	})
+
 	local ContentGroup = New("CanvasGroup", {
 		Size                = UDim2.new(1, 0, 0, 0),
 		AutomaticSize       = Enum.AutomaticSize.Y,
@@ -10334,11 +10339,7 @@ local function _ks_Run(ksConfig, windowConfig)
 		GroupTransparency   = 0,
 		Parent              = KsRootCanvas,
 	}, {
-		New("UIListLayout", {
-			SortOrder           = Enum.SortOrder.LayoutOrder,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding             = UDim.new(0, 10),
-		}),
+		ContentListLayout,
 		New("UIPadding", {
 			PaddingLeft   = UDim.new(0, 18),
 			PaddingRight  = UDim.new(0, 18),
@@ -10786,6 +10787,23 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- Apply all theme tags now that every element is built
 	Creator.UpdateTheme()
+
+	-- Drive KsRoot height from ContentGroup content size.
+	-- ContentGroup has AutomaticSize.Y but KsRoot cannot auto-size from
+	-- scale-based children, so we measure and apply manually.
+	local TITLE_BAR_H = 48
+	local function updateKsSize()
+		local contentH = ContentListLayout.AbsoluteContentSize.Y + 8 + 14 -- paddingTop + paddingBottom
+		local totalH   = TITLE_BAR_H + contentH
+		KsRoot.Size     = UDim2.fromOffset(ksW, totalH)
+		KsRoot.Position = UDim2.fromOffset(
+			math.floor((vpSize.X - ksW) / 2),
+			math.floor((vpSize.Y - totalH) / 2)
+		)
+		KsRoot.AnchorPoint = Vector2.new(0, 0)
+	end
+	Creator.AddSignal(ContentListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), updateKsSize)
+	task.defer(updateKsSize)
 
 	-- ── Transition helpers ────────────────────────────────────
 	local fSetClipboard = setclipboard or toclipboard or function() end
