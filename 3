@@ -10099,23 +10099,33 @@ local function _ks_wipeKey(folder, fileName)
 end
 
 local _ks_hardFail = {
-	KEY_INVALID = true, KEY_EXPIRED = true,
-	KEY_INVALIDATED = true, ALREADY_USED = true, HWID_BANNED = true,
+	KEY_INVALID   = true,
+	KEY_EXPIRED   = true,
+	KEY_INVALIDATED = true,
+	ALREADY_USED  = true,
+	HWID_BANNED   = true,
 }
 
 local function _ks_Run(ksConfig, windowConfig)
 	local New = Creator.New
 
+	-- ── Config resolution ─────────────────────────────────────
 	local title          = ksConfig.Title    or windowConfig.Title or "Key System"
 	local subtitle       = ksConfig.Subtitle or "Enter your key to continue"
-	local note           = ksConfig.Note     or ""
 	local icon           = _ks_resolveIcon(ksConfig.Icon or "shield")
-	local noteIcon       = _ks_resolveIcon(ksConfig.NoteIcon or "info")
 	local fileName       = ksConfig.FileName or "FluentKey"
 	local saveKey        = ksConfig.SaveKey  ~= false
 	local folder         = "FluentKeySystem"
 	local customErrors   = ksConfig.Errors or {}
 
+	-- Discord block config
+	local discordCfg     = ksConfig.Discord
+	local discordEnabled = discordCfg and discordCfg.Enabled == true
+	local discordNote    = discordEnabled and (discordCfg.Note or "Join our Discord server.") or ""
+	local discordLink    = discordEnabled and (discordCfg.Link or "") or ""
+	local discordAction  = discordEnabled and (discordCfg.Action or "copy") or "copy"
+
+	-- Validate function
 	local validateFn
 	if type(ksConfig.Validate) == "function" then
 		validateFn = ksConfig.Validate
@@ -10125,115 +10135,145 @@ local function _ks_Run(ksConfig, windowConfig)
 		error("[FluentPlus KeySystem] KeySettings requires either a Validate function or a Keys table.")
 	end
 
+	-- GetKey config
 	local getKeyFn        = ksConfig.GetKey and type(ksConfig.GetKey.Action) == "function" and ksConfig.GetKey.Action or nil
 	local getKeyLabel     = (ksConfig.GetKey and ksConfig.GetKey.Label) or "Get Key"
-	local getKeyIcon      = _ks_resolveIcon((ksConfig.GetKey and ksConfig.GetKey.Icon) or "link")
 	local rateLimitEnabled = ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Enabled
 	local rateLimitSecs   = rateLimitEnabled and (ksConfig.GetKey.RateLimit.Seconds or 300) or nil
 	local rateLimitMsg    = (ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Message) or "Please wait before getting a new link."
 	local lastGetKeyTime  = 0
 
+	-- OnSuccess config
 	local loaderMode     = (ksConfig.OnSuccess and ksConfig.OnSuccess.Mode) or "loading"
 	local loaderText     = (ksConfig.OnSuccess and ksConfig.OnSuccess.LoadingText) or "Loading..."
 	local loaderDuration = (ksConfig.OnSuccess and ksConfig.OnSuccess.Duration) or 2
 
-	-- Apply theme so ThemeTags work immediately
-	Library.Theme  = windowConfig.Theme or "Dark"
-	Creator.Theme  = Library.Theme
+	-- Icons (resolved once)
+	local ICON_KEY       = _ks_resolveIcon("key")
+	local ICON_CHECK     = _ks_resolveIcon("check")
+	local ICON_X         = _ks_resolveIcon("x")
+	local ICON_LINK      = _ks_resolveIcon("link")
+	local ICON_CLIPBOARD = _ks_resolveIcon("clipboard")
+	local ICON_LOADER    = _ks_resolveIcon("loader")
+	local ICON_DISCORD   = _ks_resolveIcon("message-circle")
+
+	-- Apply theme early so ThemeTags resolve correctly during build
+	Library.Theme      = windowConfig.Theme or "Dark"
+	Creator.Theme      = Library.Theme
 	Library.UseAcrylic = windowConfig.Acrylic or false
 	Library.Acrylic    = windowConfig.Acrylic or false
 	if windowConfig.Acrylic then Acrylic.init() end
 
-	-- Window dimensions
-	local ksW, ksH = 420, 320
-	local vpSize   = Camera.ViewportSize
-	local startX   = math.floor((vpSize.X - ksW) / 2)
-	local startY   = math.floor((vpSize.Y - ksH) / 2)
-
+	-- ── Window sizing ─────────────────────────────────────────
+	local ksW = 420
+	local ksH = discordEnabled and 310 or 286
+	local vpSize  = Camera.ViewportSize
 	local KsAcrylic = Acrylic.AcrylicPaint()
 
 	local KsRoot = New("Frame", {
 		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(ksW, ksH),
-		Position = UDim2.fromOffset(startX, startY),
+		Size     = UDim2.fromOffset(ksW, ksH),
+		Position = UDim2.fromOffset(
+			math.floor((vpSize.X - ksW) / 2),
+			math.floor((vpSize.Y - ksH) / 2)
+		),
 		Parent = Library.GUI,
 	}, { KsAcrylic.Frame })
 
-	if Library.UseAcrylic then
-		KsAcrylic.AddParent(KsRoot)
-	end
+	if Library.UseAcrylic then KsAcrylic.AddParent(KsRoot) end
 
-	-- ── Title bar ────────────────────────────────────────────
-	local TitleBarFrame = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 42),
+	-- Entry animation — scale + fade in
+	local ScaleObj = New("UIScale", { Scale = 0.94, Parent = KsRoot })
+	local EntryScaleMotor = Flipper.SingleMotor.new(0.94)
+	EntryScaleMotor:onStep(function(v) ScaleObj.Scale = v end)
+	local EntryAlphaMotor = Flipper.SingleMotor.new(0)
+
+	local KsRootCanvas = New("CanvasGroup", {
+		Size                = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
-		Parent = KsRoot,
+		GroupTransparency   = 1,
+		Parent              = KsRoot,
+	})
+
+	task.defer(function()
+		EntryScaleMotor:setGoal(Flipper.Spring.new(1, { frequency = 7, dampingRatio = 0.8 }))
+		EntryScaleMotor:start()
+		EntryAlphaMotor:onStep(function(v) KsRootCanvas.GroupTransparency = 1 - v end)
+		EntryAlphaMotor:setGoal(Flipper.Spring.new(1, { frequency = 7, dampingRatio = 0.8 }))
+		EntryAlphaMotor:start()
+	end)
+
+	-- ── Title bar ─────────────────────────────────────────────
+	local TitleBarFrame = New("Frame", {
+		Size                = UDim2.new(1, 0, 0, 42),
+		BackgroundTransparency = 1,
+		Parent              = KsRootCanvas,
 	}, {
 		New("Frame", {
-			Size = UDim2.new(1, -16, 1, 0),
-			Position = UDim2.new(0, 12, 0, 0),
+			Size                = UDim2.new(1, -16, 1, 0),
+			Position            = UDim2.new(0, 12, 0, 0),
 			BackgroundTransparency = 1,
 		}, {
 			New("UIListLayout", {
-				Padding = UDim.new(0, 5),
-				FillDirection = Enum.FillDirection.Horizontal,
-				SortOrder = Enum.SortOrder.LayoutOrder,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding             = UDim.new(0, 5),
+				FillDirection       = Enum.FillDirection.Horizontal,
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
 			}),
 			New("TextLabel", {
-				Text = windowConfig.Title or "Script",
-				FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-				TextSize = 12,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				TextYAlignment = Enum.TextYAlignment.Center,
-				Size = UDim2.fromScale(0, 1),
-				AutomaticSize = Enum.AutomaticSize.X,
+				Text                = windowConfig.Title or "Script",
+				FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+				TextSize            = 12,
+				TextXAlignment      = Enum.TextXAlignment.Left,
+				TextYAlignment      = Enum.TextYAlignment.Center,
+				Size                = UDim2.fromScale(0, 1),
+				AutomaticSize       = Enum.AutomaticSize.X,
 				BackgroundTransparency = 1,
-				LayoutOrder = 1,
-				ThemeTag = { TextColor3 = "Text" },
+				LayoutOrder         = 1,
+				ThemeTag            = { TextColor3 = "Text" },
 			}),
 		}),
 		New("Frame", {
 			BackgroundTransparency = 0.5,
-			Size = UDim2.new(1, 0, 0, 1),
-			Position = UDim2.new(0, 0, 1, 0),
-			ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+			Size                = UDim2.new(1, 0, 0, 1),
+			Position            = UDim2.new(0, 0, 1, 0),
+			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
 		}),
 	})
 
 	-- Close button
 	local KsCloseBtn = New("TextButton", {
-		Size = UDim2.fromOffset(34, 34),
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -4, 0, 4),
+		Size                = UDim2.fromOffset(34, 34),
+		AnchorPoint         = Vector2.new(1, 0),
+		Position            = UDim2.new(1, -4, 0, 4),
 		BackgroundTransparency = 1,
-		Text = "",
-		Parent = KsRoot,
-		ThemeTag = { BackgroundColor3 = "Text" },
+		Text                = "",
+		Parent              = KsRootCanvas,
+		ThemeTag            = { BackgroundColor3 = "Text" },
 	}, {
 		New("UICorner", { CornerRadius = UDim.new(0, 7) }),
 		New("ImageLabel", {
-			Image = Components.Assets.Close,
-			Size = UDim2.fromOffset(16, 16),
-			Position = UDim2.fromScale(0.5, 0.5),
-			AnchorPoint = Vector2.new(0.5, 0.5),
+			Image               = Components.Assets.Close,
+			Size                = UDim2.fromOffset(16, 16),
+			Position            = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint         = Vector2.new(0.5, 0.5),
 			BackgroundTransparency = 1,
-			ThemeTag = { ImageColor3 = "Text" },
+			ThemeTag            = { ImageColor3 = "Text" },
 		}),
 	})
-
-	local CloseHoverMotor, CloseSetTrans = Creator.SpringMotor(1, KsCloseBtn, "BackgroundTransparency")
+	local _, CloseSetTrans = Creator.SpringMotor(1, KsCloseBtn, "BackgroundTransparency")
 	Creator.AddSignal(KsCloseBtn.MouseEnter,       function() CloseSetTrans(0.94) end)
 	Creator.AddSignal(KsCloseBtn.MouseLeave,       function() CloseSetTrans(1, true) end)
 	Creator.AddSignal(KsCloseBtn.MouseButton1Down, function() CloseSetTrans(0.96) end)
 	Creator.AddSignal(KsCloseBtn.MouseButton1Up,   function() CloseSetTrans(0.94) end)
 
-	-- Dragging on title bar
+	-- Drag on title bar
 	do
 		local dragging, dragStart, startPos = false, nil, nil
 		Creator.AddSignal(TitleBarFrame.InputBegan, function(inp)
-			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-				dragging = true
+			if inp.UserInputType == Enum.UserInputType.MouseButton1
+				or inp.UserInputType == Enum.UserInputType.Touch then
+				dragging  = true
 				dragStart = inp.Position
 				startPos  = KsRoot.Position
 				inp.Changed:Connect(function()
@@ -10242,392 +10282,732 @@ local function _ks_Run(ksConfig, windowConfig)
 			end
 		end)
 		Creator.AddSignal(UserInputService.InputChanged, function(inp)
-			if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+			if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement
+				or inp.UserInputType == Enum.UserInputType.Touch) then
 				local delta = inp.Position - dragStart
-				KsRoot.Position = UDim2.fromOffset(startPos.X.Offset + delta.X, startPos.Y.Offset + delta.Y)
+				KsRoot.Position = UDim2.fromOffset(
+					startPos.X.Offset + delta.X,
+					startPos.Y.Offset + delta.Y
+				)
 			end
 		end)
 	end
 
 	-- ── Content area ─────────────────────────────────────────
 	local ContentGroup = New("CanvasGroup", {
-		Size = UDim2.new(1, -48, 1, -54),
-		Position = UDim2.fromOffset(24, 48),
+		Size                = UDim2.new(1, -32, 1, -54),
+		Position            = UDim2.fromOffset(16, 48),
 		BackgroundTransparency = 1,
-		GroupTransparency = 0,
-		Parent = KsRoot,
+		GroupTransparency   = 0,
+		Parent              = KsRootCanvas,
 	}, {
 		New("UIListLayout", {
-			SortOrder = Enum.SortOrder.LayoutOrder,
+			SortOrder           = Enum.SortOrder.LayoutOrder,
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding = UDim.new(0, 10),
+			Padding             = UDim.new(0, 10),
 		}),
 	})
 
-	-- Header: icon + title + subtitle
+	-- ── Header: icon LEFT of title/subtitle ──────────────────
 	local HeaderHolder = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
+		Size                = UDim2.new(1, 0, 0, 0),
+		AutomaticSize       = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
-		LayoutOrder = 1,
-		Parent = ContentGroup,
+		LayoutOrder         = 1,
+		Parent              = ContentGroup,
 	}, {
 		New("UIListLayout", {
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding = UDim.new(0, 4),
+			FillDirection       = Enum.FillDirection.Horizontal,
+			SortOrder           = Enum.SortOrder.LayoutOrder,
+			VerticalAlignment   = Enum.VerticalAlignment.Center,
+			Padding             = UDim.new(0, 10),
 		}),
 	})
 
 	if icon then
 		New("ImageLabel", {
-			Image = icon,
-			Size = UDim2.fromOffset(26, 26),
+			Image               = icon,
+			Size                = UDim2.fromOffset(28, 28),
 			BackgroundTransparency = 1,
-			LayoutOrder = 1,
-			Parent = HeaderHolder,
-			ThemeTag = { ImageColor3 = "Accent" },
+			LayoutOrder         = 1,
+			Parent              = HeaderHolder,
+			ThemeTag            = { ImageColor3 = "Accent" },
 		})
 	end
 
-	New("TextLabel", {
-		Text = title,
-		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-		TextSize = 17,
+	-- Title + subtitle stacked to the right of the icon
+	New("Frame", {
+		Size                = UDim2.new(1, icon and -38 or 0, 0, 0),
+		AutomaticSize       = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		LayoutOrder = 2,
-		Parent = HeaderHolder,
-		ThemeTag = { TextColor3 = "Text" },
-	})
-
-	New("TextLabel", {
-		Text = subtitle,
-		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-		TextSize = 12,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		LayoutOrder = 3,
-		Parent = HeaderHolder,
-		ThemeTag = { TextColor3 = "SubText" },
-	})
-
-	-- ── Key input ─────────────────────────────────────────────
-	local InputOuter = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 36),
-		BackgroundTransparency = 0.9,
-		LayoutOrder = 2,
-		Parent = ContentGroup,
-		ThemeTag = { BackgroundColor3 = "Input" },
+		LayoutOrder         = 2,
+		Parent              = HeaderHolder,
 	}, {
-		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-		New("UIStroke", {
-			Transparency = 0.5,
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			ThemeTag = { Color = "InElementBorder" },
+		New("UIListLayout", {
+			SortOrder           = Enum.SortOrder.LayoutOrder,
+			Padding             = UDim.new(0, 2),
+		}),
+		New("TextLabel", {
+			Text                = title,
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+			TextSize            = 16,
+			BackgroundTransparency = 1,
+			Size                = UDim2.new(1, 0, 0, 0),
+			AutomaticSize       = Enum.AutomaticSize.Y,
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			LayoutOrder         = 1,
+			ThemeTag            = { TextColor3 = "Text" },
+		}),
+		New("TextLabel", {
+			Text                = subtitle,
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			TextSize            = 12,
+			BackgroundTransparency = 1,
+			Size                = UDim2.new(1, 0, 0, 0),
+			AutomaticSize       = Enum.AutomaticSize.Y,
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			LayoutOrder         = 2,
+			ThemeTag            = { TextColor3 = "SubText" },
 		}),
 	})
 
-	local KsInputBox = New("TextBox", {
-		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-		TextSize = 13,
-		TextXAlignment = Enum.TextXAlignment.Left,
+	-- ── Key input with icon + paste button ───────────────────
+	local InputOuter = New("Frame", {
+		Size                = UDim2.new(1, 0, 0, 38),
+		BackgroundTransparency = 0.9,
+		LayoutOrder         = 2,
+		Parent              = ContentGroup,
+		ThemeTag            = { BackgroundColor3 = "Input" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+		New("UIStroke", {
+			Transparency        = 0.5,
+			ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+			ThemeTag            = { Color = "InElementBorder" },
+		}),
+	})
+
+	-- Key icon on the left
+	New("ImageLabel", {
+		Image               = ICON_KEY or "",
+		Size                = UDim2.fromOffset(14, 14),
+		Position            = UDim2.new(0, 10, 0.5, 0),
+		AnchorPoint         = Vector2.new(0, 0.5),
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -16, 1, 0),
-		Position = UDim2.fromOffset(8, 0),
-		PlaceholderText = "Paste your key here...",
-		ClearTextOnFocus = false,
-		Parent = InputOuter,
-		ThemeTag = { TextColor3 = "Text", PlaceholderColor3 = "SubText" },
+		Parent              = InputOuter,
+		ThemeTag            = { ImageColor3 = "SubText" },
 	})
 
+	-- Paste button on the right
+	local pasteSupported = type(getclipboard) == "function" or type(toclipboard) == "function"
+	local PasteBtn
+	if pasteSupported then
+		PasteBtn = New("TextButton", {
+			Size                = UDim2.new(0, 0, 0, 26),
+			AutomaticSize       = Enum.AutomaticSize.X,
+			AnchorPoint         = Vector2.new(1, 0.5),
+			Position            = UDim2.new(1, -6, 0.5, 0),
+			BackgroundTransparency = 0.88,
+			Text                = "",
+			Parent              = InputOuter,
+			ThemeTag            = { BackgroundColor3 = "Element" },
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+			New("UIStroke", {
+				Transparency    = 0.7,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				ThemeTag        = { Color = "InElementBorder" },
+			}),
+			New("UIListLayout", {
+				FillDirection   = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				Padding         = UDim.new(0, 4),
+				SortOrder       = Enum.SortOrder.LayoutOrder,
+			}),
+			New("UIPadding", {
+				PaddingLeft  = UDim.new(0, 7),
+				PaddingRight = UDim.new(0, 7),
+			}),
+			New("ImageLabel", {
+				Image           = ICON_CLIPBOARD or "",
+				Size            = UDim2.fromOffset(12, 12),
+				BackgroundTransparency = 1,
+				LayoutOrder     = 1,
+				ThemeTag        = { ImageColor3 = "SubText" },
+			}),
+			New("TextLabel", {
+				Text            = "Paste",
+				FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+				TextSize        = 11,
+				BackgroundTransparency = 1,
+				Size            = UDim2.fromScale(0, 1),
+				AutomaticSize   = Enum.AutomaticSize.X,
+				LayoutOrder     = 2,
+				ThemeTag        = { TextColor3 = "SubText" },
+			}),
+		})
+
+		local _, PasteSetTrans = Creator.SpringMotor(0.88, PasteBtn, "BackgroundTransparency")
+		Creator.AddSignal(PasteBtn.MouseEnter,       function() PasteSetTrans(0.78) end)
+		Creator.AddSignal(PasteBtn.MouseLeave,       function() PasteSetTrans(0.88) end)
+		Creator.AddSignal(PasteBtn.MouseButton1Down, function() PasteSetTrans(0.94) end)
+		Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.78) end)
+	end
+
+	-- The actual text box
+	local pasteWidth = pasteSupported and 72 or 0
+	local KsInputBox = New("TextBox", {
+		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize            = 13,
+		TextXAlignment      = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Size                = UDim2.new(1, -(30 + pasteWidth), 1, 0),
+		Position            = UDim2.fromOffset(28, 0),
+		PlaceholderText     = "Paste your key here...",
+		ClearTextOnFocus    = false,
+		Parent              = InputOuter,
+		ThemeTag            = { TextColor3 = "Text", PlaceholderColor3 = "SubText" },
+	})
+
+	-- Focus indicator line
 	local InputIndicator = New("Frame", {
-		Size = UDim2.new(1, -4, 0, 1),
-		Position = UDim2.new(0, 2, 1, 0),
-		AnchorPoint = Vector2.new(0, 1),
+		Size                = UDim2.new(1, -4, 0, 1),
+		Position            = UDim2.new(0, 2, 1, 0),
+		AnchorPoint         = Vector2.new(0, 1),
 		BackgroundTransparency = 0.5,
-		Parent = InputOuter,
-		ThemeTag = { BackgroundColor3 = "InputIndicator" },
+		Parent              = InputOuter,
+		ThemeTag            = { BackgroundColor3 = "InputIndicator" },
 	})
-
 	Creator.AddSignal(KsInputBox.Focused, function()
 		TweenService:Create(InputIndicator, TweenInfo.new(0.15), {
-			Size = UDim2.new(1, -2, 0, 2),
+			Size               = UDim2.new(1, -2, 0, 2),
 			BackgroundTransparency = 0,
 		}):Play()
 		Creator.OverrideTag(InputIndicator, { BackgroundColor3 = "Accent" })
 	end)
 	Creator.AddSignal(KsInputBox.FocusLost, function()
 		TweenService:Create(InputIndicator, TweenInfo.new(0.15), {
-			Size = UDim2.new(1, -4, 0, 1),
+			Size               = UDim2.new(1, -4, 0, 1),
 			BackgroundTransparency = 0.5,
 		}):Play()
 		Creator.OverrideTag(InputIndicator, { BackgroundColor3 = "InputIndicator" })
 	end)
 
-	-- ── Button row ────────────────────────────────────────────
+	-- Paste button action
+	if PasteBtn then
+		Creator.AddSignal(PasteBtn.MouseButton1Click, function()
+			local ok, text = pcall(function() return getclipboard() end)
+			if ok and type(text) == "string" and text ~= "" then
+				KsInputBox.Text = text:match("^%s*(.-)%s*$")
+			end
+		end)
+	end
+
+	-- ── Button row — half-width each, 10px gap ────────────────
 	local ButtonRow = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 34),
+		Size                = UDim2.new(1, 0, 0, 40),
 		BackgroundTransparency = 1,
-		LayoutOrder = 3,
-		Parent = ContentGroup,
-	}, {
-		New("UIListLayout", {
-			FillDirection = Enum.FillDirection.Horizontal,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
-			Padding = UDim.new(0, 8),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		}),
+		LayoutOrder         = 3,
+		Parent              = ContentGroup,
 	})
 
-	local function MakeKsButton(labelTxt, btnIcon, layoutOrder, isAccent)
-		local btnChildren = {
+	-- Helper: build a key system button with icon + label
+	-- and expose refs to the inner icon ImageLabel and TextLabel for morph
+	local function MakeKsButton(parent, labelTxt, btnIcon, pos, size, isAccent)
+		local iconRef, labelRef
+
+		local iconEl = btnIcon and New("ImageLabel", {
+			Image               = btnIcon,
+			Size                = UDim2.fromOffset(14, 14),
+			BackgroundTransparency = 1,
+			LayoutOrder         = 1,
+			ThemeTag            = { ImageColor3 = isAccent and "Accent" or "SubText" },
+		}) or nil
+
+		local labelEl = New("TextLabel", {
+			Text                = labelTxt,
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+			TextSize            = 13,
+			BackgroundTransparency = 1,
+			Size                = UDim2.fromScale(0, 1),
+			AutomaticSize       = Enum.AutomaticSize.X,
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			LayoutOrder         = 2,
+			ThemeTag            = { TextColor3 = isAccent and "Accent" or "Text" },
+		})
+
+		local children = {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
 			New("UIStroke", {
-				Transparency = isAccent and 0.35 or 0.55,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				ThemeTag = { Color = isAccent and "Accent" or "InElementBorder" },
+				Transparency        = isAccent and 0.35 or 0.6,
+				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+				ThemeTag            = { Color = isAccent and "Accent" or "InElementBorder" },
 			}),
 			New("UIListLayout", {
-				FillDirection = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
+				FillDirection       = Enum.FillDirection.Horizontal,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
 				HorizontalAlignment = Enum.HorizontalAlignment.Center,
-				Padding = UDim.new(0, 6),
-				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding             = UDim.new(0, 6),
+				SortOrder           = Enum.SortOrder.LayoutOrder,
 			}),
-			New("UIPadding", {
-				PaddingLeft  = UDim.new(0, 14),
-				PaddingRight = UDim.new(0, 14),
-			}),
+			labelEl,
 		}
-		if btnIcon then
-			table.insert(btnChildren, New("ImageLabel", {
-				Image = btnIcon,
-				Size = UDim2.fromOffset(14, 14),
-				BackgroundTransparency = 1,
-				LayoutOrder = 1,
-				ThemeTag = { ImageColor3 = isAccent and "Accent" or "SubText" },
-			}))
-		end
-		table.insert(btnChildren, New("TextLabel", {
-			Text = labelTxt,
-			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-			TextSize = 13,
-			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(0, 1),
-			AutomaticSize = Enum.AutomaticSize.X,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			LayoutOrder = 2,
-			ThemeTag = { TextColor3 = isAccent and "Accent" or "Text" },
-		}))
+		if iconEl then table.insert(children, iconEl) end
 
 		local btn = New("TextButton", {
-			Size = UDim2.new(0, 0, 1, 0),
-			AutomaticSize = Enum.AutomaticSize.X,
+			Size                = size,
+			Position            = pos,
 			BackgroundTransparency = 0.92,
-			Text = "",
-			LayoutOrder = layoutOrder,
-			Parent = ButtonRow,
-			ThemeTag = { BackgroundColor3 = isAccent and "Accent" or "Element" },
-		}, btnChildren)
+			Text                = "",
+			Parent              = parent,
+			ThemeTag            = { BackgroundColor3 = isAccent and "Accent" or "Element" },
+		}, children)
 
-		local _, SetBtnTrans = Creator.SpringMotor(0.92, btn, "BackgroundTransparency")
-		Creator.AddSignal(btn.MouseEnter,       function() SetBtnTrans(0.84) end)
-		Creator.AddSignal(btn.MouseLeave,       function() SetBtnTrans(0.92) end)
-		Creator.AddSignal(btn.MouseButton1Down, function() SetBtnTrans(0.96) end)
-		Creator.AddSignal(btn.MouseButton1Up,   function() SetBtnTrans(0.84) end)
-		return btn
+		local _, SetTrans = Creator.SpringMotor(0.92, btn, "BackgroundTransparency")
+		Creator.AddSignal(btn.MouseEnter,       function() SetTrans(0.84) end)
+		Creator.AddSignal(btn.MouseLeave,       function() SetTrans(0.92) end)
+		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.96) end)
+		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.84) end)
+
+		local ScaleConstraint = New("UIScale", { Scale = 1, Parent = btn })
+		local BtnScaleMotor   = Flipper.SingleMotor.new(1)
+		BtnScaleMotor:onStep(function(v) ScaleConstraint.Scale = v end)
+
+		return btn, iconEl, labelEl, BtnScaleMotor
 	end
 
-	local SubmitBtn = MakeKsButton("Submit Key", _ks_resolveIcon("key"), 1, true)
-	local GetKeyBtn = getKeyFn and MakeKsButton(getKeyLabel, getKeyIcon, 2, false) or nil
+	local btnHalfW = UDim2.new(0.5, -5, 1, 0)
 
-	-- ── Status label ─────────────────────────────────────────
-	local StatusLabel = New("TextLabel", {
-		Text = "",
-		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-		TextSize = 12,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextWrapped = true,
-		LayoutOrder = 4,
-		Visible = false,
-		Parent = ContentGroup,
-		ThemeTag = { TextColor3 = "SubText" },
-	})
+	local SubmitBtn, SubmitIcon, SubmitLabel, SubmitScaleMotor = MakeKsButton(
+		ButtonRow,
+		"Submit Key",
+		ICON_KEY,
+		UDim2.fromOffset(0, 0),
+		btnHalfW,
+		true
+	)
 
-	local function SetStatus(msg, isError)
-		StatusLabel.Text = msg or ""
-		StatusLabel.Visible = (msg ~= nil and msg ~= "")
-		Creator.OverrideTag(StatusLabel, { TextColor3 = isError and "Accent" or "SubText" })
+	local GetKeyBtn, GetKeyIcon, GetKeyLabel, GetKeyScaleMotor
+	if getKeyFn then
+		GetKeyBtn, GetKeyIcon, GetKeyLabel, GetKeyScaleMotor = MakeKsButton(
+			ButtonRow,
+			getKeyLabel,
+			ICON_LINK,
+			UDim2.new(0.5, 5, 0, 0),
+			btnHalfW,
+			false
+		)
+	else
+		-- No GetKey configured — expand Submit to full width
+		SubmitBtn.Size = UDim2.fromScale(1, 1)
+		SubmitBtn.Position = UDim2.fromOffset(0, 0)
 	end
 
-	-- ── Note divider + text ───────────────────────────────────
-	if note ~= "" then
+	-- ── Button morph helper ───────────────────────────────────
+	-- Swaps icon + label on a button, pulses scale, then reverts after delay.
+	local function morphButton(iconRef, labelRef, scaleMotor, newIcon, newLabel, isSuccess, revertIcon, revertLabel, revertDelay)
+		if iconRef  then iconRef.Image  = newIcon  or "" end
+		if labelRef then labelRef.Text  = newLabel or "" end
+
+		-- Colour flash
+		if iconRef then
+			Creator.OverrideTag(iconRef,  { ImageColor3 = isSuccess and "Accent" or "Accent" })
+		end
+		if labelRef then
+			Creator.OverrideTag(labelRef, { TextColor3  = "Accent" })
+		end
+
+		-- Scale pulse: 1 → 1.06 → 1
+		if scaleMotor then
+			scaleMotor:setGoal(Flipper.Spring.new(1.06, { frequency = 12, dampingRatio = 0.5 }))
+			scaleMotor:start()
+			task.delay(0.18, function()
+				scaleMotor:setGoal(Flipper.Spring.new(1, { frequency = 8, dampingRatio = 0.8 }))
+			end)
+		end
+
+		-- Revert after delay
+		task.delay(revertDelay or 1.8, function()
+			if iconRef  then iconRef.Image  = revertIcon  or "" end
+			if labelRef then labelRef.Text  = revertLabel or "" end
+			-- Reset colours
+			if iconRef  then Creator.OverrideTag(iconRef,  { ImageColor3 = "Accent" }) end
+			if labelRef then Creator.OverrideTag(labelRef, { TextColor3  = "Accent" }) end
+		end)
+	end
+
+	-- ── Discord card ──────────────────────────────────────────
+	if discordEnabled and discordLink ~= "" then
+		-- Separator
 		New("Frame", {
-			Size = UDim2.new(1, 0, 0, 1),
+			Size                = UDim2.new(1, 0, 0, 1),
 			BackgroundTransparency = 0.6,
-			LayoutOrder = 5,
-			Parent = ContentGroup,
-			ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+			LayoutOrder         = 4,
+			Parent              = ContentGroup,
+			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
 		})
 
-		local NoteRow = New("Frame", {
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			BackgroundTransparency = 1,
-			LayoutOrder = 6,
-			Parent = ContentGroup,
+		local DiscordCard = New("Frame", {
+			Size                = UDim2.new(1, 0, 0, 44),
+			BackgroundTransparency = 0.88,
+			LayoutOrder         = 5,
+			Parent              = ContentGroup,
+			ThemeTag            = { BackgroundColor3 = "Element" },
 		}, {
-			New("UIListLayout", {
-				FillDirection = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = UDim.new(0, 5),
-				SortOrder = Enum.SortOrder.LayoutOrder,
+			New("UICorner",  { CornerRadius = UDim.new(0, 6) }),
+			New("UIStroke", {
+				Transparency        = 0.6,
+				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+				ThemeTag            = { Color = "InElementBorder" },
 			}),
 		})
 
-		if noteIcon then
-			New("ImageLabel", {
-				Image = noteIcon,
-				Size = UDim2.fromOffset(13, 13),
-				BackgroundTransparency = 1,
-				LayoutOrder = 1,
-				Parent = NoteRow,
-				ThemeTag = { ImageColor3 = "SubText" },
-			})
-		end
+		-- Discord icon (blurple tint via override after build)
+		local DiscordIcon = New("ImageLabel", {
+			Image               = ICON_DISCORD or "",
+			Size                = UDim2.fromOffset(18, 18),
+			Position            = UDim2.new(0, 12, 0.5, 0),
+			AnchorPoint         = Vector2.new(0, 0.5),
+			BackgroundTransparency = 1,
+			Parent              = DiscordCard,
+		})
+		-- Blurple colour applied directly since it's not a theme key
+		task.defer(function() DiscordIcon.ImageColor3 = Color3.fromRGB(88, 101, 242) end)
 
 		New("TextLabel", {
-			Text = note,
-			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-			TextSize = 12,
+			Text                = discordNote,
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			TextSize            = 12,
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1, noteIcon and -20 or 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextWrapped = true,
-			LayoutOrder = 2,
-			Parent = NoteRow,
-			ThemeTag = { TextColor3 = "SubText" },
+			Size                = UDim2.new(1, -130, 1, 0),
+			Position            = UDim2.fromOffset(38, 0),
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			TextYAlignment      = Enum.TextYAlignment.Center,
+			TextWrapped         = true,
+			Parent              = DiscordCard,
+			ThemeTag            = { TextColor3 = "SubText" },
 		})
+
+		-- Join Server button
+		local DiscordJoinIcon = New("ImageLabel", {
+			Image               = ICON_LINK or "",
+			Size                = UDim2.fromOffset(12, 12),
+			BackgroundTransparency = 1,
+			LayoutOrder         = 1,
+			ThemeTag            = { ImageColor3 = "Text" },
+		})
+
+		local DiscordJoinLabel = New("TextLabel", {
+			Text                = "Join Server",
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+			TextSize            = 12,
+			BackgroundTransparency = 1,
+			Size                = UDim2.fromScale(0, 1),
+			AutomaticSize       = Enum.AutomaticSize.X,
+			LayoutOrder         = 2,
+			ThemeTag            = { TextColor3 = "Text" },
+		})
+
+		local DiscordJoinBtn = New("TextButton", {
+			Size                = UDim2.new(0, 0, 0, 28),
+			AutomaticSize       = Enum.AutomaticSize.X,
+			AnchorPoint         = Vector2.new(1, 0.5),
+			Position            = UDim2.new(1, -10, 0.5, 0),
+			BackgroundTransparency = 0.88,
+			Text                = "",
+			Parent              = DiscordCard,
+			ThemeTag            = { BackgroundColor3 = "Element" },
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 5) }),
+			New("UIStroke", {
+				Transparency        = 0.65,
+				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+				ThemeTag            = { Color = "InElementBorder" },
+			}),
+			New("UIListLayout", {
+				FillDirection       = Enum.FillDirection.Horizontal,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				Padding             = UDim.new(0, 4),
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+			}),
+			New("UIPadding", {
+				PaddingLeft  = UDim.new(0, 9),
+				PaddingRight = UDim.new(0, 9),
+			}),
+			DiscordJoinIcon,
+			DiscordJoinLabel,
+		})
+
+		local _, DJSetTrans = Creator.SpringMotor(0.88, DiscordJoinBtn, "BackgroundTransparency")
+		Creator.AddSignal(DiscordJoinBtn.MouseEnter,       function() DJSetTrans(0.78) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseLeave,       function() DJSetTrans(0.88) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseButton1Down, function() DJSetTrans(0.94) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseButton1Up,   function() DJSetTrans(0.78) end)
+
+		local djReverting = false
+		Creator.AddSignal(DiscordJoinBtn.MouseButton1Click, function()
+			if djReverting then return end
+
+			local copied = false
+			local opened = false
+
+			if discordAction == "open" or discordAction == "both" then
+				pcall(function()
+					if syn and syn.open_url then
+						syn.open_url(discordLink)
+						opened = true
+					elseif open_url then
+						open_url(discordLink)
+						opened = true
+					end
+				end)
+			end
+
+			if discordAction == "copy" or discordAction == "both" or not opened then
+				local fClip = setclipboard or toclipboard
+				if fClip then
+					pcall(function() fClip(discordLink) end)
+					copied = true
+				end
+			end
+
+			-- Morph button to check
+			djReverting = true
+			DiscordJoinIcon.Image = ICON_CHECK or ""
+			DiscordJoinLabel.Text = opened and "Opened!" or "Copied!"
+			task.delay(1.8, function()
+				DiscordJoinIcon.Image = ICON_LINK or ""
+				DiscordJoinLabel.Text = "Join Server"
+				djReverting = false
+			end)
+		end)
 	end
 
 	-- ── Loading overlay ───────────────────────────────────────
-	local LoadOverlay = New("Frame", {
-		Size = UDim2.fromScale(1, 1),
+	local LoadOverlay = New("CanvasGroup", {
+		Size                = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
-		Visible = false,
-		ZIndex = 10,
-		Parent = KsRoot,
+		GroupTransparency   = 1,
+		Visible             = false,
+		ZIndex              = 10,
+		Parent              = KsRootCanvas,
 	}, {
 		New("UIListLayout", {
-			SortOrder = Enum.SortOrder.LayoutOrder,
+			SortOrder           = Enum.SortOrder.LayoutOrder,
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
-			Padding = UDim.new(0, 12),
+			VerticalAlignment   = Enum.VerticalAlignment.Center,
+			Padding             = UDim.new(0, 14),
 		}),
 		New("UIPadding", {
-			PaddingLeft = UDim.new(0, 24), PaddingRight = UDim.new(0, 24),
+			PaddingLeft  = UDim.new(0, 24),
+			PaddingRight = UDim.new(0, 24),
 		}),
 	})
 
 	New("TextLabel", {
-		Text = loaderText,
-		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-		TextSize = 14,
+		Text                = loaderText,
+		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize            = 14,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 20),
-		TextXAlignment = Enum.TextXAlignment.Center,
-		LayoutOrder = 1,
-		Parent = LoadOverlay,
-		ThemeTag = { TextColor3 = "Text" },
+		Size                = UDim2.new(1, 0, 0, 20),
+		TextXAlignment      = Enum.TextXAlignment.Center,
+		LayoutOrder         = 1,
+		Parent              = LoadOverlay,
+		ThemeTag            = { TextColor3 = "Text" },
 	})
 
 	local ProgressRail = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 4),
+		Size                = UDim2.new(1, 0, 0, 4),
 		BackgroundTransparency = 0.6,
-		LayoutOrder = 2,
-		Parent = LoadOverlay,
-		ThemeTag = { BackgroundColor3 = "SliderRail" },
+		LayoutOrder         = 2,
+		Parent              = LoadOverlay,
+		ThemeTag            = { BackgroundColor3 = "SliderRail" },
 	}, {
 		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
 	})
 
 	local ProgressFill = New("Frame", {
-		Size = UDim2.new(0, 0, 1, 0),
-		Parent = ProgressRail,
-		ThemeTag = { BackgroundColor3 = "Accent" },
+		Size                = UDim2.new(0, 0, 1, 0),
+		Parent              = ProgressRail,
+		ThemeTag            = { BackgroundColor3 = "Accent" },
 	}, {
 		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
 	})
 
-	-- Apply theme to everything we just built
+	-- Apply all theme tags now that every element is built
 	Creator.UpdateTheme()
 
-	-- ── Saved key silent check ────────────────────────────────
+	-- ── Transition helpers ────────────────────────────────────
 	local fSetClipboard = setclipboard or toclipboard or function() end
 
+	-- Fade content out, show loader, animate progress, then destroy
+	local function runLoadingTransition(onComplete)
+		ContentGroup.Visible = true
+		local FadeOut = Flipper.SingleMotor.new(0)
+		FadeOut:onStep(function(v) ContentGroup.GroupTransparency = v end)
+		FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
+		FadeOut:start()
+		task.wait(0.22)
+		ContentGroup.Visible  = false
+		LoadOverlay.Visible   = true
+		LoadOverlay.GroupTransparency = 0
+
+		local FillMotor = Flipper.SingleMotor.new(0)
+		FillMotor:onStep(function(v)
+			ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
+		end)
+		FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.1, dampingRatio = 1 }))
+		FillMotor:start()
+		task.wait(loaderDuration)
+		if onComplete then onComplete() end
+	end
+
+	local function destroyKsWindow()
+		-- Scale + fade out
+		local ExitScale = Flipper.SingleMotor.new(1)
+		ExitScale:onStep(function(v) ScaleObj.Scale = v end)
+		ExitScale:setGoal(Flipper.Spring.new(0.92, { frequency = 8, dampingRatio = 1 }))
+		ExitScale:start()
+		local ExitAlpha = Flipper.SingleMotor.new(1)
+		ExitAlpha:onStep(function(v) KsRootCanvas.GroupTransparency = 1 - v end)
+		ExitAlpha:setGoal(Flipper.Spring.new(0, { frequency = 8, dampingRatio = 1 }))
+		ExitAlpha:start()
+		task.wait(0.2)
+		if Library.UseAcrylic and KsAcrylic.Model then
+			pcall(function() KsAcrylic.Model:Destroy() end)
+		end
+		KsRoot:Destroy()
+	end
+
+	local function finalise(tier)
+		Library._KeySystemTier   = tier
+	end
+
+	-- ── Saved key silent check ────────────────────────────────
 	if saveKey and not RunService:IsStudio() then
 		local savedKey = _ks_loadKey(folder, fileName)
 		if savedKey and savedKey ~= "" then
-			SetStatus("Checking saved key...", false)
-			local ok, result = pcall(validateFn, savedKey)
-			if ok and result and result.valid then
-				-- Immediately clean up and skip UI
-				Library._KeySystemTier   = result.tier or "free"
-				Library._KeySystemResult = result
-				Library._KeySystemKey    = savedKey
+
+			if loaderMode == "instant" then
+				-- Totally invisible — check silently, no window shown
+				-- We already built the window; destroy it immediately and re-show only on failure
 				if Library.UseAcrylic and KsAcrylic.Model then
 					pcall(function() KsAcrylic.Model:Destroy() end)
 				end
 				KsRoot:Destroy()
-				return Library._KeySystemTier
-			else
-				local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
-				if _ks_hardFail[errCode] then
-					_ks_wipeKey(folder, fileName)
+				local ok, result = pcall(validateFn, savedKey)
+				if ok and result and result.valid then
+					Library._KeySystemTier   = result.tier or "free"
+					Library._KeySystemResult = result
+					Library._KeySystemKey    = savedKey
+					return Library._KeySystemTier
 				else
-					-- Network error — prefill input so user can retry easily
-					KsInputBox.Text = savedKey
+					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
+					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
+					-- Rebuild window for key entry (re-call recursively is clean)
+					return _ks_Run(ksConfig, windowConfig)
 				end
-				SetStatus("", false)
+
+			elseif loaderMode == "loading" then
+				-- Show loader immediately, check in background
+				ContentGroup.Visible  = false
+				LoadOverlay.Visible   = true
+				LoadOverlay.GroupTransparency = 0
+
+				local FillMotor = Flipper.SingleMotor.new(0)
+				FillMotor:onStep(function(v)
+					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
+				end)
+				-- Start a slow crawl; we'll complete it if check passes
+				FillMotor:setGoal(Flipper.Spring.new(0.7, { frequency = 0.6, dampingRatio = 1 }))
+				FillMotor:start()
+
+				local ok, result = pcall(validateFn, savedKey)
+
+				if ok and result and result.valid then
+					-- Complete the bar then transition
+					FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.5, dampingRatio = 1 }))
+					task.wait(loaderDuration * 0.5)
+					Library._KeySystemTier   = result.tier or "free"
+					Library._KeySystemResult = result
+					Library._KeySystemKey    = savedKey
+					destroyKsWindow()
+					return Library._KeySystemTier
+				else
+					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
+					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
+					-- Hide loader, show entry UI with notification
+					LoadOverlay.Visible  = false
+					ContentGroup.Visible = true
+					ContentGroup.GroupTransparency = 0
+					Library:Notify({
+						Title    = "Key System",
+						Content  = _ks_getErrorMsg(errCode, customErrors),
+						Duration = 5,
+					})
+					KsInputBox.Text = (not _ks_hardFail[errCode]) and savedKey or ""
+				end
 			end
 		end
 	end
 
 	-- ── Close button ──────────────────────────────────────────
 	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
-		if Library.UseAcrylic and KsAcrylic.Model then
-			pcall(function() KsAcrylic.Model:Destroy() end)
-		end
-		KsRoot:Destroy()
+		destroyKsWindow()
 	end)
 
 	-- ── Get Key button ────────────────────────────────────────
 	if GetKeyBtn and getKeyFn then
+		local gkReverting = false
+
 		Creator.AddSignal(GetKeyBtn.MouseButton1Click, function()
+			if gkReverting then return end
+
 			if rateLimitSecs then
 				local now = tick()
 				if (now - lastGetKeyTime) < rateLimitSecs then
-					SetStatus(rateLimitMsg, true)
+					-- Rate limit feedback
+					gkReverting = true
+					morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
+						ICON_X, "Rate Limited", false,
+						ICON_LINK, getKeyLabel, 2)
+					Library:Notify({
+						Title   = "Get Key",
+						Content = rateLimitMsg,
+						Duration = 4,
+					})
+					task.delay(2, function() gkReverting = false end)
 					return
 				end
-				lastGetKeyTime = now
+				lastGetKeyTime = tick()
 			end
+
 			local ok, linkOrErr = pcall(getKeyFn)
 			if ok and type(linkOrErr) == "string" and linkOrErr ~= "" then
 				pcall(function() fSetClipboard(linkOrErr) end)
-				SetStatus("Link copied to clipboard!", false)
+				gkReverting = true
+				morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
+					ICON_CHECK, "Copied!", true,
+					ICON_LINK, getKeyLabel, 2)
+				Library:Notify({
+					Title   = "Get Key",
+					Content = "Key link copied to clipboard.",
+					Duration = 3,
+				})
+				task.delay(2, function() gkReverting = false end)
 			else
-				SetStatus("Failed to get link. Please try again.", true)
+				gkReverting = true
+				morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
+					ICON_X, "Failed", false,
+					ICON_LINK, getKeyLabel, 2)
+				Library:Notify({
+					Title   = "Get Key",
+					Content = type(linkOrErr) == "string" and linkOrErr or "Failed to get link. Please try again.",
+					Duration = 4,
+				})
+				task.delay(2, function() gkReverting = false end)
 			end
 		end)
 	end
@@ -10639,11 +11019,15 @@ local function _ks_Run(ksConfig, windowConfig)
 		if submitting then return end
 		local key = (KsInputBox.Text or ""):match("^%s*(.-)%s*$")
 		if key == "" then
-			SetStatus("Please enter a key.", true)
+			morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
+				ICON_X, "Enter a key", false,
+				ICON_KEY, "Submit Key", 2)
 			return
 		end
+
 		submitting = true
-		SetStatus("Verifying...", false)
+		if SubmitLabel then SubmitLabel.Text = "Verifying..." end
+		if SubmitIcon  then SubmitIcon.Image = ICON_LOADER or "" end
 
 		task.spawn(function()
 			local ok, result = pcall(validateFn, key)
@@ -10651,16 +11035,25 @@ local function _ks_Run(ksConfig, windowConfig)
 
 			if not result or not result.valid then
 				local errCode = result and result.error or "ERROR"
+
 				if errCode == "HWID_BANNED" then
 					game.Players.LocalPlayer:Kick("You have been banned.")
 					return
 				end
-				SetStatus(_ks_getErrorMsg(errCode, customErrors), true)
+
+				morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
+					ICON_X, "Invalid Key", false,
+					ICON_KEY, "Submit Key", 2)
+				Library:Notify({
+					Title   = "Key System",
+					Content = _ks_getErrorMsg(errCode, customErrors),
+					Duration = 5,
+				})
 				submitting = false
 				return
 			end
 
-			-- Persist
+			-- Valid — save key
 			if saveKey and not RunService:IsStudio() then
 				_ks_saveKey(folder, fileName, key)
 			end
@@ -10670,52 +11063,33 @@ local function _ks_Run(ksConfig, windowConfig)
 			Library._KeySystemResult = result
 			Library._KeySystemKey    = key
 
-			-- Transition
+			-- Success morph on submit button
+			morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
+				ICON_CHECK, "Success!", true,
+				ICON_KEY, "Submit Key", 99)
+
 			if loaderMode == "instant" then
-				if Library.UseAcrylic and KsAcrylic.Model then
-					pcall(function() KsAcrylic.Model:Destroy() end)
-				end
-				KsRoot:Destroy()
+				task.wait(0.3)
+				destroyKsWindow()
 			else
-				-- Fade content out
-				local FadeMotor = Flipper.SingleMotor.new(0)
-				FadeMotor:onStep(function(v) ContentGroup.GroupTransparency = v end)
-				FadeMotor:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
-				FadeMotor:start()
-				task.wait(0.25)
-				ContentGroup.Visible = false
-				LoadOverlay.Visible  = true
-
-				-- Animate progress bar
-				local FillMotor = Flipper.SingleMotor.new(0)
-				FillMotor:onStep(function(v)
-					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
-				end)
-				FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.2, dampingRatio = 1 }))
-				FillMotor:start()
-				task.wait(loaderDuration)
-
-				if Library.UseAcrylic and KsAcrylic.Model then
-					pcall(function() KsAcrylic.Model:Destroy() end)
-				end
-				KsRoot:Destroy()
+				runLoadingTransition(destroyKsWindow)
 			end
 		end)
 	end
 
 	Creator.AddSignal(SubmitBtn.MouseButton1Click, doSubmit)
-
-	-- Also allow pressing Enter to submit
-	Creator.AddSignal(KsInputBox.FocusLost, function(enterPressed)
-		if enterPressed then doSubmit() end
+	Creator.AddSignal(KsInputBox.FocusLost, function(enter)
+		if enter then doSubmit() end
 	end)
 
-	-- ── Block until window gone ───────────────────────────────
+	-- ── Block until window is destroyed ──────────────────────
 	while KsRoot and KsRoot.Parent do
 		task.wait(0.05)
 	end
 
 	return Library._KeySystemTier or nil
+end
+
 end
 
 -- ── Key System gate in CreateWindow (inserted below) ─────────────────────────
