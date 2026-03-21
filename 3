@@ -10295,8 +10295,8 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- ── Content area ─────────────────────────────────────────
 	local ContentGroup = New("CanvasGroup", {
-		Size                = UDim2.new(1, -32, 1, -54),
-		Position            = UDim2.fromOffset(16, 48),
+		Size                = UDim2.new(1, 0, 1, -54),
+		Position            = UDim2.fromOffset(0, 48),
 		BackgroundTransparency = 1,
 		GroupTransparency   = 0,
 		Parent              = KsRootCanvas,
@@ -10305,6 +10305,11 @@ local function _ks_Run(ksConfig, windowConfig)
 			SortOrder           = Enum.SortOrder.LayoutOrder,
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 			Padding             = UDim.new(0, 10),
+		}),
+		New("UIPadding", {
+			PaddingLeft  = UDim.new(0, 18),
+			PaddingRight = UDim.new(0, 18),
+			PaddingTop   = UDim.new(0, 4),
 		}),
 	})
 
@@ -10374,7 +10379,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- ── Key input with icon + paste button ───────────────────
 	local InputOuter = New("Frame", {
 		Size                = UDim2.new(1, 0, 0, 38),
-		BackgroundTransparency = 0.9,
+		BackgroundTransparency = 0.88,
 		LayoutOrder         = 2,
 		Parent              = ContentGroup,
 		ThemeTag            = { BackgroundColor3 = "Input" },
@@ -10407,7 +10412,7 @@ local function _ks_Run(ksConfig, windowConfig)
 			AutomaticSize       = Enum.AutomaticSize.X,
 			AnchorPoint         = Vector2.new(1, 0.5),
 			Position            = UDim2.new(1, -6, 0.5, 0),
-			BackgroundTransparency = 0.88,
+			BackgroundTransparency = 0.9,
 			Text                = "",
 			Parent              = InputOuter,
 			ThemeTag            = { BackgroundColor3 = "Element" },
@@ -10448,11 +10453,11 @@ local function _ks_Run(ksConfig, windowConfig)
 			}),
 		})
 
-		local _, PasteSetTrans = Creator.SpringMotor(0.88, PasteBtn, "BackgroundTransparency")
-		Creator.AddSignal(PasteBtn.MouseEnter,       function() PasteSetTrans(0.78) end)
-		Creator.AddSignal(PasteBtn.MouseLeave,       function() PasteSetTrans(0.88) end)
-		Creator.AddSignal(PasteBtn.MouseButton1Down, function() PasteSetTrans(0.94) end)
-		Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.78) end)
+		local _, PasteSetTrans = Creator.SpringMotor(0.9, PasteBtn, "BackgroundTransparency")
+		Creator.AddSignal(PasteBtn.MouseEnter,       function() PasteSetTrans(0.82) end)
+		Creator.AddSignal(PasteBtn.MouseLeave,       function() PasteSetTrans(0.9) end)
+		Creator.AddSignal(PasteBtn.MouseButton1Down, function() PasteSetTrans(0.95) end)
+		Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.82) end)
 	end
 
 	-- The actual text box
@@ -10522,7 +10527,7 @@ local function _ks_Run(ksConfig, windowConfig)
 			Size                = UDim2.fromOffset(14, 14),
 			BackgroundTransparency = 1,
 			LayoutOrder         = 1,
-			ThemeTag            = { ImageColor3 = isAccent and "Accent" or "SubText" },
+			ThemeTag            = { ImageColor3 = "Text" },
 		}) or nil
 
 		local labelEl = New("TextLabel", {
@@ -10534,13 +10539,13 @@ local function _ks_Run(ksConfig, windowConfig)
 			AutomaticSize       = Enum.AutomaticSize.X,
 			TextXAlignment      = Enum.TextXAlignment.Left,
 			LayoutOrder         = 2,
-			ThemeTag            = { TextColor3 = isAccent and "Accent" or "Text" },
+			ThemeTag            = { TextColor3 = "Text" },
 		})
 
 		local children = {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
 			New("UIStroke", {
-				Transparency        = isAccent and 0.35 or 0.6,
+				Transparency        = isAccent and 0.3 or 0.55,
 				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
 				ThemeTag            = { Color = isAccent and "Accent" or "InElementBorder" },
 			}),
@@ -10558,17 +10563,17 @@ local function _ks_Run(ksConfig, windowConfig)
 		local btn = New("TextButton", {
 			Size                = size,
 			Position            = pos,
-			BackgroundTransparency = 0.92,
+			BackgroundTransparency = 0.9,
 			Text                = "",
 			Parent              = parent,
-			ThemeTag            = { BackgroundColor3 = isAccent and "Accent" or "Element" },
+			ThemeTag            = { BackgroundColor3 = "Element" },
 		}, children)
 
-		local _, SetTrans = Creator.SpringMotor(0.92, btn, "BackgroundTransparency")
-		Creator.AddSignal(btn.MouseEnter,       function() SetTrans(0.84) end)
-		Creator.AddSignal(btn.MouseLeave,       function() SetTrans(0.92) end)
-		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.96) end)
-		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.84) end)
+		local _, SetTrans = Creator.SpringMotor(0.9, btn, "BackgroundTransparency")
+		Creator.AddSignal(btn.MouseEnter,       function() SetTrans(0.82) end)
+		Creator.AddSignal(btn.MouseLeave,       function() SetTrans(0.9) end)
+		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.95) end)
+		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.82) end)
 
 		return btn, iconEl, labelEl
 	end
@@ -10626,29 +10631,37 @@ local function _ks_Run(ksConfig, windowConfig)
 
 		local DiscordCard = New("Frame", {
 			Size                = UDim2.new(1, 0, 0, 44),
-			BackgroundTransparency = 0.88,
+			BackgroundTransparency = 0.9,
 			LayoutOrder         = 5,
 			Parent              = ContentGroup,
 			ThemeTag            = { BackgroundColor3 = "Element" },
 		}, {
-			New("UICorner",  { CornerRadius = UDim.new(0, 6) }),
+			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
 			New("UIStroke", {
 				Transparency        = 0.6,
 				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
 				ThemeTag            = { Color = "InElementBorder" },
+			}),
+			New("UIListLayout", {
+				FillDirection       = Enum.FillDirection.Horizontal,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+				Padding             = UDim.new(0, 8),
+			}),
+			New("UIPadding", {
+				PaddingLeft  = UDim.new(0, 12),
+				PaddingRight = UDim.new(0, 10),
 			}),
 		})
 
 		-- Discord icon (blurple tint via override after build)
 		local DiscordIcon = New("ImageLabel", {
 			Image               = ICON_DISCORD or "",
-			Size                = UDim2.fromOffset(18, 18),
-			Position            = UDim2.new(0, 12, 0.5, 0),
-			AnchorPoint         = Vector2.new(0, 0.5),
+			Size                = UDim2.fromOffset(16, 16),
 			BackgroundTransparency = 1,
+			LayoutOrder         = 1,
 			Parent              = DiscordCard,
 		})
-		-- Blurple colour applied directly since it's not a theme key
 		task.defer(function() DiscordIcon.ImageColor3 = Color3.fromRGB(88, 101, 242) end)
 
 		New("TextLabel", {
@@ -10656,11 +10669,11 @@ local function _ks_Run(ksConfig, windowConfig)
 			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
 			TextSize            = 12,
 			BackgroundTransparency = 1,
-			Size                = UDim2.new(1, -130, 1, 0),
-			Position            = UDim2.fromOffset(38, 0),
+			Size                = UDim2.new(1, -120, 1, 0),
 			TextXAlignment      = Enum.TextXAlignment.Left,
 			TextYAlignment      = Enum.TextYAlignment.Center,
 			TextWrapped         = true,
+			LayoutOrder         = 2,
 			Parent              = DiscordCard,
 			ThemeTag            = { TextColor3 = "SubText" },
 		})
@@ -10686,11 +10699,10 @@ local function _ks_Run(ksConfig, windowConfig)
 		})
 
 		local DiscordJoinBtn = New("TextButton", {
-			Size                = UDim2.new(0, 0, 0, 28),
+			Size                = UDim2.new(0, 0, 0, 30),
 			AutomaticSize       = Enum.AutomaticSize.X,
-			AnchorPoint         = Vector2.new(1, 0.5),
-			Position            = UDim2.new(1, -10, 0.5, 0),
-			BackgroundTransparency = 0.88,
+			LayoutOrder         = 3,
+			BackgroundTransparency = 0.9,
 			Text                = "",
 			Parent              = DiscordCard,
 			ThemeTag            = { BackgroundColor3 = "Element" },
@@ -10716,11 +10728,11 @@ local function _ks_Run(ksConfig, windowConfig)
 			DiscordJoinLabel,
 		})
 
-		local _, DJSetTrans = Creator.SpringMotor(0.88, DiscordJoinBtn, "BackgroundTransparency")
-		Creator.AddSignal(DiscordJoinBtn.MouseEnter,       function() DJSetTrans(0.78) end)
-		Creator.AddSignal(DiscordJoinBtn.MouseLeave,       function() DJSetTrans(0.88) end)
-		Creator.AddSignal(DiscordJoinBtn.MouseButton1Down, function() DJSetTrans(0.94) end)
-		Creator.AddSignal(DiscordJoinBtn.MouseButton1Up,   function() DJSetTrans(0.78) end)
+		local _, DJSetTrans = Creator.SpringMotor(0.9, DiscordJoinBtn, "BackgroundTransparency")
+		Creator.AddSignal(DiscordJoinBtn.MouseEnter,       function() DJSetTrans(0.82) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseLeave,       function() DJSetTrans(0.9) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseButton1Down, function() DJSetTrans(0.95) end)
+		Creator.AddSignal(DiscordJoinBtn.MouseButton1Up,   function() DJSetTrans(0.82) end)
 
 		local djReverting = false
 		Creator.AddSignal(DiscordJoinBtn.MouseButton1Click, function()
