@@ -10123,7 +10123,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	local discordEnabled = discordCfg and discordCfg.Enabled == true
 	local discordNote    = discordEnabled and (discordCfg.Note or "Join our Discord server.") or ""
 	local discordLink    = discordEnabled and (discordCfg.Link or "") or ""
-	local discordAction  = discordEnabled and (discordCfg.Action or "copy") or "copy"
+	-- Discord always copies the link to clipboard
 
 	-- Validate function
 	local validateFn
@@ -10570,16 +10570,12 @@ local function _ks_Run(ksConfig, windowConfig)
 		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.96) end)
 		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.84) end)
 
-		local ScaleConstraint = New("UIScale", { Scale = 1, Parent = btn })
-		local BtnScaleMotor   = Flipper.SingleMotor.new(1)
-		BtnScaleMotor:onStep(function(v) ScaleConstraint.Scale = v end)
-
-		return btn, iconEl, labelEl, BtnScaleMotor
+		return btn, iconEl, labelEl
 	end
 
 	local btnHalfW = UDim2.new(0.5, -5, 1, 0)
 
-	local SubmitBtn, SubmitIcon, SubmitLabel, SubmitScaleMotor = MakeKsButton(
+	local SubmitBtn, SubmitIcon, SubmitLabel = MakeKsButton(
 		ButtonRow,
 		"Submit Key",
 		ICON_KEY,
@@ -10588,9 +10584,9 @@ local function _ks_Run(ksConfig, windowConfig)
 		true
 	)
 
-	local GetKeyBtn, GetKeyIcon, GetKeyLabel, GetKeyScaleMotor
+	local GetKeyBtn, GetKeyIcon, GetKeyLabel
 	if getKeyFn then
-		GetKeyBtn, GetKeyIcon, GetKeyLabel, GetKeyScaleMotor = MakeKsButton(
+		GetKeyBtn, GetKeyIcon, GetKeyLabel = MakeKsButton(
 			ButtonRow,
 			getKeyLabel,
 			ICON_LINK,
@@ -10606,34 +10602,14 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- ── Button morph helper ───────────────────────────────────
 	-- Swaps icon + label on a button, pulses scale, then reverts after delay.
-	local function morphButton(iconRef, labelRef, scaleMotor, newIcon, newLabel, isSuccess, revertIcon, revertLabel, revertDelay)
-		if iconRef  then iconRef.Image  = newIcon  or "" end
-		if labelRef then labelRef.Text  = newLabel or "" end
+	local function morphButton(iconRef, labelRef, newIcon, newLabel, revertIcon, revertLabel, revertDelay)
+		if iconRef  then iconRef.Image = newIcon  or "" end
+		if labelRef then labelRef.Text = newLabel or "" end
 
-		-- Colour flash
-		if iconRef then
-			Creator.OverrideTag(iconRef,  { ImageColor3 = isSuccess and "Accent" or "Accent" })
-		end
-		if labelRef then
-			Creator.OverrideTag(labelRef, { TextColor3  = "Accent" })
-		end
-
-		-- Scale pulse: 1 → 1.06 → 1
-		if scaleMotor then
-			scaleMotor:setGoal(Flipper.Spring.new(1.06, { frequency = 12, dampingRatio = 0.5 }))
-			scaleMotor:start()
-			task.delay(0.18, function()
-				scaleMotor:setGoal(Flipper.Spring.new(1, { frequency = 8, dampingRatio = 0.8 }))
-			end)
-		end
-
-		-- Revert after delay
+		-- Revert icon and label after delay
 		task.delay(revertDelay or 1.8, function()
-			if iconRef  then iconRef.Image  = revertIcon  or "" end
-			if labelRef then labelRef.Text  = revertLabel or "" end
-			-- Reset colours
-			if iconRef  then Creator.OverrideTag(iconRef,  { ImageColor3 = "Accent" }) end
-			if labelRef then Creator.OverrideTag(labelRef, { TextColor3  = "Accent" }) end
+			if iconRef  then iconRef.Image = revertIcon  or "" end
+			if labelRef then labelRef.Text = revertLabel or "" end
 		end)
 	end
 
@@ -10749,34 +10725,11 @@ local function _ks_Run(ksConfig, windowConfig)
 		local djReverting = false
 		Creator.AddSignal(DiscordJoinBtn.MouseButton1Click, function()
 			if djReverting then return end
-
-			local copied = false
-			local opened = false
-
-			if discordAction == "open" or discordAction == "both" then
-				pcall(function()
-					if syn and syn.open_url then
-						syn.open_url(discordLink)
-						opened = true
-					elseif open_url then
-						open_url(discordLink)
-						opened = true
-					end
-				end)
-			end
-
-			if discordAction == "copy" or discordAction == "both" or not opened then
-				local fClip = setclipboard or toclipboard
-				if fClip then
-					pcall(function() fClip(discordLink) end)
-					copied = true
-				end
-			end
-
-			-- Morph button to check
+			local fClip = setclipboard or toclipboard
+			if fClip then pcall(function() fClip(discordLink) end) end
 			djReverting = true
 			DiscordJoinIcon.Image = ICON_CHECK or ""
-			DiscordJoinLabel.Text = opened and "Opened!" or "Copied!"
+			DiscordJoinLabel.Text = "Copied!"
 			task.delay(1.8, function()
 				DiscordJoinIcon.Image = ICON_LINK or ""
 				DiscordJoinLabel.Text = "Join Server"
@@ -10945,6 +10898,7 @@ local function _ks_Run(ksConfig, windowConfig)
 					Library:Notify({
 						Title    = "Key System",
 						Content  = _ks_getErrorMsg(errCode, customErrors),
+						Icon     = "shield-alert",
 						Duration = 5,
 					})
 					KsInputBox.Text = (not _ks_hardFail[errCode]) and savedKey or ""
@@ -10970,12 +10924,13 @@ local function _ks_Run(ksConfig, windowConfig)
 				if (now - lastGetKeyTime) < rateLimitSecs then
 					-- Rate limit feedback
 					gkReverting = true
-					morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
-						ICON_X, "Rate Limited", false,
+					morphButton(GetKeyIcon, GetKeyLabel,
+						ICON_X, "Rate Limited",
 						ICON_LINK, getKeyLabel, 2)
 					Library:Notify({
 						Title   = "Get Key",
 						Content = rateLimitMsg,
+						Icon    = "clock",
 						Duration = 4,
 					})
 					task.delay(2, function() gkReverting = false end)
@@ -10988,23 +10943,25 @@ local function _ks_Run(ksConfig, windowConfig)
 			if ok and type(linkOrErr) == "string" and linkOrErr ~= "" then
 				pcall(function() fSetClipboard(linkOrErr) end)
 				gkReverting = true
-				morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
-					ICON_CHECK, "Copied!", true,
+				morphButton(GetKeyIcon, GetKeyLabel,
+					ICON_CHECK, "Copied!",
 					ICON_LINK, getKeyLabel, 2)
 				Library:Notify({
 					Title   = "Get Key",
 					Content = "Key link copied to clipboard.",
+					Icon    = "link",
 					Duration = 3,
 				})
 				task.delay(2, function() gkReverting = false end)
 			else
 				gkReverting = true
-				morphButton(GetKeyIcon, GetKeyLabel, GetKeyScaleMotor,
-					ICON_X, "Failed", false,
+				morphButton(GetKeyIcon, GetKeyLabel,
+					ICON_X, "Failed",
 					ICON_LINK, getKeyLabel, 2)
 				Library:Notify({
 					Title   = "Get Key",
 					Content = type(linkOrErr) == "string" and linkOrErr or "Failed to get link. Please try again.",
+					Icon    = "alert-circle",
 					Duration = 4,
 				})
 				task.delay(2, function() gkReverting = false end)
@@ -11019,8 +10976,8 @@ local function _ks_Run(ksConfig, windowConfig)
 		if submitting then return end
 		local key = (KsInputBox.Text or ""):match("^%s*(.-)%s*$")
 		if key == "" then
-			morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
-				ICON_X, "Enter a key", false,
+			morphButton(SubmitIcon, SubmitLabel,
+				ICON_X, "Enter a key",
 				ICON_KEY, "Submit Key", 2)
 			return
 		end
@@ -11041,12 +10998,13 @@ local function _ks_Run(ksConfig, windowConfig)
 					return
 				end
 
-				morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
-					ICON_X, "Invalid Key", false,
+				morphButton(SubmitIcon, SubmitLabel,
+					ICON_X, "Invalid Key",
 					ICON_KEY, "Submit Key", 2)
 				Library:Notify({
 					Title   = "Key System",
 					Content = _ks_getErrorMsg(errCode, customErrors),
+					Icon    = "shield-alert",
 					Duration = 5,
 				})
 				submitting = false
@@ -11064,8 +11022,8 @@ local function _ks_Run(ksConfig, windowConfig)
 			Library._KeySystemKey    = key
 
 			-- Success morph on submit button
-			morphButton(SubmitIcon, SubmitLabel, SubmitScaleMotor,
-				ICON_CHECK, "Success!", true,
+			morphButton(SubmitIcon, SubmitLabel,
+				ICON_CHECK, "Success!",
 				ICON_KEY, "Submit Key", 99)
 
 			if loaderMode == "instant" then
