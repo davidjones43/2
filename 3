@@ -56,9 +56,7 @@ local Themes = {
 		"Cloud",
 		"Grape",
 		"Bloody",
-		"Arctic",
-		"Gold",
-		"Crimson"
+		"Arctic"
 	},
 	Dark = {
 		Name = "Dark",
@@ -763,84 +761,6 @@ local Themes = {
 		SubText = Color3.fromRGB(180, 200, 220),
 		Hover = Color3.fromRGB(90, 140, 180),
 		HoverChange = 0.04
-	},
-	-- Light theme with warm gold accent — creamy off-white background, rich gold highlights
-	Gold = {
-		Name = "Gold",
-		Accent = Color3.fromRGB(212, 160, 20),
-		AcrylicMain = Color3.fromRGB(245, 240, 228),
-		AcrylicBorder = Color3.fromRGB(200, 185, 150),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(252, 248, 238), Color3.fromRGB(245, 238, 218)),
-		AcrylicNoise = 0.97,
-		TitleBarLine = Color3.fromRGB(210, 190, 140),
-		Tab = Color3.fromRGB(130, 105, 50),
-		Element = Color3.fromRGB(145, 118, 55),
-		ElementBorder = Color3.fromRGB(200, 175, 115),
-		InElementBorder = Color3.fromRGB(210, 185, 130),
-		ElementTransparency = 0.88,
-		ToggleSlider = Color3.fromRGB(160, 130, 65),
-		ToggleToggled = Color3.fromRGB(245, 238, 218),
-		SliderRail = Color3.fromRGB(160, 130, 65),
-		DropdownFrame = Color3.fromRGB(180, 150, 80),
-		DropdownHolder = Color3.fromRGB(240, 232, 210),
-		DropdownBorder = Color3.fromRGB(200, 175, 115),
-		DropdownOption = Color3.fromRGB(130, 105, 50),
-		Keybind = Color3.fromRGB(140, 112, 50),
-		Input = Color3.fromRGB(180, 150, 80),
-		InputFocused = Color3.fromRGB(252, 248, 238),
-		InputIndicator = Color3.fromRGB(160, 130, 60),
-		InputIndicatorFocus = Color3.fromRGB(212, 160, 20),
-		Dialog = Color3.fromRGB(242, 235, 215),
-		DialogHolder = Color3.fromRGB(235, 226, 203),
-		DialogHolderLine = Color3.fromRGB(220, 205, 170),
-		DialogButton = Color3.fromRGB(242, 235, 215),
-		DialogButtonBorder = Color3.fromRGB(200, 175, 115),
-		DialogBorder = Color3.fromRGB(195, 168, 105),
-		DialogInput = Color3.fromRGB(238, 228, 205),
-		DialogInputLine = Color3.fromRGB(212, 160, 20),
-		Text = Color3.fromRGB(55, 42, 18),
-		SubText = Color3.fromRGB(110, 88, 42),
-		Hover = Color3.fromRGB(145, 118, 55),
-		HoverChange = 0.06
-	},
-	-- Dark theme with deep blood-red accent on near-black background
-	Crimson = {
-		Name = "Crimson",
-		Accent = Color3.fromRGB(180, 28, 42),
-		AcrylicMain = Color3.fromRGB(12, 6, 8),
-		AcrylicBorder = Color3.fromRGB(60, 18, 22),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(10, 4, 6), Color3.fromRGB(14, 6, 8)),
-		AcrylicNoise = 0.94,
-		TitleBarLine = Color3.fromRGB(55, 15, 20),
-		Tab = Color3.fromRGB(160, 50, 60),
-		Element = Color3.fromRGB(140, 45, 55),
-		ElementBorder = Color3.fromRGB(25, 8, 10),
-		InElementBorder = Color3.fromRGB(70, 22, 28),
-		ElementTransparency = 0.86,
-		ToggleSlider = Color3.fromRGB(150, 50, 60),
-		ToggleToggled = Color3.fromRGB(12, 4, 6),
-		SliderRail = Color3.fromRGB(140, 45, 55),
-		DropdownFrame = Color3.fromRGB(175, 60, 72),
-		DropdownHolder = Color3.fromRGB(18, 8, 10),
-		DropdownBorder = Color3.fromRGB(30, 10, 14),
-		DropdownOption = Color3.fromRGB(155, 50, 62),
-		Keybind = Color3.fromRGB(150, 48, 58),
-		Input = Color3.fromRGB(160, 52, 64),
-		InputFocused = Color3.fromRGB(8, 4, 5),
-		InputIndicator = Color3.fromRGB(120, 38, 48),
-		InputIndicatorFocus = Color3.fromRGB(180, 28, 42),
-		Dialog = Color3.fromRGB(22, 8, 10),
-		DialogHolder = Color3.fromRGB(16, 6, 8),
-		DialogHolderLine = Color3.fromRGB(12, 4, 6),
-		DialogButton = Color3.fromRGB(22, 8, 10),
-		DialogButtonBorder = Color3.fromRGB(55, 18, 22),
-		DialogBorder = Color3.fromRGB(50, 16, 20),
-		DialogInput = Color3.fromRGB(28, 10, 13),
-		DialogInputLine = Color3.fromRGB(160, 52, 64),
-		Text = Color3.fromRGB(240, 225, 228),
-		SubText = Color3.fromRGB(160, 110, 118),
-		Hover = Color3.fromRGB(140, 45, 55),
-		HoverChange = 0.05
 	}
 
 }
@@ -4717,7 +4637,6 @@ Components.Window = (function()
 		end
 		
 		table.insert(rootChildren, Window.AcrylicPaint.Frame)
-
 		table.insert(rootChildren, Window.TabDisplay)
 		table.insert(rootChildren, Window.ContainerCanvas)
 		table.insert(rootChildren, TabFrame)
@@ -7366,14 +7285,14 @@ ElementsTable.Colorpicker = (function()
 
 			Display()
 
-			-- - PALETTE SWATCHES -
+			-- ── PALETTE SWATCHES ─────────────────────────────────────────────
 			-- Rendered only when Config.Palette = { Color3, Color3, ... } is set.
 			-- Each swatch is a small clickable square that instantly applies that
 			-- color to the picker without closing the dialog.
 			if Config.Palette and #Config.Palette > 0 then
 				local swatchSize = 20
 				local swatchGap  = 4
-				-- Last fixed control ends at Y~244 (color preview frames).
+				-- Last fixed control ends at Y≈244 (color preview frames).
 				-- paletteTopY gives 8px breathing room below that.
 				-- Dialog expands by 30px so the button strip (always pinned 70px
 				-- from the bottom) stays clear.
@@ -7432,7 +7351,7 @@ ElementsTable.Colorpicker = (function()
 					end
 				end
 			end
-			-- -
+			-- ─────────────────────────────────────────────────────────────────
 
 			Dialog:Button("Done", function()
 				Colorpicker:SetValue({ Hue, Sat, Vib }, Transparency)
@@ -7573,7 +7492,7 @@ ElementsTable.Input = (function()
 
 	return Element
 end)()
--- -
+-- ──────────────────────────────────────────────────────────────────────────────
 -- PROGRESS BAR
 -- API:
 --   Section:AddProgressBar("MyBar", {
@@ -7585,7 +7504,7 @@ end)()
 --   })
 --   bar:SetValue(75)      -- animate fill to 75
 --   bar:OnChanged(func)   -- fired after SetValue
--- -
+-- ──────────────────────────────────────────────────────────────────────────────
 ElementsTable.ProgressBar = (function()
 	local Element = {}
 	Element.__index = Element
@@ -7658,7 +7577,10 @@ ElementsTable.ProgressBar = (function()
 			BarFill,
 		})
 
-		-- SingleMotor drives BarFill.Size.X scale directly
+		-- Flipper spring motor so fill animates smoothly on SetValue
+		local FillMotor, SetFill = Creator.SpringMotor(0, BarFill, "Size")
+		-- Override: we need to drive Size.X scale, not a transparency
+		-- Re-implement with SingleMotor driving the Scale directly
 		local FillScaleMotor = Flipper.SingleMotor.new(0)
 		FillScaleMotor:onStep(function(v)
 			BarFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
@@ -10008,6 +9930,7 @@ local InterfaceManager = {} do
 
 
 
+
 		section:AddSlider("WindowTransparency", {
 
 
@@ -10095,8 +10018,716 @@ Library.CreateWindow = function(self, Config)
 	end
 
 
+-- ============================================================
+-- KEY SYSTEM — helpers (injected by FluentPlus)
+-- ============================================================
+local function _ks_resolveIcon(name)
+	if not name or name == "" then return nil end
+	local resolved = Library:GetIcon(name)
+	if resolved then return resolved end
+	if type(name) == "string" and name:match("^rbxassetid://") then return name end
+	return nil
+end
 
+local function _ks_getErrorMsg(errCode, customErrors)
+	if customErrors and customErrors[errCode] then
+		return customErrors[errCode]
+	end
+	local defaults = {
+		KEY_INVALID       = "Key not found. Please check and try again.",
+		KEY_EXPIRED       = "Your key has expired. Please get a new one.",
+		HWID_BANNED       = "Your hardware has been banned.",
+		KEY_INVALIDATED   = "This key has been manually disabled.",
+		ALREADY_USED      = "This one-time key has already been used.",
+		HWID_MISMATCH     = "HWID limit reached for this key.",
+		SERVICE_NOT_FOUND = "Service not found.",
+		SERVICE_MISMATCH  = "This key is for a different service.",
+		PREMIUM_REQUIRED  = "A premium key is required.",
+		RATE_LIMITTED     = "Please wait before getting a new link.",
+		ERROR             = "Network error. Please try again.",
+	}
+	if errCode and type(errCode) == "string" and errCode:match("^http %d+") then
+		return "Server error (" .. errCode .. "). Please try again."
+	end
+	return defaults[errCode]
+		or (type(errCode) == "string" and errCode ~= "" and errCode)
+		or "Key could not be verified."
+end
 
+local function _ks_validateList(key, keyList)
+	for _, entry in ipairs(keyList) do
+		if entry == key then
+			return { valid = true, tier = "free" }
+		end
+		if type(entry) == "string" and entry:match("^https?://") then
+			local ok, contents = pcall(function() return game:HttpGet(entry) end)
+			if ok and contents then
+				for line in contents:gmatch("[^\n]+") do
+					if line:match("^%s*(.-)%s*$") == key then
+						return { valid = true, tier = "free" }
+					end
+				end
+			end
+		end
+	end
+	return { valid = false, error = "KEY_INVALID" }
+end
+
+local function _ks_saveKey(folder, fileName, key)
+	pcall(function()
+		if not isfolder(folder) then makefolder(folder) end
+		writefile(folder .. "/" .. fileName .. ".json", httpService:JSONEncode({ key = key }))
+	end)
+end
+
+local function _ks_loadKey(folder, fileName)
+	local path = folder .. "/" .. fileName .. ".json"
+	local ok, data = pcall(readfile, path)
+	if ok and data and data ~= "" then
+		local ok2, tbl = pcall(function() return httpService:JSONDecode(data) end)
+		if ok2 and tbl and type(tbl.key) == "string" and tbl.key ~= "" then
+			return tbl.key
+		end
+	end
+	return nil
+end
+
+local function _ks_wipeKey(folder, fileName)
+	pcall(function()
+		writefile(folder .. "/" .. fileName .. ".json", httpService:JSONEncode({ key = "" }))
+	end)
+end
+
+local _ks_hardFail = {
+	KEY_INVALID = true, KEY_EXPIRED = true,
+	KEY_INVALIDATED = true, ALREADY_USED = true, HWID_BANNED = true,
+}
+
+local function _ks_Run(ksConfig, windowConfig)
+	local New = Creator.New
+
+	local title          = ksConfig.Title    or windowConfig.Title or "Key System"
+	local subtitle       = ksConfig.Subtitle or "Enter your key to continue"
+	local note           = ksConfig.Note     or ""
+	local icon           = _ks_resolveIcon(ksConfig.Icon or "shield")
+	local noteIcon       = _ks_resolveIcon(ksConfig.NoteIcon or "info")
+	local fileName       = ksConfig.FileName or "FluentKey"
+	local saveKey        = ksConfig.SaveKey  ~= false
+	local folder         = "FluentKeySystem"
+	local customErrors   = ksConfig.Errors or {}
+
+	local validateFn
+	if type(ksConfig.Validate) == "function" then
+		validateFn = ksConfig.Validate
+	elseif type(ksConfig.Keys) == "table" then
+		validateFn = function(k) return _ks_validateList(k, ksConfig.Keys) end
+	else
+		error("[FluentPlus KeySystem] KeySettings requires either a Validate function or a Keys table.")
+	end
+
+	local getKeyFn        = ksConfig.GetKey and type(ksConfig.GetKey.Action) == "function" and ksConfig.GetKey.Action or nil
+	local getKeyLabel     = (ksConfig.GetKey and ksConfig.GetKey.Label) or "Get Key"
+	local getKeyIcon      = _ks_resolveIcon((ksConfig.GetKey and ksConfig.GetKey.Icon) or "link")
+	local rateLimitEnabled = ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Enabled
+	local rateLimitSecs   = rateLimitEnabled and (ksConfig.GetKey.RateLimit.Seconds or 300) or nil
+	local rateLimitMsg    = (ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Message) or "Please wait before getting a new link."
+	local lastGetKeyTime  = 0
+
+	local loaderMode     = (ksConfig.OnSuccess and ksConfig.OnSuccess.Mode) or "loading"
+	local loaderText     = (ksConfig.OnSuccess and ksConfig.OnSuccess.LoadingText) or "Loading..."
+	local loaderDuration = (ksConfig.OnSuccess and ksConfig.OnSuccess.Duration) or 2
+
+	-- Apply theme so ThemeTags work immediately
+	Library.Theme  = windowConfig.Theme or "Dark"
+	Creator.Theme  = Library.Theme
+	Library.UseAcrylic = windowConfig.Acrylic or false
+	Library.Acrylic    = windowConfig.Acrylic or false
+	if windowConfig.Acrylic then Acrylic.init() end
+
+	-- Window dimensions
+	local ksW, ksH = 420, 320
+	local vpSize   = Camera.ViewportSize
+	local startX   = math.floor((vpSize.X - ksW) / 2)
+	local startY   = math.floor((vpSize.Y - ksH) / 2)
+
+	local KsAcrylic = Acrylic.AcrylicPaint()
+
+	local KsRoot = New("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(ksW, ksH),
+		Position = UDim2.fromOffset(startX, startY),
+		Parent = Library.GUI,
+	}, { KsAcrylic.Frame })
+
+	if Library.UseAcrylic then
+		KsAcrylic.AddParent(KsRoot)
+	end
+
+	-- ── Title bar ────────────────────────────────────────────
+	local TitleBarFrame = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 42),
+		BackgroundTransparency = 1,
+		Parent = KsRoot,
+	}, {
+		New("Frame", {
+			Size = UDim2.new(1, -16, 1, 0),
+			Position = UDim2.new(0, 12, 0, 0),
+			BackgroundTransparency = 1,
+		}, {
+			New("UIListLayout", {
+				Padding = UDim.new(0, 5),
+				FillDirection = Enum.FillDirection.Horizontal,
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+			}),
+			New("TextLabel", {
+				Text = windowConfig.Title or "Script",
+				FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+				TextSize = 12,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextYAlignment = Enum.TextYAlignment.Center,
+				Size = UDim2.fromScale(0, 1),
+				AutomaticSize = Enum.AutomaticSize.X,
+				BackgroundTransparency = 1,
+				LayoutOrder = 1,
+				ThemeTag = { TextColor3 = "Text" },
+			}),
+		}),
+		New("Frame", {
+			BackgroundTransparency = 0.5,
+			Size = UDim2.new(1, 0, 0, 1),
+			Position = UDim2.new(0, 0, 1, 0),
+			ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+		}),
+	})
+
+	-- Close button
+	local KsCloseBtn = New("TextButton", {
+		Size = UDim2.fromOffset(34, 34),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -4, 0, 4),
+		BackgroundTransparency = 1,
+		Text = "",
+		Parent = KsRoot,
+		ThemeTag = { BackgroundColor3 = "Text" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 7) }),
+		New("ImageLabel", {
+			Image = Components.Assets.Close,
+			Size = UDim2.fromOffset(16, 16),
+			Position = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundTransparency = 1,
+			ThemeTag = { ImageColor3 = "Text" },
+		}),
+	})
+
+	local CloseHoverMotor, CloseSetTrans = Creator.SpringMotor(1, KsCloseBtn, "BackgroundTransparency")
+	Creator.AddSignal(KsCloseBtn.MouseEnter,       function() CloseSetTrans(0.94) end)
+	Creator.AddSignal(KsCloseBtn.MouseLeave,       function() CloseSetTrans(1, true) end)
+	Creator.AddSignal(KsCloseBtn.MouseButton1Down, function() CloseSetTrans(0.96) end)
+	Creator.AddSignal(KsCloseBtn.MouseButton1Up,   function() CloseSetTrans(0.94) end)
+
+	-- Dragging on title bar
+	do
+		local dragging, dragStart, startPos = false, nil, nil
+		Creator.AddSignal(TitleBarFrame.InputBegan, function(inp)
+			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				dragStart = inp.Position
+				startPos  = KsRoot.Position
+				inp.Changed:Connect(function()
+					if inp.UserInputState == Enum.UserInputState.End then dragging = false end
+				end)
+			end
+		end)
+		Creator.AddSignal(UserInputService.InputChanged, function(inp)
+			if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+				local delta = inp.Position - dragStart
+				KsRoot.Position = UDim2.fromOffset(startPos.X.Offset + delta.X, startPos.Y.Offset + delta.Y)
+			end
+		end)
+	end
+
+	-- ── Content area ─────────────────────────────────────────
+	local ContentGroup = New("CanvasGroup", {
+		Size = UDim2.new(1, -48, 1, -54),
+		Position = UDim2.fromOffset(24, 48),
+		BackgroundTransparency = 1,
+		GroupTransparency = 0,
+		Parent = KsRoot,
+	}, {
+		New("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Padding = UDim.new(0, 10),
+		}),
+	})
+
+	-- Header: icon + title + subtitle
+	local HeaderHolder = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		LayoutOrder = 1,
+		Parent = ContentGroup,
+	}, {
+		New("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Padding = UDim.new(0, 4),
+		}),
+	})
+
+	if icon then
+		New("ImageLabel", {
+			Image = icon,
+			Size = UDim2.fromOffset(26, 26),
+			BackgroundTransparency = 1,
+			LayoutOrder = 1,
+			Parent = HeaderHolder,
+			ThemeTag = { ImageColor3 = "Accent" },
+		})
+	end
+
+	New("TextLabel", {
+		Text = title,
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+		TextSize = 17,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		LayoutOrder = 2,
+		Parent = HeaderHolder,
+		ThemeTag = { TextColor3 = "Text" },
+	})
+
+	New("TextLabel", {
+		Text = subtitle,
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize = 12,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		LayoutOrder = 3,
+		Parent = HeaderHolder,
+		ThemeTag = { TextColor3 = "SubText" },
+	})
+
+	-- ── Key input ─────────────────────────────────────────────
+	local InputOuter = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 36),
+		BackgroundTransparency = 0.9,
+		LayoutOrder = 2,
+		Parent = ContentGroup,
+		ThemeTag = { BackgroundColor3 = "Input" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+		New("UIStroke", {
+			Transparency = 0.5,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			ThemeTag = { Color = "InElementBorder" },
+		}),
+	})
+
+	local KsInputBox = New("TextBox", {
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize = 13,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -16, 1, 0),
+		Position = UDim2.fromOffset(8, 0),
+		PlaceholderText = "Paste your key here...",
+		ClearTextOnFocus = false,
+		Parent = InputOuter,
+		ThemeTag = { TextColor3 = "Text", PlaceholderColor3 = "SubText" },
+	})
+
+	local InputIndicator = New("Frame", {
+		Size = UDim2.new(1, -4, 0, 1),
+		Position = UDim2.new(0, 2, 1, 0),
+		AnchorPoint = Vector2.new(0, 1),
+		BackgroundTransparency = 0.5,
+		Parent = InputOuter,
+		ThemeTag = { BackgroundColor3 = "InputIndicator" },
+	})
+
+	Creator.AddSignal(KsInputBox.Focused, function()
+		TweenService:Create(InputIndicator, TweenInfo.new(0.15), {
+			Size = UDim2.new(1, -2, 0, 2),
+			BackgroundTransparency = 0,
+		}):Play()
+		Creator.OverrideTag(InputIndicator, { BackgroundColor3 = "Accent" })
+	end)
+	Creator.AddSignal(KsInputBox.FocusLost, function()
+		TweenService:Create(InputIndicator, TweenInfo.new(0.15), {
+			Size = UDim2.new(1, -4, 0, 1),
+			BackgroundTransparency = 0.5,
+		}):Play()
+		Creator.OverrideTag(InputIndicator, { BackgroundColor3 = "InputIndicator" })
+	end)
+
+	-- ── Button row ────────────────────────────────────────────
+	local ButtonRow = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 34),
+		BackgroundTransparency = 1,
+		LayoutOrder = 3,
+		Parent = ContentGroup,
+	}, {
+		New("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+
+	local function MakeKsButton(labelTxt, btnIcon, layoutOrder, isAccent)
+		local btnChildren = {
+			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+			New("UIStroke", {
+				Transparency = isAccent and 0.35 or 0.55,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				ThemeTag = { Color = isAccent and "Accent" or "InElementBorder" },
+			}),
+			New("UIListLayout", {
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				Padding = UDim.new(0, 6),
+				SortOrder = Enum.SortOrder.LayoutOrder,
+			}),
+			New("UIPadding", {
+				PaddingLeft  = UDim.new(0, 14),
+				PaddingRight = UDim.new(0, 14),
+			}),
+		}
+		if btnIcon then
+			table.insert(btnChildren, New("ImageLabel", {
+				Image = btnIcon,
+				Size = UDim2.fromOffset(14, 14),
+				BackgroundTransparency = 1,
+				LayoutOrder = 1,
+				ThemeTag = { ImageColor3 = isAccent and "Accent" or "SubText" },
+			}))
+		end
+		table.insert(btnChildren, New("TextLabel", {
+			Text = labelTxt,
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+			TextSize = 13,
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			LayoutOrder = 2,
+			ThemeTag = { TextColor3 = isAccent and "Accent" or "Text" },
+		}))
+
+		local btn = New("TextButton", {
+			Size = UDim2.new(0, 0, 1, 0),
+			AutomaticSize = Enum.AutomaticSize.X,
+			BackgroundTransparency = 0.92,
+			Text = "",
+			LayoutOrder = layoutOrder,
+			Parent = ButtonRow,
+			ThemeTag = { BackgroundColor3 = isAccent and "Accent" or "Element" },
+		}, btnChildren)
+
+		local _, SetBtnTrans = Creator.SpringMotor(0.92, btn, "BackgroundTransparency")
+		Creator.AddSignal(btn.MouseEnter,       function() SetBtnTrans(0.84) end)
+		Creator.AddSignal(btn.MouseLeave,       function() SetBtnTrans(0.92) end)
+		Creator.AddSignal(btn.MouseButton1Down, function() SetBtnTrans(0.96) end)
+		Creator.AddSignal(btn.MouseButton1Up,   function() SetBtnTrans(0.84) end)
+		return btn
+	end
+
+	local SubmitBtn = MakeKsButton("Submit Key", _ks_resolveIcon("key"), 1, true)
+	local GetKeyBtn = getKeyFn and MakeKsButton(getKeyLabel, getKeyIcon, 2, false) or nil
+
+	-- ── Status label ─────────────────────────────────────────
+	local StatusLabel = New("TextLabel", {
+		Text = "",
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize = 12,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextWrapped = true,
+		LayoutOrder = 4,
+		Visible = false,
+		Parent = ContentGroup,
+		ThemeTag = { TextColor3 = "SubText" },
+	})
+
+	local function SetStatus(msg, isError)
+		StatusLabel.Text = msg or ""
+		StatusLabel.Visible = (msg ~= nil and msg ~= "")
+		Creator.OverrideTag(StatusLabel, { TextColor3 = isError and "Accent" or "SubText" })
+	end
+
+	-- ── Note divider + text ───────────────────────────────────
+	if note ~= "" then
+		New("Frame", {
+			Size = UDim2.new(1, 0, 0, 1),
+			BackgroundTransparency = 0.6,
+			LayoutOrder = 5,
+			Parent = ContentGroup,
+			ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+		})
+
+		local NoteRow = New("Frame", {
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 1,
+			LayoutOrder = 6,
+			Parent = ContentGroup,
+		}, {
+			New("UIListLayout", {
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding = UDim.new(0, 5),
+				SortOrder = Enum.SortOrder.LayoutOrder,
+			}),
+		})
+
+		if noteIcon then
+			New("ImageLabel", {
+				Image = noteIcon,
+				Size = UDim2.fromOffset(13, 13),
+				BackgroundTransparency = 1,
+				LayoutOrder = 1,
+				Parent = NoteRow,
+				ThemeTag = { ImageColor3 = "SubText" },
+			})
+		end
+
+		New("TextLabel", {
+			Text = note,
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			TextSize = 12,
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, noteIcon and -20 or 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = true,
+			LayoutOrder = 2,
+			Parent = NoteRow,
+			ThemeTag = { TextColor3 = "SubText" },
+		})
+	end
+
+	-- ── Loading overlay ───────────────────────────────────────
+	local LoadOverlay = New("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 10,
+		Parent = KsRoot,
+	}, {
+		New("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 12),
+		}),
+		New("UIPadding", {
+			PaddingLeft = UDim.new(0, 24), PaddingRight = UDim.new(0, 24),
+		}),
+	})
+
+	New("TextLabel", {
+		Text = loaderText,
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+		TextSize = 14,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Center,
+		LayoutOrder = 1,
+		Parent = LoadOverlay,
+		ThemeTag = { TextColor3 = "Text" },
+	})
+
+	local ProgressRail = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 4),
+		BackgroundTransparency = 0.6,
+		LayoutOrder = 2,
+		Parent = LoadOverlay,
+		ThemeTag = { BackgroundColor3 = "SliderRail" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+	})
+
+	local ProgressFill = New("Frame", {
+		Size = UDim2.new(0, 0, 1, 0),
+		Parent = ProgressRail,
+		ThemeTag = { BackgroundColor3 = "Accent" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+	})
+
+	-- Apply theme to everything we just built
+	Creator.UpdateTheme()
+
+	-- ── Saved key silent check ────────────────────────────────
+	local fSetClipboard = setclipboard or toclipboard or function() end
+
+	if saveKey and not RunService:IsStudio() then
+		local savedKey = _ks_loadKey(folder, fileName)
+		if savedKey and savedKey ~= "" then
+			SetStatus("Checking saved key...", false)
+			local ok, result = pcall(validateFn, savedKey)
+			if ok and result and result.valid then
+				-- Immediately clean up and skip UI
+				Library._KeySystemTier   = result.tier or "free"
+				Library._KeySystemResult = result
+				Library._KeySystemKey    = savedKey
+				if Library.UseAcrylic and KsAcrylic.Model then
+					pcall(function() KsAcrylic.Model:Destroy() end)
+				end
+				KsRoot:Destroy()
+				return Library._KeySystemTier
+			else
+				local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
+				if _ks_hardFail[errCode] then
+					_ks_wipeKey(folder, fileName)
+				else
+					-- Network error — prefill input so user can retry easily
+					KsInputBox.Text = savedKey
+				end
+				SetStatus("", false)
+			end
+		end
+	end
+
+	-- ── Close button ──────────────────────────────────────────
+	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
+		if Library.UseAcrylic and KsAcrylic.Model then
+			pcall(function() KsAcrylic.Model:Destroy() end)
+		end
+		KsRoot:Destroy()
+	end)
+
+	-- ── Get Key button ────────────────────────────────────────
+	if GetKeyBtn and getKeyFn then
+		Creator.AddSignal(GetKeyBtn.MouseButton1Click, function()
+			if rateLimitSecs then
+				local now = tick()
+				if (now - lastGetKeyTime) < rateLimitSecs then
+					SetStatus(rateLimitMsg, true)
+					return
+				end
+				lastGetKeyTime = now
+			end
+			local ok, linkOrErr = pcall(getKeyFn)
+			if ok and type(linkOrErr) == "string" and linkOrErr ~= "" then
+				pcall(function() fSetClipboard(linkOrErr) end)
+				SetStatus("Link copied to clipboard!", false)
+			else
+				SetStatus("Failed to get link. Please try again.", true)
+			end
+		end)
+	end
+
+	-- ── Submit button ─────────────────────────────────────────
+	local submitting = false
+
+	local function doSubmit()
+		if submitting then return end
+		local key = (KsInputBox.Text or ""):match("^%s*(.-)%s*$")
+		if key == "" then
+			SetStatus("Please enter a key.", true)
+			return
+		end
+		submitting = true
+		SetStatus("Verifying...", false)
+
+		task.spawn(function()
+			local ok, result = pcall(validateFn, key)
+			if not ok then result = { valid = false, error = "ERROR" } end
+
+			if not result or not result.valid then
+				local errCode = result and result.error or "ERROR"
+				if errCode == "HWID_BANNED" then
+					game.Players.LocalPlayer:Kick("You have been banned.")
+					return
+				end
+				SetStatus(_ks_getErrorMsg(errCode, customErrors), true)
+				submitting = false
+				return
+			end
+
+			-- Persist
+			if saveKey and not RunService:IsStudio() then
+				_ks_saveKey(folder, fileName, key)
+			end
+
+			local tier = result.tier or "free"
+			Library._KeySystemTier   = tier
+			Library._KeySystemResult = result
+			Library._KeySystemKey    = key
+
+			-- Transition
+			if loaderMode == "instant" then
+				if Library.UseAcrylic and KsAcrylic.Model then
+					pcall(function() KsAcrylic.Model:Destroy() end)
+				end
+				KsRoot:Destroy()
+			else
+				-- Fade content out
+				local FadeMotor = Flipper.SingleMotor.new(0)
+				FadeMotor:onStep(function(v) ContentGroup.GroupTransparency = v end)
+				FadeMotor:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
+				FadeMotor:start()
+				task.wait(0.25)
+				ContentGroup.Visible = false
+				LoadOverlay.Visible  = true
+
+				-- Animate progress bar
+				local FillMotor = Flipper.SingleMotor.new(0)
+				FillMotor:onStep(function(v)
+					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
+				end)
+				FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.2, dampingRatio = 1 }))
+				FillMotor:start()
+				task.wait(loaderDuration)
+
+				if Library.UseAcrylic and KsAcrylic.Model then
+					pcall(function() KsAcrylic.Model:Destroy() end)
+				end
+				KsRoot:Destroy()
+			end
+		end)
+	end
+
+	Creator.AddSignal(SubmitBtn.MouseButton1Click, doSubmit)
+
+	-- Also allow pressing Enter to submit
+	Creator.AddSignal(KsInputBox.FocusLost, function(enterPressed)
+		if enterPressed then doSubmit() end
+	end)
+
+	-- ── Block until window gone ───────────────────────────────
+	while KsRoot and KsRoot.Parent do
+		task.wait(0.05)
+	end
+
+	return Library._KeySystemTier or nil
+end
+
+-- ── Key System gate in CreateWindow (inserted below) ─────────────────────────
+
+	-- Key System gate
+	if Config.KeySystem == true and type(Config.KeySettings) == "table" then
+		local _ksTier = _ks_Run(Config.KeySettings, Config)
+		if not _ksTier then
+			-- User closed the key window without a valid key
+			return nil
+		end
+	end
 
 	Library.MinimizeKey = Config.MinimizeKey or Enum.KeyCode.LeftControl
 
@@ -10874,6 +11505,7 @@ end
 
 
 function Library:SetWindowTransparency(Value)
+
 
 	if Library.Window and Library.UseAcrylic then
 
