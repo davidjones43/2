@@ -10502,8 +10502,17 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- Paste button action
 	if PasteBtn then
 		Creator.AddSignal(PasteBtn.MouseButton1Click, function()
-			local ok, text = pcall(function() return getclipboard() end)
-			if ok and type(text) == "string" and text ~= "" then
+			local text
+			for _, fn in ipairs({ getclipboard, clgui and clgui.getclipboard, syn and syn.get_clipboard, Clipboard and Clipboard.get }) do
+				if type(fn) == "function" then
+					local ok, result = pcall(fn)
+					if ok and type(result) == "string" and result ~= "" then
+						text = result
+						break
+					end
+				end
+			end
+			if text then
 				KsInputBox.Text = text:match("^%s*(.-)%s*$")
 			end
 		end)
@@ -10544,11 +10553,11 @@ local function _ks_Run(ksConfig, windowConfig)
 
 		local children = {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-			New("UIStroke", {
-				Transparency        = isAccent and 0.3 or 0.55,
+			isAccent and New("UIStroke", {
+				Transparency        = 0.4,
 				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
-				ThemeTag            = { Color = isAccent and "Accent" or "InElementBorder" },
-			}),
+				ThemeTag            = { Color = "Accent" },
+			}) or nil,
 			New("UIListLayout", {
 				FillDirection       = Enum.FillDirection.Horizontal,
 				VerticalAlignment   = Enum.VerticalAlignment.Center,
@@ -10830,16 +10839,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	end
 
 	local function destroyKsWindow()
-		-- Scale + fade out
-		local ExitScale = Flipper.SingleMotor.new(1)
-		ExitScale:onStep(function(v) ScaleObj.Scale = v end)
-		ExitScale:setGoal(Flipper.Spring.new(0.92, { frequency = 8, dampingRatio = 1 }))
-		ExitScale:start()
-		local ExitAlpha = Flipper.SingleMotor.new(1)
-		ExitAlpha:onStep(function(v) KsRootCanvas.GroupTransparency = 1 - v end)
-		ExitAlpha:setGoal(Flipper.Spring.new(0, { frequency = 8, dampingRatio = 1 }))
-		ExitAlpha:start()
-		task.wait(0.2)
 		if Library.UseAcrylic and KsAcrylic.Model then
 			pcall(function() KsAcrylic.Model:Destroy() end)
 		end
@@ -10921,7 +10920,125 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- ── Close button ──────────────────────────────────────────
 	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
-		destroyKsWindow()
+		if Library.DialogOpen then return end
+		Library.DialogOpen = true
+		local TintFrame = New("TextButton", {
+			Text                = "",
+			Size                = UDim2.fromScale(1, 1),
+			BackgroundColor3    = Color3.fromRGB(0, 0, 0),
+			BackgroundTransparency = 0.5,
+			Parent              = KsRootCanvas,
+			ZIndex              = 20,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		})
+		local DialogRoot = New("CanvasGroup", {
+			Size                = UDim2.fromOffset(300, 140),
+			AnchorPoint         = Vector2.new(0.5, 0.5),
+			Position            = UDim2.fromScale(0.5, 0.5),
+			GroupTransparency   = 0,
+			Parent              = TintFrame,
+			ZIndex              = 21,
+			ThemeTag            = { BackgroundColor3 = "Dialog" },
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("UIStroke", {
+				Transparency        = 0.5,
+				ThemeTag            = { Color = "DialogBorder" },
+			}),
+		})
+		New("TextLabel", {
+			Text                = "Close",
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+			TextSize            = 18,
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			BackgroundTransparency = 1,
+			Size                = UDim2.new(1, -40, 0, 22),
+			Position            = UDim2.fromOffset(20, 20),
+			Parent              = DialogRoot,
+			ZIndex              = 22,
+			ThemeTag            = { TextColor3 = "Text" },
+		})
+		New("TextLabel", {
+			Text                = "Are you sure you want to close the key system?",
+			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			TextSize            = 13,
+			TextXAlignment      = Enum.TextXAlignment.Left,
+			TextYAlignment      = Enum.TextYAlignment.Top,
+			TextWrapped         = true,
+			BackgroundTransparency = 1,
+			Size                = UDim2.new(1, -40, 0, 40),
+			Position            = UDim2.fromOffset(20, 50),
+			Parent              = DialogRoot,
+			ZIndex              = 22,
+			ThemeTag            = { TextColor3 = "SubText" },
+		})
+		local BtnHolder = New("Frame", {
+			Size                = UDim2.new(1, -40, 0, 32),
+			AnchorPoint         = Vector2.new(0.5, 1),
+			Position            = UDim2.new(0.5, 0, 1, -14),
+			BackgroundTransparency = 1,
+			Parent              = DialogRoot,
+			ZIndex              = 22,
+		}, {
+			New("UIListLayout", {
+				FillDirection       = Enum.FillDirection.Horizontal,
+				HorizontalAlignment = Enum.HorizontalAlignment.Right,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
+				Padding             = UDim.new(0, 8),
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+			}),
+		})
+		local function MakeDialogBtn(label, layoutOrder, isPrimary)
+			local btn = New("TextButton", {
+				Size                = UDim2.new(0, 0, 1, 0),
+				AutomaticSize       = Enum.AutomaticSize.X,
+				LayoutOrder         = layoutOrder,
+				BackgroundTransparency = 0.9,
+				Text                = "",
+				Parent              = BtnHolder,
+				ZIndex              = 23,
+				ThemeTag            = { BackgroundColor3 = "DialogButton" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 5) }),
+				New("UIStroke", {
+					Transparency        = 0.6,
+					ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+					ThemeTag            = { Color = isPrimary and "Accent" or "DialogButtonBorder" },
+				}),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 14),
+					PaddingRight = UDim.new(0, 14),
+				}),
+				New("TextLabel", {
+					Text            = label,
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+					TextSize        = 13,
+					BackgroundTransparency = 1,
+					Size            = UDim2.fromScale(1, 1),
+					ZIndex          = 24,
+					ThemeTag        = { TextColor3 = isPrimary and "Accent" or "Text" },
+				}),
+			})
+			local _, SetT = Creator.SpringMotor(0.9, btn, "BackgroundTransparency", true)
+			Creator.AddSignal(btn.MouseEnter,       function() SetT(0.82) end)
+			Creator.AddSignal(btn.MouseLeave,       function() SetT(0.9)  end)
+			Creator.AddSignal(btn.MouseButton1Down, function() SetT(0.95) end)
+			Creator.AddSignal(btn.MouseButton1Up,   function() SetT(0.82) end)
+			return btn
+		end
+		local NoBtn  = MakeDialogBtn("No",  1, false)
+		local YesBtn = MakeDialogBtn("Yes", 2, true)
+		Creator.UpdateTheme()
+		Creator.AddSignal(NoBtn.MouseButton1Click, function()
+			Library.DialogOpen = false
+			TintFrame:Destroy()
+		end)
+		Creator.AddSignal(YesBtn.MouseButton1Click, function()
+			Library.DialogOpen = false
+			TintFrame:Destroy()
+			destroyKsWindow()
+		end)
 	end)
 
 	-- ── Get Key button ────────────────────────────────────────
@@ -10996,7 +11113,6 @@ local function _ks_Run(ksConfig, windowConfig)
 
 		submitting = true
 		if SubmitLabel then SubmitLabel.Text = "Verifying..." end
-		if SubmitIcon  then SubmitIcon.Image = ICON_LOADER or "" end
 
 		task.spawn(function()
 			local ok, result = pcall(validateFn, key)
