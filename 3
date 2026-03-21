@@ -10313,67 +10313,18 @@ local function _ks_Run(ksConfig, windowConfig)
 		}),
 	})
 
-	-- ── Header: icon LEFT of title/subtitle ──────────────────
-	local HeaderHolder = New("Frame", {
+	-- Subtitle label, left-aligned above input
+	New("TextLabel", {
+		Text                = subtitle,
+		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+		TextSize            = 13,
+		BackgroundTransparency = 1,
 		Size                = UDim2.new(1, 0, 0, 0),
 		AutomaticSize       = Enum.AutomaticSize.Y,
-		BackgroundTransparency = 1,
+		TextXAlignment      = Enum.TextXAlignment.Left,
 		LayoutOrder         = 1,
 		Parent              = ContentGroup,
-	}, {
-		New("UIListLayout", {
-			FillDirection       = Enum.FillDirection.Horizontal,
-			SortOrder           = Enum.SortOrder.LayoutOrder,
-			VerticalAlignment   = Enum.VerticalAlignment.Center,
-			Padding             = UDim.new(0, 10),
-		}),
-	})
-
-	if icon then
-		New("ImageLabel", {
-			Image               = icon,
-			Size                = UDim2.fromOffset(28, 28),
-			BackgroundTransparency = 1,
-			LayoutOrder         = 1,
-			Parent              = HeaderHolder,
-			ThemeTag            = { ImageColor3 = "Accent" },
-		})
-	end
-
-	-- Title + subtitle stacked to the right of the icon
-	New("Frame", {
-		Size                = UDim2.new(1, icon and -38 or 0, 0, 0),
-		AutomaticSize       = Enum.AutomaticSize.Y,
-		BackgroundTransparency = 1,
-		LayoutOrder         = 2,
-		Parent              = HeaderHolder,
-	}, {
-		New("UIListLayout", {
-			SortOrder           = Enum.SortOrder.LayoutOrder,
-			Padding             = UDim.new(0, 2),
-		}),
-		New("TextLabel", {
-			Text                = title,
-			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-			TextSize            = 16,
-			BackgroundTransparency = 1,
-			Size                = UDim2.new(1, 0, 0, 0),
-			AutomaticSize       = Enum.AutomaticSize.Y,
-			TextXAlignment      = Enum.TextXAlignment.Left,
-			LayoutOrder         = 1,
-			ThemeTag            = { TextColor3 = "Text" },
-		}),
-		New("TextLabel", {
-			Text                = subtitle,
-			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-			TextSize            = 12,
-			BackgroundTransparency = 1,
-			Size                = UDim2.new(1, 0, 0, 0),
-			AutomaticSize       = Enum.AutomaticSize.Y,
-			TextXAlignment      = Enum.TextXAlignment.Left,
-			LayoutOrder         = 2,
-			ThemeTag            = { TextColor3 = "SubText" },
-		}),
+		ThemeTag            = { TextColor3 = "Text" },
 	})
 
 	-- ── Key input with icon + paste button ───────────────────
@@ -10404,64 +10355,60 @@ local function _ks_Run(ksConfig, windowConfig)
 	})
 
 	-- Paste button on the right
-	local pasteSupported = type(getclipboard) == "function" or (type(clgui) == "table" and type(clgui.getclipboard) == "function") or (type(syn) == "table" and type(syn.get_clipboard) == "function")
-	local PasteBtn
-	if pasteSupported then
-		PasteBtn = New("TextButton", {
-			Size                = UDim2.new(0, 0, 0, 26),
-			AutomaticSize       = Enum.AutomaticSize.X,
-			AnchorPoint         = Vector2.new(1, 0.5),
-			Position            = UDim2.new(1, -6, 0.5, 0),
-			BackgroundTransparency = 0.9,
-			Text                = "",
-			Parent              = InputOuter,
-			ThemeTag            = { BackgroundColor3 = "Element" },
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
-			New("UIStroke", {
-				Transparency    = 0.7,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				ThemeTag        = { Color = "InElementBorder" },
-			}),
-			New("UIListLayout", {
-				FillDirection   = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				HorizontalAlignment = Enum.HorizontalAlignment.Center,
-				Padding         = UDim.new(0, 4),
-				SortOrder       = Enum.SortOrder.LayoutOrder,
-			}),
-			New("UIPadding", {
-				PaddingLeft  = UDim.new(0, 7),
-				PaddingRight = UDim.new(0, 7),
-			}),
-			New("ImageLabel", {
-				Image           = ICON_CLIPBOARD or "",
-				Size            = UDim2.fromOffset(12, 12),
-				BackgroundTransparency = 1,
-				LayoutOrder     = 1,
-				ThemeTag        = { ImageColor3 = "SubText" },
-			}),
-			New("TextLabel", {
-				Text            = "Paste",
-				FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-				TextSize        = 11,
-				BackgroundTransparency = 1,
-				Size            = UDim2.fromScale(0, 1),
-				AutomaticSize   = Enum.AutomaticSize.X,
-				LayoutOrder     = 2,
-				ThemeTag        = { TextColor3 = "SubText" },
-			}),
-		})
+	local PasteBtn = New("TextButton", {
+		Size                = UDim2.new(0, 0, 0, 26),
+		AutomaticSize       = Enum.AutomaticSize.X,
+		AnchorPoint         = Vector2.new(1, 0.5),
+		Position            = UDim2.new(1, -6, 0.5, 0),
+		BackgroundTransparency = 0.9,
+		Text                = "",
+		Parent              = InputOuter,
+		ThemeTag            = { BackgroundColor3 = "Element" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+		New("UIStroke", {
+			Transparency    = 0.7,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			ThemeTag        = { Color = "InElementBorder" },
+		}),
+		New("UIListLayout", {
+			FillDirection   = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Padding         = UDim.new(0, 4),
+			SortOrder       = Enum.SortOrder.LayoutOrder,
+		}),
+		New("UIPadding", {
+			PaddingLeft  = UDim.new(0, 7),
+			PaddingRight = UDim.new(0, 7),
+		}),
+		New("ImageLabel", {
+			Image           = ICON_CLIPBOARD or "",
+			Size            = UDim2.fromOffset(12, 12),
+			BackgroundTransparency = 1,
+			LayoutOrder     = 1,
+			ThemeTag        = { ImageColor3 = "SubText" },
+		}),
+		New("TextLabel", {
+			Text            = "Paste",
+			FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			TextSize        = 11,
+			BackgroundTransparency = 1,
+			Size            = UDim2.fromScale(0, 1),
+			AutomaticSize   = Enum.AutomaticSize.X,
+			LayoutOrder     = 2,
+			ThemeTag        = { TextColor3 = "SubText" },
+		}),
+	})
 
-		local _, PasteSetTrans = Creator.SpringMotor(0.9, PasteBtn, "BackgroundTransparency")
-		Creator.AddSignal(PasteBtn.MouseEnter,       function() PasteSetTrans(0.82) end)
-		Creator.AddSignal(PasteBtn.MouseLeave,       function() PasteSetTrans(0.9) end)
-		Creator.AddSignal(PasteBtn.MouseButton1Down, function() PasteSetTrans(0.95) end)
-		Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.82) end)
-	end
+	local _, PasteSetTrans = Creator.SpringMotor(0.9, PasteBtn, "BackgroundTransparency")
+	Creator.AddSignal(PasteBtn.MouseEnter,       function() PasteSetTrans(0.82) end)
+	Creator.AddSignal(PasteBtn.MouseLeave,       function() PasteSetTrans(0.9) end)
+	Creator.AddSignal(PasteBtn.MouseButton1Down, function() PasteSetTrans(0.95) end)
+	Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.82) end)
 
 	-- The actual text box
-	local pasteWidth = pasteSupported and 72 or 0
+	local pasteWidth = 72
 	local KsInputBox = New("TextBox", {
 		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
 		TextSize            = 13,
@@ -10500,8 +10447,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	end)
 
 	-- Paste button action
-	if PasteBtn then
-		Creator.AddSignal(PasteBtn.MouseButton1Click, function()
+	Creator.AddSignal(PasteBtn.MouseButton1Click, function()
 			local ok, text = pcall(function()
 				if type(getclipboard) == "function" then
 					return getclipboard()
@@ -10516,7 +10462,6 @@ local function _ks_Run(ksConfig, windowConfig)
 				KsInputBox.Text = text:match("^%s*(.-)%s*$")
 			end
 		end)
-	end
 
 	-- ── Button row — half-width each, 10px gap ────────────────
 	local ButtonRow = New("Frame", {
