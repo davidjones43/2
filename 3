@@ -10404,7 +10404,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	})
 
 	-- Paste button on the right
-	local pasteSupported = type(getclipboard) == "function" or type(toclipboard) == "function"
+	local pasteSupported = type(getclipboard) == "function" or (type(clgui) == "table" and type(clgui.getclipboard) == "function") or (type(syn) == "table" and type(syn.get_clipboard) == "function")
 	local PasteBtn
 	if pasteSupported then
 		PasteBtn = New("TextButton", {
@@ -10502,17 +10502,17 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- Paste button action
 	if PasteBtn then
 		Creator.AddSignal(PasteBtn.MouseButton1Click, function()
-			local text
-			for _, fn in ipairs({ getclipboard, clgui and clgui.getclipboard, syn and syn.get_clipboard, Clipboard and Clipboard.get }) do
-				if type(fn) == "function" then
-					local ok, result = pcall(fn)
-					if ok and type(result) == "string" and result ~= "" then
-						text = result
-						break
-					end
+			local ok, text = pcall(function()
+				if type(getclipboard) == "function" then
+					return getclipboard()
+				elseif type(clgui) == "table" and type(clgui.getclipboard) == "function" then
+					return clgui.getclipboard()
+				elseif type(syn) == "table" and type(syn.get_clipboard) == "function" then
+					return syn.get_clipboard()
 				end
-			end
-			if text then
+				return ""
+			end)
+			if ok and type(text) == "string" and text ~= "" then
 				KsInputBox.Text = text:match("^%s*(.-)%s*$")
 			end
 		end)
@@ -10553,11 +10553,6 @@ local function _ks_Run(ksConfig, windowConfig)
 
 		local children = {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-			isAccent and New("UIStroke", {
-				Transparency        = 0.4,
-				ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
-				ThemeTag            = { Color = "Accent" },
-			}) or nil,
 			New("UIListLayout", {
 				FillDirection       = Enum.FillDirection.Horizontal,
 				VerticalAlignment   = Enum.VerticalAlignment.Center,
@@ -10921,124 +10916,45 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- ── Close button ──────────────────────────────────────────
 	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
 		if Library.DialogOpen then return end
-		Library.DialogOpen = true
-		local TintFrame = New("TextButton", {
-			Text                = "",
-			Size                = UDim2.fromScale(1, 1),
-			BackgroundColor3    = Color3.fromRGB(0, 0, 0),
-			BackgroundTransparency = 0.5,
-			Parent              = KsRootCanvas,
-			ZIndex              = 20,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-		})
-		local DialogRoot = New("CanvasGroup", {
-			Size                = UDim2.fromOffset(300, 140),
-			AnchorPoint         = Vector2.new(0.5, 0.5),
-			Position            = UDim2.fromScale(0.5, 0.5),
-			GroupTransparency   = 0,
-			Parent              = TintFrame,
-			ZIndex              = 21,
-			ThemeTag            = { BackgroundColor3 = "Dialog" },
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-			New("UIStroke", {
-				Transparency        = 0.5,
-				ThemeTag            = { Color = "DialogBorder" },
-			}),
-		})
-		New("TextLabel", {
-			Text                = "Close",
-			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-			TextSize            = 18,
-			TextXAlignment      = Enum.TextXAlignment.Left,
+		-- Use the library's own Dialog system, temporarily pointed at KsRootCanvas
+		local KsDialogModule = Components.Dialog:Init({ Root = KsRootCanvas })
+		local Dlg = KsDialogModule:Create()
+		Dlg.Title.Text = "Close"
+		local ContentHolder = Creator.New("ScrollingFrame", {
 			BackgroundTransparency = 1,
-			Size                = UDim2.new(1, -40, 0, 22),
-			Position            = UDim2.fromOffset(20, 20),
-			Parent              = DialogRoot,
-			ZIndex              = 22,
-			ThemeTag            = { TextColor3 = "Text" },
+			ScrollBarImageTransparency = 0.7,
+			ScrollBarThickness = 4,
+			BottomImage = "rbxassetid://6889812791",
+			MidImage = "rbxassetid://6889812721",
+			TopImage = "rbxassetid://6276641225",
+			Position = UDim2.fromOffset(20, 60),
+			Size = UDim2.new(1, -40, 1, -110),
+			CanvasSize = UDim2.fromOffset(0, 0),
+			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			Parent = Dlg.Root,
 		})
-		New("TextLabel", {
-			Text                = "Are you sure you want to close the key system?",
-			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-			TextSize            = 13,
-			TextXAlignment      = Enum.TextXAlignment.Left,
-			TextYAlignment      = Enum.TextYAlignment.Top,
-			TextWrapped         = true,
+		Creator.New("TextLabel", {
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+			Text = "Are you sure you want to close the key system?",
+			TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextWrapped = true,
+			Size = UDim2.new(1, -8, 0, 0),
 			BackgroundTransparency = 1,
-			Size                = UDim2.new(1, -40, 0, 40),
-			Position            = UDim2.fromOffset(20, 50),
-			Parent              = DialogRoot,
-			ZIndex              = 22,
-			ThemeTag            = { TextColor3 = "SubText" },
+			Parent = ContentHolder,
+			ThemeTag = { TextColor3 = "Text" },
 		})
-		local BtnHolder = New("Frame", {
-			Size                = UDim2.new(1, -40, 0, 32),
-			AnchorPoint         = Vector2.new(0.5, 1),
-			Position            = UDim2.new(0.5, 0, 1, -14),
-			BackgroundTransparency = 1,
-			Parent              = DialogRoot,
-			ZIndex              = 22,
-		}, {
-			New("UIListLayout", {
-				FillDirection       = Enum.FillDirection.Horizontal,
-				HorizontalAlignment = Enum.HorizontalAlignment.Right,
-				VerticalAlignment   = Enum.VerticalAlignment.Center,
-				Padding             = UDim.new(0, 8),
-				SortOrder           = Enum.SortOrder.LayoutOrder,
-			}),
-		})
-		local function MakeDialogBtn(label, layoutOrder, isPrimary)
-			local btn = New("TextButton", {
-				Size                = UDim2.new(0, 0, 1, 0),
-				AutomaticSize       = Enum.AutomaticSize.X,
-				LayoutOrder         = layoutOrder,
-				BackgroundTransparency = 0.9,
-				Text                = "",
-				Parent              = BtnHolder,
-				ZIndex              = 23,
-				ThemeTag            = { BackgroundColor3 = "DialogButton" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 5) }),
-				New("UIStroke", {
-					Transparency        = 0.6,
-					ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
-					ThemeTag            = { Color = isPrimary and "Accent" or "DialogButtonBorder" },
-				}),
-				New("UIPadding", {
-					PaddingLeft  = UDim.new(0, 14),
-					PaddingRight = UDim.new(0, 14),
-				}),
-				New("TextLabel", {
-					Text            = label,
-					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-					TextSize        = 13,
-					BackgroundTransparency = 1,
-					Size            = UDim2.fromScale(1, 1),
-					ZIndex          = 24,
-					ThemeTag        = { TextColor3 = isPrimary and "Accent" or "Text" },
-				}),
-			})
-			local _, SetT = Creator.SpringMotor(0.9, btn, "BackgroundTransparency", true)
-			Creator.AddSignal(btn.MouseEnter,       function() SetT(0.82) end)
-			Creator.AddSignal(btn.MouseLeave,       function() SetT(0.9)  end)
-			Creator.AddSignal(btn.MouseButton1Down, function() SetT(0.95) end)
-			Creator.AddSignal(btn.MouseButton1Up,   function() SetT(0.82) end)
-			return btn
-		end
-		local NoBtn  = MakeDialogBtn("No",  1, false)
-		local YesBtn = MakeDialogBtn("Yes", 2, true)
-		Creator.UpdateTheme()
-		Creator.AddSignal(NoBtn.MouseButton1Click, function()
-			Library.DialogOpen = false
-			TintFrame:Destroy()
-		end)
-		Creator.AddSignal(YesBtn.MouseButton1Click, function()
-			Library.DialogOpen = false
-			TintFrame:Destroy()
+		Dlg:Button("Yes", function()
 			destroyKsWindow()
 		end)
+		Dlg:Button("No")
+		Dlg:Open()
+		-- Restore Dialog.Window to the real window after KS resolves
+		if Library.Window then
+			Components.Dialog:Init(Library.Window)
+		end
 	end)
 
 	-- ── Get Key button ────────────────────────────────────────
