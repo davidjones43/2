@@ -5247,6 +5247,622 @@ Components.Window = (function()
 			Window.SelectorPosMotor:setGoal(Instant(TabModule:GetCurrentTabPos()))
 		end)
 
+		-- ══════════════════════════════════════════════════════════════════════
+		-- FLUENT PLUS+ — BUILT-IN HOME TAB DASHBOARD
+		-- Inspired by Luna Interface Suite's home tab, redesigned for Fluent Plus+
+		-- ══════════════════════════════════════════════════════════════════════
+		function Window:AddHomeTab(HomeTabConfig)
+			HomeTabConfig = HomeTabConfig or {}
+			local scriptName         = HomeTabConfig.ScriptName        or Config.Title or "Script"
+			local supportedExecutors = HomeTabConfig.SupportedExecutors or {}
+			local discordInvite      = HomeTabConfig.DiscordInvite      or nil  -- e.g. "discord.gg/abc" or just "abc"
+			local discordLabel       = HomeTabConfig.DiscordLabel       or "Join our Discord"
+
+			-- ── Helpers ───────────────────────────────────────────────────────
+			local Players     = game:GetService("Players")
+			local LocalPlayer = Players.LocalPlayer
+			local Localization = game:GetService("LocalizationService")
+			local Stats       = game:GetService("Stats")
+
+			local homeIconResolved = Library:GetIcon("home") or "rbxassetid://9080449299"
+
+			local function getPing()
+				local ok, val = pcall(function()
+					return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+				end)
+				return ok and math.clamp(math.floor(val), 0, 9999) or 0
+			end
+
+			local function fmt2(n)
+				return string.format("%02i", n)
+			end
+
+			local function hms(secs)
+				secs = math.floor(secs)
+				local m = math.floor(secs / 60) % 60
+				local h = math.floor(secs / 3600)
+				local s = secs % 60
+				return fmt2(h) .. ":" .. fmt2(m) .. ":" .. fmt2(s)
+			end
+
+			-- ── Create the sidebar tab button (index is auto-managed) ─────────
+			local HomeTabIndex = TabModule.TabCount + 1
+
+			-- Insert it at position 1 (top of sidebar) by temporarily overriding
+			-- the count so it appears first; reset after.
+			local savedCount = TabModule.TabCount
+			TabModule.TabCount = 0  -- force index = 1
+			local HomeTabObj = TabModule:New("Home", homeIconResolved, Window.TabHolder)
+			-- Restore correct total count for subsequent AddTab calls
+			TabModule.TabCount = math.max(savedCount + 1, 1)
+
+			-- Move the home button frame to the top of the sidebar
+			HomeTabObj.Frame.LayoutOrder = -999
+			HomeTabObj.Frame.Parent = Window.TabHolder
+
+			local HomeTabIndex = 1  -- we assigned TabCount=0 so it became index 1
+			-- Shift every other tab's index up by 1 to account for insertion at front
+			-- (TabModule already stores them at index 1, so existing tabs are 2+)
+
+			local HomeContainer = HomeTabObj.ContainerFrame  -- the ScrollingFrame content area
+
+			-- ── Colour helper ─────────────────────────────────────────────────
+			-- Reads the current theme live.
+			local function themeColor(key)
+				local t = Themes[Library.Theme]
+				return t and t[key] or Color3.fromRGB(120, 120, 120)
+			end
+
+			-- ── Card builder ──────────────────────────────────────────────────
+			-- Creates a Fluent-styled card (acrylic-ish dark rounded frame).
+			local function makeCard(parent, heightOffset)
+				local card = New("Frame", {
+					Size           = UDim2.new(1, 0, 0, heightOffset),
+					BackgroundTransparency = 0.87,
+					BorderSizePixel = 0,
+					Parent         = parent,
+					ThemeTag       = { BackgroundColor3 = "Element" },
+				}, {
+					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+					New("UIStroke", {
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+						Transparency    = 0.7,
+						Thickness       = 1,
+						ThemeTag        = { Color = "InElementBorder" },
+					}),
+				})
+				return card
+			end
+
+			-- ── Stat row builder ─────────────────────────────────────────────
+			-- Creates a two-column label/value row inside a card.
+			local function makeStatRow(parent, icon, labelText, defaultValue, layoutOrder)
+				local row = New("Frame", {
+					Size            = UDim2.new(1, 0, 0, 28),
+					BackgroundTransparency = 1,
+					LayoutOrder     = layoutOrder or 0,
+					Parent          = parent,
+				}, {
+					New("UIListLayout", {
+						FillDirection       = Enum.FillDirection.Horizontal,
+						VerticalAlignment   = Enum.VerticalAlignment.Center,
+						Padding             = UDim.new(0, 8),
+					}),
+					New("UIPadding", {
+						PaddingLeft  = UDim.new(0, 10),
+						PaddingRight = UDim.new(0, 10),
+					}),
+				})
+
+				-- Optional icon
+				if icon then
+					New("ImageLabel", {
+						Size                = UDim2.fromOffset(14, 14),
+						BackgroundTransparency = 1,
+						Image               = Library:GetIcon(icon) or icon,
+						LayoutOrder         = 1,
+						ThemeTag            = { ImageColor3 = "SubText" },
+						Parent              = row,
+					})
+				end
+
+				local lbl = New("TextLabel", {
+					Text            = labelText,
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+					TextSize        = 12,
+					TextXAlignment  = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(0.5, 0, 1, 0),
+					LayoutOrder     = 2,
+					ThemeTag        = { TextColor3 = "SubText" },
+					Parent          = row,
+				})
+
+				local val = New("TextLabel", {
+					Text            = defaultValue or "—",
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize        = 12,
+					TextXAlignment  = Enum.TextXAlignment.Right,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(0.5, 0, 1, 0),
+					LayoutOrder     = 3,
+					ThemeTag        = { TextColor3 = "Text" },
+					Parent          = row,
+				})
+
+				return { Row = row, Label = lbl, Value = val }
+			end
+
+			-- ── Section header ────────────────────────────────────────────────
+			local function makeSectionHeader(parent, text, layoutOrder)
+				return New("TextLabel", {
+					Text            = text,
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize        = 11,
+					TextXAlignment  = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(1, 0, 0, 18),
+					LayoutOrder     = layoutOrder or 0,
+					Parent          = parent,
+					ThemeTag        = { TextColor3 = "SubText" },
+				})
+			end
+
+			-- ── Thin divider line ─────────────────────────────────────────────
+			local function makeDivider(parent, layoutOrder)
+				return New("Frame", {
+					Size            = UDim2.new(1, 0, 0, 1),
+					BackgroundTransparency = 0.7,
+					BorderSizePixel = 0,
+					LayoutOrder     = layoutOrder or 0,
+					Parent          = parent,
+					ThemeTag        = { BackgroundColor3 = "TitleBarLine" },
+				})
+			end
+
+			-- ═══════════════════════════════════════════════════════════════
+			-- BUILD DASHBOARD LAYOUT
+			-- ═══════════════════════════════════════════════════════════════
+
+			-- Root layout inside the ScrollingFrame
+			New("UIListLayout", {
+				Padding         = UDim.new(0, 8),
+				SortOrder       = Enum.SortOrder.LayoutOrder,
+				Parent          = HomeContainer,
+			})
+			New("UIPadding", {
+				PaddingLeft   = UDim.new(0, 2),
+				PaddingRight  = UDim.new(0, 10),
+				PaddingTop    = UDim.new(0, 6),
+				PaddingBottom = UDim.new(0, 10),
+				Parent        = HomeContainer,
+			})
+
+			-- ── 1. PLAYER BANNER ─────────────────────────────────────────────
+			local bannerCard = makeCard(HomeContainer, 68)
+			bannerCard.LayoutOrder = 1
+
+			local avatarImg = New("ImageLabel", {
+				Size                = UDim2.fromOffset(44, 44),
+				Position            = UDim2.new(0, 12, 0.5, 0),
+				AnchorPoint         = Vector2.new(0, 0.5),
+				BackgroundTransparency = 0.8,
+				Image               = "rbxassetid://0",
+				Parent              = bannerCard,
+				ThemeTag            = { BackgroundColor3 = "AcrylicMain" },
+				ZIndex              = 5,
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+				New("UIStroke", {
+					Thickness       = 1.5,
+					Transparency    = 0.5,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					ThemeTag        = { Color = "Accent" },
+				}),
+			})
+
+			-- Load avatar async
+			task.spawn(function()
+				local ok, img = pcall(function()
+					return Players:GetUserThumbnailAsync(
+						LocalPlayer.UserId,
+						Enum.ThumbnailType.HeadShot,
+						Enum.ThumbnailSize.Size420x420
+					)
+				end)
+				if ok and img then
+					avatarImg.Image = img
+				end
+			end)
+
+			New("TextLabel", {
+				Name            = "HelloLabel",
+				Text            = "Hello, " .. LocalPlayer.DisplayName,
+				FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+				TextSize        = 14,
+				TextXAlignment  = Enum.TextXAlignment.Left,
+				BackgroundTransparency = 1,
+				Size            = UDim2.new(1, -80, 0, 20),
+				Position        = UDim2.new(0, 66, 0, 14),
+				ZIndex          = 5,
+				Parent          = bannerCard,
+				ThemeTag        = { TextColor3 = "Text" },
+			})
+
+			New("TextLabel", {
+				Name            = "UserSubLabel",
+				Text            = "@" .. LocalPlayer.Name .. "  ·  " .. scriptName,
+				FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+				TextSize        = 11,
+				TextXAlignment  = Enum.TextXAlignment.Left,
+				BackgroundTransparency = 1,
+				Size            = UDim2.new(1, -80, 0, 16),
+				Position        = UDim2.new(0, 66, 0, 36),
+				ZIndex          = 5,
+				Parent          = bannerCard,
+				ThemeTag        = { TextColor3 = "SubText" },
+			})
+
+			-- Accent bar on the left edge of the banner
+			New("Frame", {
+				Size            = UDim2.new(0, 3, 0.6, 0),
+				Position        = UDim2.new(0, 0, 0.2, 0),
+				AnchorPoint     = Vector2.new(0, 0),
+				BackgroundTransparency = 0,
+				BorderSizePixel = 0,
+				ZIndex          = 6,
+				Parent          = bannerCard,
+				ThemeTag        = { BackgroundColor3 = "Accent" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+			})
+
+			-- ── 2. CLIENT INFO CARD ──────────────────────────────────────────
+			local clientCard = makeCard(HomeContainer, 90)
+			clientCard.LayoutOrder = 2
+
+			New("UIListLayout", {
+				Padding         = UDim.new(0, 0),
+				SortOrder       = Enum.SortOrder.LayoutOrder,
+				Parent          = clientCard,
+			})
+
+			-- Card header
+			local clientHeader = New("Frame", {
+				Size            = UDim2.new(1, 0, 0, 32),
+				BackgroundTransparency = 1,
+				LayoutOrder     = 1,
+				Parent          = clientCard,
+			}, {
+				New("UIListLayout", {
+					FillDirection     = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding           = UDim.new(0, 6),
+				}),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+				}),
+				New("ImageLabel", {
+					Size                = UDim2.fromOffset(14, 14),
+					BackgroundTransparency = 1,
+					Image               = Library:GetIcon("cpu") or "rbxassetid://0",
+					LayoutOrder         = 1,
+					ThemeTag            = { ImageColor3 = "Accent" },
+				}),
+				New("TextLabel", {
+					Text            = "CLIENT",
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+					TextSize        = 10,
+					TextXAlignment  = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(1, -28, 1, 0),
+					LayoutOrder     = 2,
+					ThemeTag        = { TextColor3 = "Accent" },
+				}),
+			})
+
+			makeDivider(clientCard, 2)
+
+			-- Executor name row
+			local execNameLabel = makeStatRow(clientCard, nil, "Executor", "Detecting...", 3)
+			local execStatusLabel = makeStatRow(clientCard, nil, "Support", "Checking...", 4)
+
+			-- Detect executor
+			task.spawn(function()
+				local execName = "Unknown Executor"
+				local supported = "Not Checked"
+				pcall(function()
+					if RunService:IsStudio() then
+						execName = "Roblox Studio"
+						supported = "Debug Mode"
+					else
+						local idFn = identifyexecutor or getexecutorname
+						if idFn then
+							execName = idFn() or "Unknown"
+						end
+						if #supportedExecutors > 0 then
+							local found = false
+							for _, v in ipairs(supportedExecutors) do
+								if v == execName then
+									found = true
+									break
+								end
+							end
+							supported = found and "✓  Supported" or "⚠  Not Listed"
+						else
+							supported = "—"
+						end
+					end
+				end)
+				execNameLabel.Value.Text = execName
+				execStatusLabel.Value.Text = supported
+			end)
+
+			-- ── 3. SERVER INFO CARD ──────────────────────────────────────────
+			local serverCard = makeCard(HomeContainer, 150)
+			serverCard.LayoutOrder = 3
+
+			New("UIListLayout", {
+				Padding         = UDim.new(0, 0),
+				SortOrder       = Enum.SortOrder.LayoutOrder,
+				Parent          = serverCard,
+			})
+
+			local serverHeader = New("Frame", {
+				Size            = UDim2.new(1, 0, 0, 32),
+				BackgroundTransparency = 1,
+				LayoutOrder     = 1,
+				Parent          = serverCard,
+			}, {
+				New("UIListLayout", {
+					FillDirection     = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding           = UDim.new(0, 6),
+				}),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+				}),
+				New("ImageLabel", {
+					Size                = UDim2.fromOffset(14, 14),
+					BackgroundTransparency = 1,
+					Image               = Library:GetIcon("server") or "rbxassetid://0",
+					LayoutOrder         = 1,
+					ThemeTag            = { ImageColor3 = "Accent" },
+				}),
+				New("TextLabel", {
+					Text            = "SERVER",
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+					TextSize        = 10,
+					TextXAlignment  = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(1, -28, 1, 0),
+					LayoutOrder     = 2,
+					ThemeTag        = { TextColor3 = "Accent" },
+				}),
+			})
+
+			makeDivider(serverCard, 2)
+
+			local rowPlayers   = makeStatRow(serverCard, nil, "Players",    "...", 3)
+			local rowMaxP      = makeStatRow(serverCard, nil, "Max Players","...", 4)
+			local rowPing      = makeStatRow(serverCard, nil, "Latency",    "...", 5)
+			local rowTime      = makeStatRow(serverCard, nil, "Session",    "...", 6)
+			local rowRegion    = makeStatRow(serverCard, nil, "Region",     "...", 7)
+
+			-- Fetch region once (network call)
+			task.spawn(function()
+				local ok, region = pcall(function()
+					return Localization:GetCountryRegionForPlayerAsync(LocalPlayer)
+				end)
+				rowRegion.Value.Text = (ok and region) and region or "N/A"
+			end)
+
+			-- ── 4. FRIENDS CARD ──────────────────────────────────────────────
+			local friendsCard = makeCard(HomeContainer, 120)
+			friendsCard.LayoutOrder = 4
+
+			New("UIListLayout", {
+				Padding         = UDim.new(0, 0),
+				SortOrder       = Enum.SortOrder.LayoutOrder,
+				Parent          = friendsCard,
+			})
+
+			New("Frame", {
+				Size            = UDim2.new(1, 0, 0, 32),
+				BackgroundTransparency = 1,
+				LayoutOrder     = 1,
+				Parent          = friendsCard,
+			}, {
+				New("UIListLayout", {
+					FillDirection     = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding           = UDim.new(0, 6),
+				}),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+				}),
+				New("ImageLabel", {
+					Size                = UDim2.fromOffset(14, 14),
+					BackgroundTransparency = 1,
+					Image               = Library:GetIcon("users") or "rbxassetid://0",
+					LayoutOrder         = 1,
+					ThemeTag            = { ImageColor3 = "Accent" },
+				}),
+				New("TextLabel", {
+					Text            = "FRIENDS",
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+					TextSize        = 10,
+					TextXAlignment  = Enum.TextXAlignment.Left,
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(1, -28, 1, 0),
+					LayoutOrder     = 2,
+					ThemeTag        = { TextColor3 = "Accent" },
+				}),
+			})
+
+			makeDivider(friendsCard, 2)
+
+			local rowFAll    = makeStatRow(friendsCard, nil, "Total",   "Loading...", 3)
+			local rowFOnline = makeStatRow(friendsCard, nil, "Online",  "Loading...", 4)
+			local rowFOffline = makeStatRow(friendsCard, nil, "Offline", "Loading...", 5)
+			local rowFGame   = makeStatRow(friendsCard, nil, "In-Game", "Loading...", 6)
+
+			-- ── 5. DISCORD BUTTON (optional) ─────────────────────────────────
+			if discordInvite and discordInvite ~= "" then
+				local discordCard = New("Frame", {
+					Size            = UDim2.new(1, 0, 0, 38),
+					BackgroundTransparency = 0.87,
+					BorderSizePixel = 0,
+					LayoutOrder     = 5,
+					Parent          = HomeContainer,
+					ThemeTag        = { BackgroundColor3 = "Accent" },
+				}, {
+					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+				})
+
+				local discordBtn = New("TextButton", {
+					Size                = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text                = "",
+					Parent              = discordCard,
+					ZIndex              = 5,
+				})
+
+				New("UIListLayout", {
+					FillDirection       = Enum.FillDirection.Horizontal,
+					VerticalAlignment   = Enum.VerticalAlignment.Center,
+					HorizontalAlignment = Enum.HorizontalAlignment.Center,
+					Padding             = UDim.new(0, 8),
+					Parent              = discordBtn,
+				})
+
+				New("ImageLabel", {
+					Size                = UDim2.fromOffset(16, 16),
+					BackgroundTransparency = 1,
+					Image               = Library:GetIcon("message-circle") or "rbxassetid://0",
+					LayoutOrder         = 1,
+					ImageColor3         = Color3.fromRGB(255, 255, 255),
+					Parent              = discordBtn,
+				})
+
+				New("TextLabel", {
+					Text            = discordLabel,
+					FontFace        = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize        = 12,
+					TextColor3      = Color3.fromRGB(255, 255, 255),
+					BackgroundTransparency = 1,
+					Size            = UDim2.new(0, 0, 1, 0),
+					AutomaticSize   = Enum.AutomaticSize.X,
+					LayoutOrder     = 2,
+					Parent          = discordBtn,
+				})
+
+				-- Hover effect
+				local Motor, SetT = Creator.SpringMotor(0.87, discordCard, "BackgroundTransparency")
+				Creator.AddSignal(discordBtn.MouseEnter, function() SetT(0.75) end)
+				Creator.AddSignal(discordBtn.MouseLeave, function() SetT(0.87) end)
+				Creator.AddSignal(discordBtn.MouseButton1Down, function() SetT(0.92) end)
+				Creator.AddSignal(discordBtn.MouseButton1Up, function() SetT(0.75) end)
+
+				Creator.AddSignal(discordBtn.MouseButton1Click, function()
+					local invite = discordInvite:match("discord%.gg/(.+)") or discordInvite
+					pcall(setclipboard, "https://discord.gg/" .. invite)
+					Library:Notify({
+						Title   = "Discord",
+						Content = "Discord invite copied to clipboard.",
+						Duration = 4,
+					})
+					pcall(function()
+						if request then
+							request({
+								Url    = "http://127.0.0.1:6463/rpc?v=1",
+								Method = "POST",
+								Headers = {
+									["Content-Type"] = "application/json",
+									Origin           = "https://discord.com",
+								},
+								Body = httpService:JSONEncode({
+									cmd   = "INVITE_BROWSER",
+									nonce = httpService:GenerateGUID(false),
+									args  = { code = invite },
+								}),
+							})
+						end
+					end)
+				end)
+			end
+
+			-- ═══════════════════════════════════════════════════════════════
+			-- LIVE UPDATE LOOP  (server stats + friends)
+			-- ═══════════════════════════════════════════════════════════════
+			local friendCooldown = 0
+
+			coroutine.wrap(function()
+				while HomeContainer and HomeContainer.Parent do
+					-- Server stats (every frame)
+					rowPlayers.Value.Text  = #Players:GetPlayers() .. " / " .. Players.MaxPlayers
+					rowMaxP.Value.Text     = tostring(Players.MaxPlayers)
+					rowTime.Value.Text     = hms(tick() % 86400)  -- session uptime approximation
+
+					local pingOk, pingVal = pcall(getPing)
+					rowPing.Value.Text = (pingOk and pingVal) and (pingVal .. " ms") or "N/A"
+
+					-- Friends (throttled to avoid API spam)
+					if friendCooldown <= 0 then
+						friendCooldown = 30
+						task.spawn(function()
+							local totalFriends  = 0
+							local onlineFriends = 0
+							local inGameFriends = 0
+
+							local playerNames = {}
+							for _, p in ipairs(Players:GetPlayers()) do
+								playerNames[p.Name] = true
+							end
+
+							pcall(function()
+								local pages = Players:GetFriendsAsync(LocalPlayer.UserId)
+								repeat
+									for _, data in ipairs(pages:GetCurrentPage()) do
+										totalFriends += 1
+									end
+									if not pages.IsFinished then pages:AdvanceToNextPageAsync() end
+								until pages.IsFinished
+							end)
+
+							pcall(function()
+								for _, info in ipairs(LocalPlayer:GetFriendsOnline()) do
+									onlineFriends += 1
+									if playerNames[info.UserName] then
+										inGameFriends += 1
+									end
+								end
+							end)
+
+							rowFAll.Value.Text     = tostring(totalFriends)
+							rowFOnline.Value.Text  = tostring(onlineFriends)
+							rowFOffline.Value.Text = tostring(totalFriends - onlineFriends)
+							rowFGame.Value.Text    = tostring(inGameFriends)
+						end)
+					else
+						friendCooldown -= 1
+					end
+
+					task.wait(1)
+				end
+			end)()
+
+			-- ── Select the home tab first ──────────────────────────────────
+			TabModule:SelectTab(1)
+
+			return HomeTabObj
+		end
+		-- ══════════════════════════════════════════════════════════════════════
+		-- END HOME TAB DASHBOARD
+		-- ══════════════════════════════════════════════════════════════════════
 
 		return Window
 	end
@@ -10117,20 +10733,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	local folder         = "FluentKeySystem"
 	local customErrors   = ksConfig.Errors or {}
 
-	-- Image config
-	-- Target controls which region the image covers:
-	--   "all"      — full window (default)
-	--   "titlebar" — only the top bar holding title + close button
-	--   "content"  — only the body below the title bar
-	local imageCfg           = ksConfig.Image
-	local imageEnabled        = imageCfg and type(imageCfg.Id) == "string" and imageCfg.Id ~= ""
-	local imageId             = imageEnabled and imageCfg.Id or nil
-	local imageTransparency   = (imageCfg and imageCfg.Transparency     ~= nil) and imageCfg.Transparency     or 0.15
-	local imageTint           = (imageCfg and imageCfg.TintTransparency ~= nil) and imageCfg.TintTransparency or 0.45
-	local imageScaleType      = (imageCfg and imageCfg.ScaleType) or Enum.ScaleType.Crop
-	local imageColor          = (imageCfg and imageCfg.Color) or Color3.fromRGB(255, 255, 255)
-	local imageTarget         = (imageCfg and imageCfg.Target) or "all"
-
 	-- Discord block config
 	local discordCfg     = ksConfig.Discord
 	local discordEnabled = discordCfg and discordCfg.Enabled == true
@@ -10215,67 +10817,6 @@ local function _ks_Run(ksConfig, windowConfig)
 		EntryAlphaMotor:setGoal(Flipper.Spring.new(1, { frequency = 7, dampingRatio = 0.8 }))
 		EntryAlphaMotor:start()
 	end)
-
-	-- ── Background image (optional) ───────────────────────────
-	-- A local helper builds a clipped image layer parented to
-	-- KsRootCanvas. Size + Position are passed in by the caller
-	-- so the same code covers all three Target modes.
-	-- UICorner on the clip frame always matches the window radius (8).
-	-- For "titlebar" the frame is 8px taller than the bar so its
-	-- bottom rounding tucks under the content area. For "content"
-	-- the frame starts 8px above the content boundary so its top
-	-- rounding hides under the title bar line.
-	local function _ks_makeImageLayer(size, pos)
-		New("Frame", {
-			Size                   = size,
-			Position               = pos,
-			BackgroundTransparency = 1,
-			ClipsDescendants       = true,
-			ZIndex                 = 1,
-			Parent                 = KsRootCanvas,
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-			New("ImageLabel", {
-				Image                  = imageId,
-				Size                   = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				ImageTransparency      = imageTransparency,
-				ImageColor3            = imageColor,
-				ScaleType              = imageScaleType,
-				ZIndex                 = 1,
-			}),
-			-- Theme tint overlay — blends the image into the active
-			-- theme so it never clashes with acrylic or colour schemes.
-			New("Frame", {
-				Size                   = UDim2.fromScale(1, 1),
-				BackgroundTransparency = imageTint,
-				ZIndex                 = 2,
-				ThemeTag               = { BackgroundColor3 = "AcrylicMain" },
-			}),
-		})
-	end
-
-	if imageEnabled then
-		if imageTarget == "titlebar" then
-			-- 8px overrun hides the bottom UICorner rounding under the content body
-			_ks_makeImageLayer(
-				UDim2.new(1, 0, 0, 50),
-				UDim2.fromOffset(0, 0)
-			)
-		elseif imageTarget == "content" then
-			-- Start 8px early so the top UICorner rounding hides under the title bar
-			_ks_makeImageLayer(
-				UDim2.new(1, 0, 1, -34),
-				UDim2.fromOffset(0, 34)
-			)
-		else
-			-- "all" — full window surface (default)
-			_ks_makeImageLayer(
-				UDim2.fromScale(1, 1),
-				UDim2.fromOffset(0, 0)
-			)
-		end
-	end
 
 	-- ── Title bar ─────────────────────────────────────────────
 	local TitleBarFrame = New("Frame", {
