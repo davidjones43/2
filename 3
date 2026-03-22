@@ -10117,6 +10117,14 @@ local function _ks_Run(ksConfig, windowConfig)
 	local folder         = "FluentKeySystem"
 	local customErrors   = ksConfig.Errors or {}
 
+	-- Image config
+	local imageCfg           = ksConfig.Image
+	local imageEnabled        = imageCfg and type(imageCfg.Id) == "string" and imageCfg.Id ~= ""
+	local imageId             = imageEnabled and imageCfg.Id or nil
+	local imageTransparency   = (imageCfg and imageCfg.Transparency  ~= nil) and imageCfg.Transparency  or 0.15
+	local imageTint           = (imageCfg and imageCfg.TintTransparency ~= nil) and imageCfg.TintTransparency or 0.45
+	local imageScaleType      = (imageCfg and imageCfg.ScaleType) or Enum.ScaleType.Crop
+
 	-- Discord block config
 	local discordCfg     = ksConfig.Discord
 	local discordEnabled = discordCfg and discordCfg.Enabled == true
@@ -10201,6 +10209,41 @@ local function _ks_Run(ksConfig, windowConfig)
 		EntryAlphaMotor:setGoal(Flipper.Spring.new(1, { frequency = 7, dampingRatio = 0.8 }))
 		EntryAlphaMotor:start()
 	end)
+
+	-- ── Background image (optional) ───────────────────────────
+	-- Sits inside KsRootCanvas at ZIndex 1, below all content.
+	-- A clipping frame with UICorner matches the window's rounded
+	-- border so the image never bleeds past the edges.
+	-- A tint overlay using AcrylicMain blends the image with
+	-- whatever theme + acrylic is active.
+	if imageEnabled then
+		local ImageClip = New("Frame", {
+			Size                = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ClipsDescendants    = true,
+			ZIndex              = 1,
+			Parent              = KsRootCanvas,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("ImageLabel", {
+				Image               = imageId,
+				Size                = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				ImageTransparency   = imageTransparency,
+				ScaleType           = imageScaleType,
+				ZIndex              = 1,
+			}),
+			-- Tint overlay — takes the theme's AcrylicMain colour so the
+			-- image always reads as part of the current theme rather than
+			-- fighting against it.
+			New("Frame", {
+				Size                = UDim2.fromScale(1, 1),
+				BackgroundTransparency = imageTint,
+				ZIndex              = 2,
+				ThemeTag            = { BackgroundColor3 = "AcrylicMain" },
+			}),
+		})
+	end
 
 	-- ── Title bar ─────────────────────────────────────────────
 	local TitleBarFrame = New("Frame", {
