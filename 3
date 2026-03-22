@@ -10111,7 +10111,6 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- ── Config resolution ─────────────────────────────────────
 	local title          = ksConfig.Title    or windowConfig.Title or "Key System"
-	local subtitle       = ksConfig.Subtitle or "Enter your key to continue"
 	local icon           = _ks_resolveIcon(ksConfig.Icon or "shield")
 	local fileName       = ksConfig.FileName or "FluentKey"
 	local saveKey        = ksConfig.SaveKey  ~= false
@@ -10146,7 +10145,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- OnSuccess config
 	local loaderMode     = (ksConfig.OnSuccess and ksConfig.OnSuccess.Mode) or "loading"
 	local loaderText     = (ksConfig.OnSuccess and ksConfig.OnSuccess.LoadingText) or "Loading..."
-	local checkingText   = (ksConfig.OnSuccess and ksConfig.OnSuccess.CheckingText) or nil
 	local loaderDuration = (ksConfig.OnSuccess and ksConfig.OnSuccess.Duration) or 2
 
 	-- Icons (resolved once)
@@ -10347,20 +10345,6 @@ local function _ks_Run(ksConfig, windowConfig)
 			PaddingTop    = UDim.new(0, 8),
 			PaddingBottom = UDim.new(0, 14),
 		}),
-	})
-
-	-- Subtitle label, left-aligned above input
-	New("TextLabel", {
-		Text                = subtitle,
-		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-		TextSize            = 13,
-		BackgroundTransparency = 1,
-		Size                = UDim2.new(1, 0, 0, 0),
-		AutomaticSize       = Enum.AutomaticSize.Y,
-		TextXAlignment      = Enum.TextXAlignment.Left,
-		LayoutOrder         = 1,
-		Parent              = ContentGroup,
-		ThemeTag            = { TextColor3 = "Text" },
 	})
 
 	-- ── Key input with icon + paste button ───────────────────
@@ -10756,8 +10740,8 @@ local function _ks_Run(ksConfig, windowConfig)
 		}),
 	})
 
-	local LoadStatusLabel = New("TextLabel", {
-		Text                = checkingText or loaderText,
+	New("TextLabel", {
+		Text                = loaderText,
 		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
 		TextSize            = 14,
 		BackgroundTransparency = 1,
@@ -10842,18 +10826,6 @@ local function _ks_Run(ksConfig, windowConfig)
 		Library._KeySystemTier   = tier
 	end
 
-	-- Crossfades the status label to new text smoothly.
-	-- Used to transition from CheckingText → LoadingText without a hard cut.
-	local function setLoadStatus(newText)
-		TweenService:Create(LoadStatusLabel, TweenInfo.new(0.15), { TextTransparency = 1 }):Play()
-		task.delay(0.15, function()
-			if LoadStatusLabel and LoadStatusLabel.Parent then
-				LoadStatusLabel.Text = newText
-				TweenService:Create(LoadStatusLabel, TweenInfo.new(0.15), { TextTransparency = 0 }):Play()
-			end
-		end)
-	end
-
 	-- ── Saved key silent check ────────────────────────────────
 	if saveKey and not RunService:IsStudio() then
 		local savedKey = _ks_loadKey(folder, fileName)
@@ -10880,11 +10852,7 @@ local function _ks_Run(ksConfig, windowConfig)
 				end
 
 			elseif loaderMode == "loading" then
-				-- Show loader immediately. If CheckingText is configured this
-				-- becomes a two-phase bar: phase 1 (validating) crawls to ~40%
-				-- under checkingText, phase 2 (loading) continues to 100%
-				-- under loaderText once the key is confirmed valid.
-				-- Without CheckingText the original single-phase behaviour runs.
+				-- Show loader immediately, check in background
 				ContentGroup.Visible  = false
 				LoadOverlay.Visible   = true
 				LoadOverlay.GroupTransparency = 0
@@ -10893,30 +10861,16 @@ local function _ks_Run(ksConfig, windowConfig)
 				FillMotor:onStep(function(v)
 					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
 				end)
-
-				if checkingText then
-					-- Phase 1: slow crawl to ~40% — label already seeded with
-					-- checkingText when the overlay was built (Change 2)
-					FillMotor:setGoal(Flipper.Spring.new(0.4, { frequency = 0.5, dampingRatio = 1 }))
-				else
-					-- No checking phase — single crawl as before
-					FillMotor:setGoal(Flipper.Spring.new(0.7, { frequency = 0.6, dampingRatio = 1 }))
-				end
+				-- Start a slow crawl; we'll complete it if check passes
+				FillMotor:setGoal(Flipper.Spring.new(0.7, { frequency = 0.6, dampingRatio = 1 }))
 				FillMotor:start()
 
 				local ok, result = pcall(validateFn, savedKey)
 
 				if ok and result and result.valid then
-					if checkingText then
-						-- Phase 2: crossfade label then sweep bar the rest of the way
-						setLoadStatus(loaderText)
-						FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.1, dampingRatio = 1 }))
-						task.wait(loaderDuration)
-					else
-						-- Original single-phase behaviour
-						FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.5, dampingRatio = 1 }))
-						task.wait(loaderDuration * 0.5)
-					end
+					-- Complete the bar then transition
+					FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.5, dampingRatio = 1 }))
+					task.wait(loaderDuration * 0.5)
 					Library._KeySystemTier   = result.tier or "free"
 					Library._KeySystemResult = result
 					Library._KeySystemKey    = savedKey
@@ -10925,11 +10879,8 @@ local function _ks_Run(ksConfig, windowConfig)
 				else
 					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
 					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
-					-- Hide loader, restore entry UI with notification
+					-- Hide loader, show entry UI with notification
 					LoadOverlay.Visible  = false
-					-- Reset label back to initial state for if the window is reused
-					LoadStatusLabel.Text = checkingText or loaderText
-					LoadStatusLabel.TextTransparency = 0
 					ContentGroup.Visible = true
 					ContentGroup.GroupTransparency = 0
 					Library:Notify({
@@ -11059,34 +11010,7 @@ local function _ks_Run(ksConfig, windowConfig)
 		end
 
 		submitting = true
-
-		-- If CheckingText is configured and mode is loading, show the overlay
-		-- with the checking label immediately — before the network call — so
-		-- the bar is already moving while we wait for the validator to respond.
-		local submitFillMotor
-		if loaderMode == "loading" and checkingText then
-			ContentGroup.Visible = true
-			local FadeOut = Flipper.SingleMotor.new(0)
-			FadeOut:onStep(function(v) ContentGroup.GroupTransparency = v end)
-			FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
-			FadeOut:start()
-			task.wait(0.22)
-			ContentGroup.Visible  = false
-			-- Reset label to checkingText before showing overlay
-			LoadStatusLabel.Text = checkingText
-			LoadStatusLabel.TextTransparency = 0
-			LoadOverlay.Visible   = true
-			LoadOverlay.GroupTransparency = 0
-			-- Phase 1: crawl to ~40%
-			submitFillMotor = Flipper.SingleMotor.new(0)
-			submitFillMotor:onStep(function(v)
-				ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
-			end)
-			submitFillMotor:setGoal(Flipper.Spring.new(0.4, { frequency = 0.5, dampingRatio = 1 }))
-			submitFillMotor:start()
-		else
-			if SubmitLabel then SubmitLabel.Text = "Verifying..." end
-		end
+		if SubmitLabel then SubmitLabel.Text = "Verifying..." end
 
 		task.spawn(function()
 			local ok, result = pcall(validateFn, key)
@@ -11098,16 +11022,6 @@ local function _ks_Run(ksConfig, windowConfig)
 				if errCode == "HWID_BANNED" then
 					game.Players.LocalPlayer:Kick("You have been banned.")
 					return
-				end
-
-				-- If the two-phase overlay was showing during validation,
-				-- hide it and restore the entry UI before showing the error.
-				if submitFillMotor then
-					LoadOverlay.Visible  = false
-					LoadStatusLabel.Text = checkingText or loaderText
-					LoadStatusLabel.TextTransparency = 0
-					ContentGroup.Visible = true
-					ContentGroup.GroupTransparency = 0
 				end
 
 				morphButton(SubmitIcon, SubmitLabel,
@@ -11133,21 +11047,13 @@ local function _ks_Run(ksConfig, windowConfig)
 			Library._KeySystemResult = result
 			Library._KeySystemKey    = key
 
-			-- Success morph on submit button (only visible if overlay not already showing)
-			if not submitFillMotor then
-				morphButton(SubmitIcon, SubmitLabel,
-					ICON_CHECK, "Success!",
-					ICON_KEY, "Submit Key", 99)
-			end
+			-- Success morph on submit button
+			morphButton(SubmitIcon, SubmitLabel,
+				ICON_CHECK, "Success!",
+				ICON_KEY, "Submit Key", 99)
 
 			if loaderMode == "instant" then
 				task.wait(0.3)
-				destroyKsWindow()
-			elseif submitFillMotor then
-				-- Two-phase: phase 2 — crossfade label, sweep bar from ~40% to 100%
-				setLoadStatus(loaderText)
-				submitFillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.1, dampingRatio = 1 }))
-				task.wait(loaderDuration)
 				destroyKsWindow()
 			else
 				runLoadingTransition(destroyKsWindow)
