@@ -10118,12 +10118,18 @@ local function _ks_Run(ksConfig, windowConfig)
 	local customErrors   = ksConfig.Errors or {}
 
 	-- Image config
+	-- Target controls which region the image covers:
+	--   "all"      — full window (default)
+	--   "titlebar" — only the top bar holding title + close button
+	--   "content"  — only the body below the title bar
 	local imageCfg           = ksConfig.Image
 	local imageEnabled        = imageCfg and type(imageCfg.Id) == "string" and imageCfg.Id ~= ""
 	local imageId             = imageEnabled and imageCfg.Id or nil
-	local imageTransparency   = (imageCfg and imageCfg.Transparency  ~= nil) and imageCfg.Transparency  or 0.15
+	local imageTransparency   = (imageCfg and imageCfg.Transparency     ~= nil) and imageCfg.Transparency     or 0.15
 	local imageTint           = (imageCfg and imageCfg.TintTransparency ~= nil) and imageCfg.TintTransparency or 0.45
 	local imageScaleType      = (imageCfg and imageCfg.ScaleType) or Enum.ScaleType.Crop
+	local imageColor          = (imageCfg and imageCfg.Color) or Color3.fromRGB(255, 255, 255)
+	local imageTarget         = (imageCfg and imageCfg.Target) or "all"
 
 	-- Discord block config
 	local discordCfg     = ksConfig.Discord
@@ -10211,38 +10217,64 @@ local function _ks_Run(ksConfig, windowConfig)
 	end)
 
 	-- ── Background image (optional) ───────────────────────────
-	-- Sits inside KsRootCanvas at ZIndex 1, below all content.
-	-- A clipping frame with UICorner matches the window's rounded
-	-- border so the image never bleeds past the edges.
-	-- A tint overlay using AcrylicMain blends the image with
-	-- whatever theme + acrylic is active.
-	if imageEnabled then
-		local ImageClip = New("Frame", {
-			Size                = UDim2.fromScale(1, 1),
+	-- A local helper builds a clipped image layer parented to
+	-- KsRootCanvas. Size + Position are passed in by the caller
+	-- so the same code covers all three Target modes.
+	-- UICorner on the clip frame always matches the window radius (8).
+	-- For "titlebar" the frame is 8px taller than the bar so its
+	-- bottom rounding tucks under the content area. For "content"
+	-- the frame starts 8px above the content boundary so its top
+	-- rounding hides under the title bar line.
+	local function _ks_makeImageLayer(size, pos)
+		New("Frame", {
+			Size                   = size,
+			Position               = pos,
 			BackgroundTransparency = 1,
-			ClipsDescendants    = true,
-			ZIndex              = 1,
-			Parent              = KsRootCanvas,
+			ClipsDescendants       = true,
+			ZIndex                 = 1,
+			Parent                 = KsRootCanvas,
 		}, {
 			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
 			New("ImageLabel", {
-				Image               = imageId,
-				Size                = UDim2.fromScale(1, 1),
+				Image                  = imageId,
+				Size                   = UDim2.fromScale(1, 1),
 				BackgroundTransparency = 1,
-				ImageTransparency   = imageTransparency,
-				ScaleType           = imageScaleType,
-				ZIndex              = 1,
+				ImageTransparency      = imageTransparency,
+				ImageColor3            = imageColor,
+				ScaleType              = imageScaleType,
+				ZIndex                 = 1,
 			}),
-			-- Tint overlay — takes the theme's AcrylicMain colour so the
-			-- image always reads as part of the current theme rather than
-			-- fighting against it.
+			-- Theme tint overlay — blends the image into the active
+			-- theme so it never clashes with acrylic or colour schemes.
 			New("Frame", {
-				Size                = UDim2.fromScale(1, 1),
+				Size                   = UDim2.fromScale(1, 1),
 				BackgroundTransparency = imageTint,
-				ZIndex              = 2,
-				ThemeTag            = { BackgroundColor3 = "AcrylicMain" },
+				ZIndex                 = 2,
+				ThemeTag               = { BackgroundColor3 = "AcrylicMain" },
 			}),
 		})
+	end
+
+	if imageEnabled then
+		if imageTarget == "titlebar" then
+			-- 8px overrun hides the bottom UICorner rounding under the content body
+			_ks_makeImageLayer(
+				UDim2.new(1, 0, 0, 50),
+				UDim2.fromOffset(0, 0)
+			)
+		elseif imageTarget == "content" then
+			-- Start 8px early so the top UICorner rounding hides under the title bar
+			_ks_makeImageLayer(
+				UDim2.new(1, 0, 1, -34),
+				UDim2.fromOffset(0, 34)
+			)
+		else
+			-- "all" — full window surface (default)
+			_ks_makeImageLayer(
+				UDim2.fromScale(1, 1),
+				UDim2.fromOffset(0, 0)
+			)
+		end
 	end
 
 	-- ── Title bar ─────────────────────────────────────────────
