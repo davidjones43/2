@@ -5248,7 +5248,7 @@ Components.Window = (function()
 		end)
 
 		-- ══════════════════════════════════════════════════════════════════════
-		-- FLUENT PLUS+ — BUILT-IN HOME TAB DASHBOARD  (grid layout, no scroll)
+		-- FLUENT PLUS+ — BUILT-IN HOME TAB DASHBOARD  (v3 grid, no scroll)
 		-- ══════════════════════════════════════════════════════════════════════
 		function Window:AddHomeTab(HomeTabConfig)
 			HomeTabConfig = HomeTabConfig or {}
@@ -5258,14 +5258,16 @@ Components.Window = (function()
 			local discordLabel       = HomeTabConfig.DiscordLabel       or "Join our Discord"
 
 			-- ── Services ──────────────────────────────────────────────────────
-			local Players      = game:GetService("Players")
-			local LocalPlayer  = Players.LocalPlayer
-			local Localization = game:GetService("LocalizationService")
-			local Stats        = game:GetService("Stats")
+			local Players         = game:GetService("Players")
+			local LocalPlayer     = Players.LocalPlayer
+			local Localization    = game:GetService("LocalizationService")
+			local Stats           = game:GetService("Stats")
+			local MarketplaceSvc  = game:GetService("MarketplaceService")
+			local UIS             = game:GetService("UserInputService")
 
 			local homeIconResolved = Library:GetIcon("home") or "rbxassetid://9080449299"
 
-			-- ── Utility ───────────────────────────────────────────────────────
+			-- ── Utility helpers ───────────────────────────────────────────────
 			local function getPing()
 				local ok, val = pcall(function()
 					return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
@@ -5283,167 +5285,220 @@ Components.Window = (function()
 				return fmt2(h) .. ":" .. fmt2(m) .. ":" .. fmt2(s)
 			end
 
-			-- ── Register tab button at position 1 ────────────────────────────
+			local function formatAge(secs)
+				secs = math.max(0, math.floor(secs))
+				if secs < 60 then
+					return secs .. "s"
+				elseif secs < 3600 then
+					return math.floor(secs / 60) .. "m " .. (secs % 60) .. "s"
+				else
+					local h = math.floor(secs / 3600)
+					local m = math.floor((secs % 3600) / 60)
+					return h .. "h " .. m .. "m"
+				end
+			end
+
+			local function getServerType()
+				local ok, vip = pcall(function() return game.VIPServerId end)
+				if ok and vip and vip ~= "" then return "VIP Server" end
+				local ok2, priv = pcall(function() return game.PrivateServerId end)
+				if ok2 and priv and priv ~= "" then return "Private" end
+				return "Public"
+			end
+
+			local function getPlatformName()
+				local ok, p = pcall(function() return UIS:GetPlatform() end)
+				if not ok then return "Unknown" end
+				local map = {
+					[Enum.Platform.Windows]  = "Windows",
+					[Enum.Platform.OSX]      = "macOS",
+					[Enum.Platform.IOS]      = "iOS",
+					[Enum.Platform.Android]  = "Android",
+					[Enum.Platform.XBoxOne]  = "Xbox",
+					[Enum.Platform.PS4]      = "PlayStation",
+					[Enum.Platform.UWP]      = "Windows (UWP)",
+				}
+				return map[p] or tostring(p):gsub("Enum%.Platform%.", "")
+			end
+
+			-- Client-side FPS tracker (updated every 0.5s via RenderStepped)
+			local _fpsFrames = 0
+			local _fpsClock  = tick()
+			local _fpsValue  = 0
+			Creator.AddSignal(RunService.RenderStepped, function()
+				_fpsFrames += 1
+				local now = tick()
+				if now - _fpsClock >= 0.5 then
+					_fpsValue  = math.round(_fpsFrames / (now - _fpsClock))
+					_fpsFrames = 0
+					_fpsClock  = now
+				end
+			end)
+
+			-- Server start time via workspace.DistributedGameTime (most accurate)
+			local serverStartTick = tick() - (pcall(function()
+				return workspace.DistributedGameTime
+			end) and workspace.DistributedGameTime or 0)
+
+			-- ── Register Home tab button (forced to index 1) ──────────────────
 			local savedCount = TabModule.TabCount
 			TabModule.TabCount = 0
 			local HomeTabObj = TabModule:New("Home", homeIconResolved, Window.TabHolder)
 			TabModule.TabCount = math.max(savedCount + 1, 1)
 			HomeTabObj.Frame.LayoutOrder = -999
 
-			-- The ScrollingFrame that Fluent creates for the tab's content.
-			-- We lock it so it never actually scrolls — the grid fills it exactly.
 			local HomeContainer = HomeTabObj.ContainerFrame
-			HomeContainer.ScrollingEnabled     = false
-			HomeContainer.ScrollBarThickness   = 0
-			HomeContainer.AutomaticCanvasSize  = Enum.AutomaticSize.None
-			HomeContainer.CanvasSize           = UDim2.fromScale(0, 0)
+			HomeContainer.ScrollingEnabled    = false
+			HomeContainer.ScrollBarThickness  = 0
+			HomeContainer.AutomaticCanvasSize = Enum.AutomaticSize.None
+			HomeContainer.CanvasSize          = UDim2.fromScale(0, 0)
 
-			-- ── Shared builders ───────────────────────────────────────────────
+			-- ── Shared UI builders ────────────────────────────────────────────
 
-			-- Fluent-styled card: fills its parent, uses theme colours.
-			local function makeCard(parent, sizeX, sizeY, posX, posY)
+			local ROW_H  = 20   -- height of each stat row in px
+			local HDR_H  = 31   -- card header height (30px frame + 1px divider)
+			local GAP    = 5    -- gap between cards
+			local PAD    = 5    -- outer padding
+
+			-- Base card frame, positioned absolutely within its parent.
+			local function makeCard(parent, sx, sy, px, py)
 				return New("Frame", {
-					Size                   = UDim2.new(sizeX.Scale, sizeX.Offset, sizeY.Scale, sizeY.Offset),
-					Position               = UDim2.new(posX.Scale, posX.Offset, posY.Scale, posY.Offset),
+					Size                   = UDim2.new(sx.s or 0, sx.o or 0, sy.s or 0, sy.o or 0),
+					Position               = UDim2.new(px.s or 0, px.o or 0, py.s or 0, py.o or 0),
 					BackgroundTransparency = 0.87,
 					BorderSizePixel        = 0,
+					ClipsDescendants       = true,
 					Parent                 = parent,
 					ThemeTag               = { BackgroundColor3 = "Element" },
 				}, {
 					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
 					New("UIStroke", {
 						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-						Transparency    = 0.65,
+						Transparency    = 0.62,
 						Thickness       = 1,
 						ThemeTag        = { Color = "InElementBorder" },
 					}),
 				})
 			end
 
-			-- Card header row: coloured label + small icon on the left.
-			local function makeCardHeader(parent, labelText, iconName)
-				local header = New("Frame", {
+			-- Card header: icon + uppercase label + thin divider line below.
+			local function makeCardHeader(parent, label, iconName)
+				local hdrFrame = New("Frame", {
 					Size                   = UDim2.new(1, 0, 0, 30),
-					Position               = UDim2.fromOffset(0, 0),
 					BackgroundTransparency = 1,
 					Parent                 = parent,
 				}, {
 					New("UIListLayout", {
 						FillDirection     = Enum.FillDirection.Horizontal,
 						VerticalAlignment = Enum.VerticalAlignment.Center,
-						Padding           = UDim.new(0, 6),
+						Padding           = UDim.new(0, 5),
 					}),
 					New("UIPadding", {
-						PaddingLeft  = UDim.new(0, 10),
-						PaddingRight = UDim.new(0, 10),
+						PaddingLeft  = UDim.new(0, 9),
+						PaddingRight = UDim.new(0, 9),
 					}),
 				})
-
-				local resolvedIcon = iconName and (Library:GetIcon(iconName) or "rbxassetid://0") or nil
-				if resolvedIcon then
+				local ico = iconName and (Library:GetIcon(iconName) or nil)
+				if ico then
 					New("ImageLabel", {
-						Size                   = UDim2.fromOffset(13, 13),
+						Size                   = UDim2.fromOffset(12, 12),
 						BackgroundTransparency = 1,
-						Image                  = resolvedIcon,
+						Image                  = ico,
 						LayoutOrder            = 1,
 						ThemeTag               = { ImageColor3 = "Accent" },
-						Parent                 = header,
+						Parent                 = hdrFrame,
 					})
 				end
-
 				New("TextLabel", {
-					Text                   = labelText,
+					Text                   = label,
 					FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
-					TextSize               = 10,
+					TextSize               = 9,
 					TextXAlignment         = Enum.TextXAlignment.Left,
 					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, resolvedIcon and -22 or 0, 1, 0),
+					Size                   = UDim2.new(1, ico and -20 or 0, 1, 0),
 					LayoutOrder            = 2,
 					ThemeTag               = { TextColor3 = "Accent" },
-					Parent                 = header,
+					Parent                 = hdrFrame,
 				})
-
-				-- thin divider below header
+				-- divider
 				New("Frame", {
-					Size                   = UDim2.new(1, -16, 0, 1),
-					Position               = UDim2.new(0, 8, 0, 30),
-					BackgroundTransparency = 0.65,
+					Size                   = UDim2.new(1, -14, 0, 1),
+					Position               = UDim2.new(0, 7, 0, 30),
+					BackgroundTransparency = 0.6,
 					BorderSizePixel        = 0,
 					Parent                 = parent,
 					ThemeTag               = { BackgroundColor3 = "TitleBarLine" },
 				})
-
-				return header
 			end
 
-			-- Two-column stat row (label left, value right).
+			-- Two-column stat row: label left, value right.
+			-- Returns the value TextLabel so callers can update it.
 			local function makeStatRow(parent, labelText, defaultValue, yPos)
 				local row = New("Frame", {
-					Size                   = UDim2.new(1, 0, 0, 22),
+					Size                   = UDim2.new(1, 0, 0, ROW_H),
 					Position               = UDim2.new(0, 0, 0, yPos),
 					BackgroundTransparency = 1,
 					Parent                 = parent,
 				}, {
 					New("UIPadding", {
-						PaddingLeft  = UDim.new(0, 10),
-						PaddingRight = UDim.new(0, 10),
+						PaddingLeft  = UDim.new(0, 9),
+						PaddingRight = UDim.new(0, 9),
 					}),
 				})
-
 				New("TextLabel", {
 					Text                   = labelText,
 					FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-					TextSize               = 11,
+					TextSize               = 10,
 					TextXAlignment         = Enum.TextXAlignment.Left,
 					TextYAlignment         = Enum.TextYAlignment.Center,
 					BackgroundTransparency = 1,
-					Size                   = UDim2.new(0.55, 0, 1, 0),
+					Size                   = UDim2.new(0.52, 0, 1, 0),
 					ThemeTag               = { TextColor3 = "SubText" },
 					Parent                 = row,
 				})
-
-				local valLabel = New("TextLabel", {
+				local val = New("TextLabel", {
 					Text                   = defaultValue or "—",
 					FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-					TextSize               = 11,
+					TextSize               = 10,
 					TextXAlignment         = Enum.TextXAlignment.Right,
 					TextYAlignment         = Enum.TextYAlignment.Center,
+					TextTruncate           = Enum.TextTruncate.AtEnd,
 					BackgroundTransparency = 1,
-					Size                   = UDim2.new(0.45, 0, 1, 0),
-					Position               = UDim2.new(0.55, 0, 0, 0),
+					Size                   = UDim2.new(0.48, 0, 1, 0),
+					Position               = UDim2.new(0.52, 0, 0, 0),
 					ThemeTag               = { TextColor3 = "Text" },
 					Parent                 = row,
 				})
-
-				return valLabel
+				return val
 			end
 
 			-- ═══════════════════════════════════════════════════════════════
-			-- GRID LAYOUT
+			-- LAYOUT  (no scrolling — everything fits the panel exactly)
 			-- ─────────────────────────────────────────────────────────────
 			--
-			--  ┌────────────────────────────────────────────────────┐
-			--  │  BANNER  (full width, fixed 66px)                  │
-			--  ├──────────────────────┬─────────────────────────────┤
-			--  │  SERVER  (left col)  │  CLIENT      (right col)    │
-			--  │                      ├─────────────────────────────┤
-			--  │                      │  FRIENDS     (right col)    │
-			--  ├──────────────────────┴─────────────────────────────┤
-			--  │  DISCORD  (full width, optional, fixed 34px)       │
-			--  └────────────────────────────────────────────────────┘
-			--
-			-- All heights in the body row are expressed in scale so the
-			-- cards fill the available space regardless of window height.
-			-- ═══════════════════════════════════════════════════════════════
+			--  ┌─────────────────────────────────────────────────────┐
+			--  │  BANNER   (full width, 78px)                        │
+			--  ├──────────────┬──────────────┬────────────────────── ┤
+			--  │   SERVER     │   CLIENT     │   FRIENDS             │
+			--  │   (1/3 col)  │   (1/3 col)  │   (1/3 col)          │
+			--  ├──────────────┴──────────────┴───────────────────────┤
+			--  │  GAME   (full width, 62px)                          │
+			--  ├─────────────────────────────────────────────────────┤
+			--  │  DISCORD  (optional, full width, 32px)              │
+			--  └─────────────────────────────────────────────────────┘
+			-- ═══════════════════════════════════════════════════════════
 
-			local GAP          = 6   -- px gap between cards
-			local PAD          = 6   -- px outer padding
-			local BANNER_H     = 66  -- px  fixed banner height
-			local DISCORD_H    = discordInvite and (GAP + 34) or 0  -- only if used
-			-- body height = 1 scale - banner - discord - padding
-			local bodyOffsetH  = -(BANNER_H + GAP + PAD * 2 + DISCORD_H)
+			local BANNER_H  = 78
+			local GAME_H    = 62
+			local DISC_H    = discordInvite and 32 or 0
+			local DISC_GAP  = discordInvite and GAP or 0
 
-			-- ── Outer padding wrapper ─────────────────────────────────────────
+			-- Total fixed pixels consumed (banner + game + discord + all gaps + outer padding)
+			local fixedH = BANNER_H + GAP + GAP + GAME_H + DISC_GAP + DISC_H + PAD * 2
+			-- body (3-col cards) fills what's left
+			local bodyH_offset = -(fixedH)
+
+			-- Outer wrapper with padding
 			local RootFrame = New("Frame", {
 				Size                   = UDim2.fromScale(1, 1),
 				BackgroundTransparency = 1,
@@ -5452,23 +5507,61 @@ Components.Window = (function()
 			}, {
 				New("UIPadding", {
 					PaddingLeft   = UDim.new(0, PAD),
-					PaddingRight  = UDim.new(0, PAD + 4),  -- 4 extra for scroll-bar gutter
+					PaddingRight  = UDim.new(0, PAD + 3),
 					PaddingTop    = UDim.new(0, PAD),
 					PaddingBottom = UDim.new(0, PAD),
 				}),
 			})
 
-			-- ── BANNER ────────────────────────────────────────────────────────
+			-- ────────────────────────────────────────────────────────────
+			-- BANNER  (full width, polished player card)
+			-- ────────────────────────────────────────────────────────────
 			local bannerCard = makeCard(
 				RootFrame,
-				{Scale=1, Offset=0}, {Scale=0, Offset=BANNER_H},
-				{Scale=0, Offset=0}, {Scale=0, Offset=0}
+				{s=1, o=0}, {s=0, o=BANNER_H},
+				{s=0, o=0}, {s=0, o=0}
 			)
 
-			-- Avatar circle
+			-- Subtle gradient overlay on the banner for depth
+			New("Frame", {
+				Size                   = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 0.85,
+				BorderSizePixel        = 0,
+				ZIndex                 = 2,
+				Parent                 = bannerCard,
+				ThemeTag               = { BackgroundColor3 = "Accent" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+				New("UIGradient", {
+					Color     = ColorSequence.new({
+						ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+						ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,0)),
+					}),
+					Transparency = NumberSequence.new({
+						NumberSequenceKeypoint.new(0, 0),
+						NumberSequenceKeypoint.new(1, 1),
+					}),
+					Rotation = 90,
+				}),
+			})
+
+			-- Accent bar — left edge
+			New("Frame", {
+				Size                   = UDim2.new(0, 3, 0, 46),
+				Position               = UDim2.new(0, 0, 0.5, -23),
+				BackgroundTransparency = 0,
+				BorderSizePixel        = 0,
+				ZIndex                 = 6,
+				Parent                 = bannerCard,
+				ThemeTag               = { BackgroundColor3 = "Accent" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+			})
+
+			-- Avatar
 			local avatarImg = New("ImageLabel", {
-				Size                   = UDim2.fromOffset(44, 44),
-				Position               = UDim2.new(0, 11, 0.5, 0),
+				Size                   = UDim2.fromOffset(48, 48),
+				Position               = UDim2.new(0, 14, 0.5, 0),
 				AnchorPoint            = Vector2.new(0, 0.5),
 				BackgroundTransparency = 0.85,
 				Image                  = "rbxassetid://0",
@@ -5478,8 +5571,8 @@ Components.Window = (function()
 			}, {
 				New("UICorner", { CornerRadius = UDim.new(1, 0) }),
 				New("UIStroke", {
-					Thickness       = 1.5,
-					Transparency    = 0.4,
+					Thickness       = 2,
+					Transparency    = 0.3,
 					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 					ThemeTag        = { Color = "Accent" },
 				}),
@@ -5496,98 +5589,119 @@ Components.Window = (function()
 				if ok and img then avatarImg.Image = img end
 			end)
 
-			-- Greeting
+			-- Display name (larger, semibold)
 			New("TextLabel", {
-				Text                   = "Hello, " .. LocalPlayer.DisplayName,
+				Text                   = LocalPlayer.DisplayName,
 				FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-				TextSize               = 13,
+				TextSize               = 15,
 				TextXAlignment         = Enum.TextXAlignment.Left,
+				TextTruncate           = Enum.TextTruncate.AtEnd,
 				BackgroundTransparency = 1,
-				Size                   = UDim2.new(1, -70, 0, 20),
-				Position               = UDim2.new(0, 63, 0, 12),
+				Size                   = UDim2.new(1, -76, 0, 20),
+				Position               = UDim2.new(0, 70, 0, 14),
 				ZIndex                 = 5,
 				Parent                 = bannerCard,
 				ThemeTag               = { TextColor3 = "Text" },
 			})
 
+			-- @username · scriptname row
 			New("TextLabel", {
-				Text                   = "@" .. LocalPlayer.Name .. "  ·  " .. scriptName,
+				Text                   = "@" .. LocalPlayer.Name,
 				FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
 				TextSize               = 11,
 				TextXAlignment         = Enum.TextXAlignment.Left,
+				TextTruncate           = Enum.TextTruncate.AtEnd,
 				BackgroundTransparency = 1,
-				Size                   = UDim2.new(1, -70, 0, 14),
-				Position               = UDim2.new(0, 63, 0, 34),
+				Size                   = UDim2.new(1, -76, 0, 14),
+				Position               = UDim2.new(0, 70, 0, 36),
 				ZIndex                 = 5,
 				Parent                 = bannerCard,
 				ThemeTag               = { TextColor3 = "SubText" },
 			})
 
-			-- Accent left bar
-			New("Frame", {
-				Size                   = UDim2.new(0, 3, 0, 34),
-				Position               = UDim2.new(0, 0, 0.5, -17),
-				BackgroundTransparency = 0,
+			-- Script name badge (right side of banner)
+			local badgeFrame = New("Frame", {
+				Size                   = UDim2.new(0, 0, 0, 20),
+				AutomaticSize          = Enum.AutomaticSize.X,
+				Position               = UDim2.new(1, -10, 0.5, 0),
+				AnchorPoint            = Vector2.new(1, 0.5),
+				BackgroundTransparency = 0.75,
 				BorderSizePixel        = 0,
-				ZIndex                 = 6,
+				ZIndex                 = 5,
 				Parent                 = bannerCard,
 				ThemeTag               = { BackgroundColor3 = "Accent" },
 			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+				New("UICorner", { CornerRadius = UDim.new(0, 5) }),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 8),
+					PaddingRight = UDim.new(0, 8),
+				}),
+				New("TextLabel", {
+					Text                   = scriptName,
+					FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize               = 10,
+					TextColor3             = Color3.fromRGB(255, 255, 255),
+					BackgroundTransparency = 1,
+					Size                   = UDim2.new(0, 0, 1, 0),
+					AutomaticSize          = Enum.AutomaticSize.X,
+					TextXAlignment         = Enum.TextXAlignment.Center,
+					TextYAlignment         = Enum.TextYAlignment.Center,
+					ZIndex                 = 6,
+				}),
 			})
 
-			-- ── BODY ROW (left + right columns) ──────────────────────────────
+			-- ────────────────────────────────────────────────────────────
+			-- BODY  (3 equal columns, fills between banner and game card)
+			-- ────────────────────────────────────────────────────────────
 			local bodyTop = BANNER_H + GAP
 
 			local bodyFrame = New("Frame", {
-				Size                   = UDim2.new(1, 0, 1, bodyOffsetH),
+				Size                   = UDim2.new(1, 0, 1, bodyH_offset),
 				Position               = UDim2.new(0, 0, 0, bodyTop),
 				BackgroundTransparency = 1,
 				Parent                 = RootFrame,
 			})
 
-			local COL_GAP   = GAP
-			local LEFT_W    = 0.5   -- left column = 50% scale
-			local RIGHT_W   = 0.5   -- right column = 50% scale
+			-- Column geometry: 3 equal cols with GAP between them
+			-- col1: x=0,         w=1/3 - 2/3*GAP
+			-- col2: x=1/3+GAP/3, w=1/3 - 2/3*GAP
+			-- col3: x=2/3+2/3*G, w=1/3 - 2/3*GAP   (adjusted slightly for right edge)
+			local cg = math.ceil(GAP * 2 / 3)   -- ~3px offset compensation per col
 
-			-- ── LEFT COLUMN  ─  SERVER card ──────────────────────────────────
-			local serverCard = makeCard(
-				bodyFrame,
-				{Scale=LEFT_W, Offset=-(COL_GAP/2)}, {Scale=1, Offset=0},
-				{Scale=0, Offset=0}, {Scale=0, Offset=0}
-			)
+			local function colCard(parent, colIdx, totalCols)
+				local fraction = 1 / totalCols
+				local px_s = fraction * (colIdx - 1)
+				local px_o = (colIdx - 1) * cg
+				local sw = fraction
+				local so = -cg * 2 + (colIdx == totalCols and cg or 0)
+				return makeCard(
+					parent,
+					{s=sw, o=so}, {s=1, o=0},
+					{s=px_s, o=px_o}, {s=0, o=0}
+				)
+			end
 
+			-- ── SERVER CARD ───────────────────────────────────────────────────
+			local serverCard = colCard(bodyFrame, 1, 3)
 			makeCardHeader(serverCard, "SERVER", "server")
 
-			-- rows start at y=36 (header 30 + divider 1 + 5 gap)
-			local valPlayers  = makeStatRow(serverCard, "Players",     "...", 36)
-			local valMaxP     = makeStatRow(serverCard, "Max Players", "...", 58)
-			local valPing     = makeStatRow(serverCard, "Latency",     "...", 80)
-			local valSession  = makeStatRow(serverCard, "Session",     "...", 102)
-			local valRegion   = makeStatRow(serverCard, "Region",      "...", 124)
+			-- rows: y = HDR_H + (index * ROW_H)
+			local yR = HDR_H  -- running Y position
+			local valPlayers  = makeStatRow(serverCard, "Players",   "...", yR)  yR += ROW_H
+			local valPing     = makeStatRow(serverCard, "Latency",   "...", yR)  yR += ROW_H
+			local valSession  = makeStatRow(serverCard, "Session",   "...", yR)  yR += ROW_H
+			local valSrvType  = makeStatRow(serverCard, "Type",      getServerType(), yR)  yR += ROW_H
+			local valSrvAge   = makeStatRow(serverCard, "Age",       "...", yR)  yR += ROW_H
 
-			task.spawn(function()
-				local ok, region = pcall(function()
-					return Localization:GetCountryRegionForPlayerAsync(LocalPlayer)
-				end)
-				valRegion.Text = (ok and region) and region or "N/A"
-			end)
-
-			-- ── RIGHT COLUMN  ─  CLIENT + FRIENDS stacked ────────────────────
-			local rightX = {Scale=RIGHT_W, Offset=COL_GAP/2}
-			local rightW = {Scale=1-RIGHT_W, Offset=-(COL_GAP/2)}
-
-			-- CLIENT card — top half of right column
-			local clientCard = makeCard(
-				bodyFrame,
-				rightW, {Scale=0.46, Offset=-(COL_GAP/2)},
-				rightX, {Scale=0, Offset=0}
-			)
-
+			-- ── CLIENT CARD ───────────────────────────────────────────────────
+			local clientCard = colCard(bodyFrame, 2, 3)
 			makeCardHeader(clientCard, "CLIENT", "cpu")
 
-			local valExec    = makeStatRow(clientCard, "Executor", "Detecting...", 36)
-			local valSupport = makeStatRow(clientCard, "Support",  "Checking...", 58)
+			yR = HDR_H
+			local valExec     = makeStatRow(clientCard, "Executor",  "Detecting...", yR)  yR += ROW_H
+			local valSupport  = makeStatRow(clientCard, "Support",   "Checking...",  yR)  yR += ROW_H
+			local valFPS      = makeStatRow(clientCard, "FPS",       "...",          yR)  yR += ROW_H
+			local valPlatform = makeStatRow(clientCard, "Platform",  getPlatformName(), yR)  yR += ROW_H
 
 			task.spawn(function()
 				local execName  = "Unknown"
@@ -5612,29 +5726,143 @@ Components.Window = (function()
 				valSupport.Text = supported
 			end)
 
-			-- FRIENDS card — bottom half of right column
-			local friendsTop = {Scale=0.46, Offset=COL_GAP/2}
-			local friendsH   = {Scale=0.54, Offset=-(COL_GAP/2)}
-
-			local friendsCard = makeCard(
-				bodyFrame,
-				rightW, friendsH,
-				rightX, friendsTop
-			)
-
+			-- ── FRIENDS CARD ──────────────────────────────────────────────────
+			local friendsCard = colCard(bodyFrame, 3, 3)
 			makeCardHeader(friendsCard, "FRIENDS", "users")
 
-			local valFAll     = makeStatRow(friendsCard, "Total",   "Loading...", 36)
-			local valFOnline  = makeStatRow(friendsCard, "Online",  "Loading...", 58)
-			local valFOffline = makeStatRow(friendsCard, "Offline", "Loading...", 80)
-			local valFGame    = makeStatRow(friendsCard, "In-Game", "Loading...", 102)
+			yR = HDR_H
+			local valFAll     = makeStatRow(friendsCard, "Total",   "Loading...", yR)  yR += ROW_H
+			local valFOnline  = makeStatRow(friendsCard, "Online",  "Loading...", yR)  yR += ROW_H
+			local valFOffline = makeStatRow(friendsCard, "Offline", "Loading...", yR)  yR += ROW_H
+			local valFGame    = makeStatRow(friendsCard, "In-Game", "Loading...", yR)  yR += ROW_H
 
-			-- ── DISCORD BUTTON (optional, full-width, pinned to bottom) ───────
+			-- ────────────────────────────────────────────────────────────
+			-- GAME CARD  (full width, pinned above discord / bottom)
+			-- ────────────────────────────────────────────────────────────
+			local gamePosY = -(DISC_H + DISC_GAP + GAME_H)
+
+			local gameCard = makeCard(
+				RootFrame,
+				{s=1, o=0}, {s=0, o=GAME_H},
+				{s=0, o=0}, {s=1, o=gamePosY}
+			)
+
+			-- Game thumbnail (square, left side)
+			local thumbImg = New("ImageLabel", {
+				Size                   = UDim2.fromOffset(GAME_H - 14, GAME_H - 14),
+				Position               = UDim2.new(0, 7, 0.5, 0),
+				AnchorPoint            = Vector2.new(0, 0.5),
+				BackgroundTransparency = 0.8,
+				Image                  = "rbxassetid://0",
+				ScaleType              = Enum.ScaleType.Crop,
+				ZIndex                 = 5,
+				Parent                 = gameCard,
+				ThemeTag               = { BackgroundColor3 = "AcrylicMain" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 5) }),
+				New("UIStroke", {
+					Transparency    = 0.7,
+					Thickness       = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					ThemeTag        = { Color = "InElementBorder" },
+				}),
+			})
+
+			local thumbW  = GAME_H - 14 + 7 + 8  -- left offset for text area
+			local textAreaW = -(thumbW + 16)       -- right-side text width offset
+
+			-- Game name
+			local valGameName = New("TextLabel", {
+				Text                   = "Loading...",
+				FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+				TextSize               = 12,
+				TextXAlignment         = Enum.TextXAlignment.Left,
+				TextTruncate           = Enum.TextTruncate.AtEnd,
+				BackgroundTransparency = 1,
+				Size                   = UDim2.new(1, textAreaW, 0, 16),
+				Position               = UDim2.new(0, thumbW, 0, 10),
+				ZIndex                 = 5,
+				Parent                 = gameCard,
+				ThemeTag               = { TextColor3 = "Text" },
+			})
+
+			-- Creator
+			local valCreator = New("TextLabel", {
+				Text                   = "...",
+				FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+				TextSize               = 10,
+				TextXAlignment         = Enum.TextXAlignment.Left,
+				TextTruncate           = Enum.TextTruncate.AtEnd,
+				BackgroundTransparency = 1,
+				Size                   = UDim2.new(1, textAreaW, 0, 14),
+				Position               = UDim2.new(0, thumbW, 0, 28),
+				ZIndex                 = 5,
+				Parent                 = gameCard,
+				ThemeTag               = { TextColor3 = "SubText" },
+			})
+
+			-- Total players (right-aligned badge)
+			local valTotalPlayers = New("TextLabel", {
+				Text                   = "...",
+				FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+				TextSize               = 10,
+				TextXAlignment         = Enum.TextXAlignment.Left,
+				BackgroundTransparency = 1,
+				Size                   = UDim2.new(1, textAreaW, 0, 14),
+				Position               = UDim2.new(0, thumbW, 0, 44),
+				ZIndex                 = 5,
+				Parent                 = gameCard,
+				ThemeTag               = { TextColor3 = "SubText" },
+			})
+
+			-- Fetch game info async
+			task.spawn(function()
+				-- MarketplaceService for name + creator
+				local ok, info = pcall(function()
+					return MarketplaceSvc:GetProductInfo(game.PlaceId)
+				end)
+				if ok and info then
+					valGameName.Text = info.Name or "Unknown"
+					valCreator.Text  = "by " .. (info.Creator and info.Creator.Name or "Unknown")
+				else
+					valGameName.Text = game.Name ~= "" and game.Name or "Unknown"
+					valCreator.Text  = "by Unknown"
+				end
+
+				-- Thumbnail via Roblox CDN
+				local ok2, thumbUrl = pcall(function()
+					return ("https://thumbnails.roblox.com/v1/games/icons?universeIds=%d&size=150x150&format=Png&isCircular=false"):format(game.GameId)
+				end)
+				if ok2 then
+					pcall(function()
+						local resp = game:HttpGet(thumbUrl)
+						local decoded = httpService:JSONDecode(resp)
+						if decoded and decoded.data and decoded.data[1] then
+							thumbImg.Image = decoded.data[1].imageUrl or "rbxassetid://0"
+						end
+					end)
+				end
+
+				-- Total concurrent players across all servers
+				pcall(function()
+					local url  = ("https://games.roblox.com/v1/games?universeIds=%d"):format(game.GameId)
+					local resp = game:HttpGet(url)
+					local data = httpService:JSONDecode(resp)
+					if data and data.data and data.data[1] then
+						local playing = data.data[1].playing or 0
+						valTotalPlayers.Text = "👥 " .. tostring(playing) .. " playing now"
+					end
+				end)
+			end)
+
+			-- ────────────────────────────────────────────────────────────
+			-- DISCORD BUTTON  (optional, full-width, pinned to bottom)
+			-- ────────────────────────────────────────────────────────────
 			if discordInvite and discordInvite ~= "" then
 				local discordCard = New("Frame", {
-					Size                   = UDim2.new(1, 0, 0, 34),
-					Position               = UDim2.new(0, 0, 1, -(PAD + 34)),
-					BackgroundTransparency = 0.82,
+					Size                   = UDim2.new(1, 0, 0, DISC_H),
+					Position               = UDim2.new(0, 0, 1, -DISC_H),
+					BackgroundTransparency = 0.80,
 					BorderSizePixel        = 0,
 					Parent                 = RootFrame,
 					ThemeTag               = { BackgroundColor3 = "Accent" },
@@ -5653,10 +5881,10 @@ Components.Window = (function()
 						FillDirection       = Enum.FillDirection.Horizontal,
 						VerticalAlignment   = Enum.VerticalAlignment.Center,
 						HorizontalAlignment = Enum.HorizontalAlignment.Center,
-						Padding             = UDim.new(0, 8),
+						Padding             = UDim.new(0, 7),
 					}),
 					New("ImageLabel", {
-						Size                   = UDim2.fromOffset(15, 15),
+						Size                   = UDim2.fromOffset(14, 14),
 						BackgroundTransparency = 1,
 						Image                  = Library:GetIcon("message-circle") or "rbxassetid://0",
 						LayoutOrder            = 1,
@@ -5665,7 +5893,7 @@ Components.Window = (function()
 					New("TextLabel", {
 						Text                   = discordLabel,
 						FontFace               = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-						TextSize               = 12,
+						TextSize               = 11,
 						TextColor3             = Color3.fromRGB(255, 255, 255),
 						BackgroundTransparency = 1,
 						Size                   = UDim2.new(0, 0, 1, 0),
@@ -5674,11 +5902,11 @@ Components.Window = (function()
 					}),
 				})
 
-				local _, SetT = Creator.SpringMotor(0.82, discordCard, "BackgroundTransparency")
-				Creator.AddSignal(discordBtn.MouseEnter,       function() SetT(0.70) end)
-				Creator.AddSignal(discordBtn.MouseLeave,       function() SetT(0.82) end)
-				Creator.AddSignal(discordBtn.MouseButton1Down, function() SetT(0.90) end)
-				Creator.AddSignal(discordBtn.MouseButton1Up,   function() SetT(0.70) end)
+				local _, SetT = Creator.SpringMotor(0.80, discordCard, "BackgroundTransparency")
+				Creator.AddSignal(discordBtn.MouseEnter,       function() SetT(0.68) end)
+				Creator.AddSignal(discordBtn.MouseLeave,       function() SetT(0.80) end)
+				Creator.AddSignal(discordBtn.MouseButton1Down, function() SetT(0.88) end)
+				Creator.AddSignal(discordBtn.MouseButton1Up,   function() SetT(0.68) end)
 
 				Creator.AddSignal(discordBtn.MouseButton1Click, function()
 					local invite = discordInvite:match("discord%.gg/(.+)") or discordInvite
@@ -5691,10 +5919,13 @@ Components.Window = (function()
 					pcall(function()
 						if request then
 							request({
-								Url    = "http://127.0.0.1:6463/rpc?v=1",
-								Method = "POST",
-								Headers = { ["Content-Type"] = "application/json", Origin = "https://discord.com" },
-								Body   = httpService:JSONEncode({
+								Url     = "http://127.0.0.1:6463/rpc?v=1",
+								Method  = "POST",
+								Headers = {
+									["Content-Type"] = "application/json",
+									Origin           = "https://discord.com",
+								},
+								Body = httpService:JSONEncode({
 									cmd   = "INVITE_BROWSER",
 									nonce = httpService:GenerateGUID(false),
 									args  = { code = invite },
@@ -5705,32 +5936,36 @@ Components.Window = (function()
 				end)
 			end
 
-			-- ═══════════════════════════════════════════════════════════════
-			-- LIVE UPDATE LOOP
-			-- ═══════════════════════════════════════════════════════════════
+			-- ════════════════════════════════════════════════════════════════
+			-- LIVE UPDATE LOOP  (1s tick — server stats, FPS, friends)
+			-- ════════════════════════════════════════════════════════════════
 			local friendCooldown = 0
 
 			coroutine.wrap(function()
 				while HomeContainer and HomeContainer.Parent do
-					-- Server stats — update every second
+
+					-- Server
 					valPlayers.Text = #Players:GetPlayers() .. " / " .. Players.MaxPlayers
-					valMaxP.Text    = tostring(Players.MaxPlayers)
-					valSession.Text = hms(tick() % 86400)
+					valSession.Text = hms(tick() - serverStartTick)
+					valSrvAge.Text  = formatAge(tick() - serverStartTick)
 
 					local pingOk, pingVal = pcall(getPing)
-					valPing.Text = (pingOk and pingVal) and (pingVal .. " ms") or "N/A"
+					valPing.Text = (pingOk and pingVal) and (tostring(pingVal) .. " ms") or "N/A"
 
-					-- Friends — throttled
+					-- Client FPS (from RenderStepped tracker)
+					valFPS.Text = tostring(_fpsValue) .. " fps"
+
+					-- Friends (throttled, every 30s)
 					if friendCooldown <= 0 then
 						friendCooldown = 30
 						task.spawn(function()
-							local total   = 0
-							local online  = 0
-							local inGame  = 0
+							local total  = 0
+							local online = 0
+							local inGame = 0
 
-							local serverPlayers = {}
+							local serverPlayerNames = {}
 							for _, p in ipairs(Players:GetPlayers()) do
-								serverPlayers[p.Name] = true
+								serverPlayerNames[p.Name] = true
 							end
 
 							pcall(function()
@@ -5744,7 +5979,7 @@ Components.Window = (function()
 							pcall(function()
 								for _, info in ipairs(LocalPlayer:GetFriendsOnline()) do
 									online += 1
-									if serverPlayers[info.UserName] then inGame += 1 end
+									if serverPlayerNames[info.UserName] then inGame += 1 end
 								end
 							end)
 
