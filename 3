@@ -1361,8 +1361,10 @@ function Creator.OverrideTag(Object, Properties)
 end
 
 function Creator.GetThemeProperty(Property)
-	local theme = Themes[Library.Theme] or Themes["Dark"]
-	return theme[Property] or Themes["Dark"][Property]
+	if Themes[Library.Theme][Property] then
+		return Themes[Library.Theme][Property]
+	end
+	return Themes["Dark"][Property]
 end
 
 local MiniMessageColors = {
@@ -3928,7 +3930,7 @@ Components.TitleBar = (function()
 				return Color3.fromRGB(r,g,b)
 			end
 		end
-		return (Themes[Library.Theme] or Themes["Dark"]).SubText or Color3.fromRGB(170,170,170)
+		return Themes[Library.Theme].SubText or Color3.fromRGB(170,170,170)
 	end
 
 	return function(Config)
@@ -4668,7 +4670,7 @@ Components.Window = (function()
 		if Config.UserInfo then
 			local function parseColor(value)
 				if typeof(value) == "Color3" then return value end
-				return (Themes[Library.Theme] or Themes["Dark"]).SubText or Color3.fromRGB(170,170,170)
+				return Themes[Library.Theme].SubText or Color3.fromRGB(170,170,170)
 			end
 
 			local userInfoHeight = 56
@@ -10120,6 +10122,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	local discordEnabled = discordCfg and discordCfg.Enabled == true
 	local discordNote    = discordEnabled and (discordCfg.Note or "Join our Discord server.") or ""
 	local discordLink    = discordEnabled and (discordCfg.Link or "") or ""
+	-- Discord always copies the link to clipboard
 
 	-- Validate function
 	local validateFn
@@ -10134,7 +10137,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- GetKey config
 	local getKeyFn        = ksConfig.GetKey and type(ksConfig.GetKey.Action) == "function" and ksConfig.GetKey.Action or nil
 	local getKeyLabel     = (ksConfig.GetKey and ksConfig.GetKey.Label) or "Get Key"
-	local getKeyDesc      = (ksConfig.GetKey and ksConfig.GetKey.Description) or "Tap below to open the key link and copy it to your clipboard."
 	local rateLimitEnabled = ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Enabled
 	local rateLimitSecs   = rateLimitEnabled and (ksConfig.GetKey.RateLimit.Seconds or 300) or nil
 	local rateLimitMsg    = (ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Message) or "Please wait before getting a new link."
@@ -10153,7 +10155,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	local ICON_CLIPBOARD = _ks_resolveIcon("clipboard")
 	local ICON_LOADER    = _ks_resolveIcon("loader")
 	local ICON_DISCORD   = _ks_resolveIcon("message-circle")
-	local ICON_UNLOCK    = _ks_resolveIcon("unlock")
 
 	-- Apply theme early so ThemeTags resolve correctly during build
 	Library.Theme      = windowConfig.Theme or "Dark"
@@ -10161,22 +10162,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	Library.UseAcrylic = windowConfig.Acrylic or false
 	Library.Acrylic    = windowConfig.Acrylic or false
 	if windowConfig.Acrylic then Acrylic.init() end
-
-	-- ── Tab setup ─────────────────────────────────────────────
-	-- Tabs are built from what features are enabled. Only show the
-	-- tab bar when there is more than one section to display.
-	local ks_tabs = {}
-	table.insert(ks_tabs, { id = "key",    icon = ICON_KEY,     label = "Enter Key",  order = 1 })
-	if getKeyFn then
-		table.insert(ks_tabs, { id = "getkey", icon = ICON_LINK,    label = "Get Key",    order = 2 })
-	end
-	if discordEnabled and discordLink ~= "" then
-		table.insert(ks_tabs, { id = "info",   icon = ICON_DISCORD, label = "Community",  order = 3 })
-	end
-
-	local showTabs  = #ks_tabs > 1
-	local TABBAR_H  = showTabs and 46 or 0
-	local CONTENT_Y = 48 + TABBAR_H
 
 	-- ── Window sizing ─────────────────────────────────────────
 	local ksW    = 420
@@ -10278,9 +10263,8 @@ local function _ks_Run(ksConfig, windowConfig)
 				ThemeTag            = { TextColor3 = "Text" },
 			}) or nil,
 		}),
-		-- Title bar bottom separator (hidden when tab bar is present; tab bar has its own separator)
 		New("Frame", {
-			BackgroundTransparency = showTabs and 1 or 0.5,
+			BackgroundTransparency = 0.5,
 			Size                = UDim2.new(1, 0, 0, 1),
 			Position            = UDim2.new(0, 0, 1, 0),
 			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
@@ -10339,253 +10323,36 @@ local function _ks_Run(ksConfig, windowConfig)
 		end)
 	end
 
-	-- ── Tab bar (only when multiple sections exist) ───────────
-	-- Adopts the same pill-button style used by Fluent+'s SubTabs
-	-- for visual consistency with the rest of the library.
-
-	local activeTabId   = ks_tabs[1].id
-	local tabPageFrames = {}   -- [tabId] = { frame = CanvasGroup, layout = UIListLayout }
-	local tabBtnRefs    = {}   -- [tabId] = { setTrans, stroke }
-
-	-- Forward declaration so switchTab can call updateKsSize before it is defined
-	local updateKsSize
-
-	if showTabs then
-		local KsTabBar = New("Frame", {
-			Size                = UDim2.new(1, 0, 0, TABBAR_H),
-			Position            = UDim2.fromOffset(0, 42),
-			BackgroundTransparency = 1,
-			Parent              = KsRootCanvas,
-		}, {
-			-- Full-width separator at the bottom of the tab bar
-			New("Frame", {
-				Size                = UDim2.new(1, 0, 0, 1),
-				Position            = UDim2.new(0, 0, 1, -1),
-				BackgroundTransparency = 0.5,
-				ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
-			}),
-		})
-
-		-- Pill-tab row, horizontally centred with left gutter
-		local KsTabRow = New("Frame", {
-			Size                = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 1,
-			Parent              = KsTabBar,
-		}, {
-			New("UIListLayout", {
-				FillDirection       = Enum.FillDirection.Horizontal,
-				SortOrder           = Enum.SortOrder.LayoutOrder,
-				VerticalAlignment   = Enum.VerticalAlignment.Center,
-				Padding             = UDim.new(0, 5),
-			}),
-			New("UIPadding", {
-				PaddingLeft  = UDim.new(0, 14),
-				PaddingRight = UDim.new(0, 14),
-			}),
-		})
-
-		for i, tabDef in ipairs(ks_tabs) do
-			local isActive = tabDef.id == activeTabId
-
-			-- Pill-style button matching SubTab buttons exactly
-			local TabPill = New("TextButton", {
-				Size                = UDim2.new(0, 0, 0, 30),
-				AutomaticSize       = Enum.AutomaticSize.X,
-				BackgroundTransparency = isActive and 0.78 or 0.93,
-				Text                = "",
-				LayoutOrder         = i,
-				Parent              = KsTabRow,
-				ThemeTag            = { BackgroundColor3 = "Tab" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-				New("UIStroke", {
-					Transparency        = isActive and 0 or 1,
-					Thickness           = 1,
-					ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
-					ThemeTag            = { Color = "Accent" },
-				}),
-				New("UIListLayout", {
-					Padding             = UDim.new(0, 6),
-					FillDirection       = Enum.FillDirection.Horizontal,
-					SortOrder           = Enum.SortOrder.LayoutOrder,
-					VerticalAlignment   = Enum.VerticalAlignment.Center,
-					HorizontalAlignment = Enum.HorizontalAlignment.Center,
-				}),
-				New("UIPadding", {
-					PaddingLeft  = UDim.new(0, 12),
-					PaddingRight = UDim.new(0, 12),
-				}),
-				New("ImageLabel", {
-					Image               = tabDef.icon or "",
-					Size                = UDim2.fromOffset(14, 14),
-					BackgroundTransparency = 1,
-					LayoutOrder         = 1,
-					ImageTransparency   = isActive and 0 or 0.3,
-					ThemeTag            = { ImageColor3 = "Text" },
-				}),
-				New("TextLabel", {
-					Text                = tabDef.label,
-					FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-					TextSize            = 12,
-					TextXAlignment      = Enum.TextXAlignment.Left,
-					TextYAlignment      = Enum.TextYAlignment.Center,
-					Size                = UDim2.new(0, 0, 1, 0),
-					AutomaticSize       = Enum.AutomaticSize.X,
-					BackgroundTransparency = 1,
-					TextTransparency    = isActive and 0 or 0.3,
-					LayoutOrder         = 2,
-					ThemeTag            = { TextColor3 = "Text" },
-				}),
-			})
-
-			local pillStroke = TabPill:FindFirstChildOfClass("UIStroke")
-			local pillIcon   = TabPill:FindFirstChildOfClass("ImageLabel")
-			local pillLabel  = TabPill:FindFirstChildOfClass("TextLabel")
-
-			local _, TabSetTrans = Creator.SpringMotor(
-				isActive and 0.78 or 0.93,
-				TabPill,
-				"BackgroundTransparency"
-			)
-
-			local function applyActive(active)
-				TabSetTrans(active and 0.78 or 0.93)
-				if pillStroke then
-					TweenService:Create(pillStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Transparency = active and 0 or 1,
-					}):Play()
-				end
-				if pillIcon then
-					TweenService:Create(pillIcon, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						ImageTransparency = active and 0 or 0.3,
-					}):Play()
-				end
-				if pillLabel then
-					TweenService:Create(pillLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						TextTransparency = active and 0 or 0.3,
-					}):Play()
-				end
-			end
-
-			tabBtnRefs[tabDef.id] = {
-				pill       = TabPill,
-				setTrans   = TabSetTrans,
-				applyActive = applyActive,
-			}
-
-			-- Hover/press states (only when not the active tab)
-			Creator.AddSignal(TabPill.MouseEnter, function()
-				if activeTabId ~= tabDef.id then TabSetTrans(0.87) end
-			end)
-			Creator.AddSignal(TabPill.MouseLeave, function()
-				if activeTabId ~= tabDef.id then TabSetTrans(0.93) end
-			end)
-			Creator.AddSignal(TabPill.MouseButton1Down, function()
-				if activeTabId ~= tabDef.id then TabSetTrans(0.92) end
-			end)
-			Creator.AddSignal(TabPill.MouseButton1Up, function()
-				if activeTabId ~= tabDef.id then TabSetTrans(0.87) end
-			end)
-		end
-	end
-
-	-- ── Content wrapper — holds one CanvasGroup per tab page ──
-	local ContentWrapper = New("Frame", {
-		Size                = UDim2.new(1, 0, 0, 0),
-		AutomaticSize       = Enum.AutomaticSize.Y,
-		Position            = UDim2.fromOffset(0, CONTENT_Y),
-		BackgroundTransparency = 1,
-		Parent              = KsRootCanvas,
+	-- ── Content area ─────────────────────────────────────────
+	local ContentListLayout = New("UIListLayout", {
+		SortOrder           = Enum.SortOrder.LayoutOrder,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Padding             = UDim.new(0, 10),
 	})
 
-	-- Build a CanvasGroup page per tab
-	for _, tabDef in ipairs(ks_tabs) do
-		local isActive = tabDef.id == activeTabId
-		local pageLayout = New("UIListLayout", {
-			SortOrder           = Enum.SortOrder.LayoutOrder,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding             = UDim.new(0, 10),
-		})
-		local page = New("CanvasGroup", {
-			Size                = UDim2.new(1, 0, 0, 0),
-			AutomaticSize       = Enum.AutomaticSize.Y,
-			BackgroundTransparency = 1,
-			GroupTransparency   = 0,
-			Visible             = isActive,
-			Parent              = ContentWrapper,
-		}, {
-			pageLayout,
-			New("UIPadding", {
-				PaddingLeft   = UDim.new(0, 18),
-				PaddingRight  = UDim.new(0, 18),
-				PaddingTop    = UDim.new(0, 8),
-				PaddingBottom = UDim.new(0, 14),
-			}),
-		})
-		tabPageFrames[tabDef.id] = { frame = page, layout = pageLayout }
-	end
+	local ContentGroup = New("CanvasGroup", {
+		Size                = UDim2.new(1, 0, 0, 0),
+		AutomaticSize       = Enum.AutomaticSize.Y,
+		Position            = UDim2.fromOffset(0, 48),
+		BackgroundTransparency = 1,
+		GroupTransparency   = 0,
+		Parent              = KsRootCanvas,
+	}, {
+		ContentListLayout,
+		New("UIPadding", {
+			PaddingLeft   = UDim.new(0, 18),
+			PaddingRight  = UDim.new(0, 18),
+			PaddingTop    = UDim.new(0, 8),
+			PaddingBottom = UDim.new(0, 14),
+		}),
+	})
 
-	-- Convenience page references
-	local KeyPage    = tabPageFrames["key"].frame
-	local GetKeyPage = tabPageFrames["getkey"] and tabPageFrames["getkey"].frame or nil
-	local InfoPage   = tabPageFrames["info"]   and tabPageFrames["info"].frame   or nil
-
-	-- ── Tab switching ─────────────────────────────────────────
-	local function switchTab(newId)
-		if newId == activeTabId then return end
-
-		-- Deactivate old tab pill
-		local oldRef = tabBtnRefs[activeTabId]
-		if oldRef then oldRef.applyActive(false) end
-
-		-- Fade out old page
-		local oldPage = tabPageFrames[activeTabId].frame
-		local FadeOut = Flipper.SingleMotor.new(0)
-		FadeOut:onStep(function(v) if oldPage and oldPage.Parent then oldPage.GroupTransparency = v end end)
-		FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 10, dampingRatio = 1 }))
-		FadeOut:start()
-		task.delay(0.11, function() if oldPage and oldPage.Parent then oldPage.Visible = false end end)
-
-		-- Update active tracker
-		activeTabId = newId
-
-		-- Activate new tab pill
-		local newRef = tabBtnRefs[newId]
-		if newRef then newRef.applyActive(true) end
-
-		-- Fade in new page
-		local newData = tabPageFrames[newId]
-		newData.frame.Visible           = true
-		newData.frame.GroupTransparency = 1
-		local FadeIn = Flipper.SingleMotor.new(1)
-		FadeIn:onStep(function(v) if newData.frame and newData.frame.Parent then newData.frame.GroupTransparency = v end end)
-		FadeIn:setGoal(Flipper.Spring.new(0, { frequency = 10, dampingRatio = 1 }))
-		FadeIn:start()
-
-		-- Refit window height to new page's content
-		task.defer(function() if updateKsSize then updateKsSize() end end)
-	end
-
-	-- Wire tab-pill clicks
-	if showTabs then
-		for _, tabDef in ipairs(ks_tabs) do
-			local ref = tabBtnRefs[tabDef.id]
-			if ref then
-				Creator.AddSignal(ref.pill.MouseButton1Click, function()
-					switchTab(tabDef.id)
-				end)
-			end
-		end
-	end
-
-	-- ── [TAB: key] — Key input + Submit ───────────────────────
-
-	-- Key input with icon + paste button
+	-- ── Key input with icon + paste button ───────────────────
 	local InputOuter = New("Frame", {
 		Size                = UDim2.new(1, 0, 0, 38),
 		BackgroundTransparency = 0.88,
-		LayoutOrder         = 1,
-		Parent              = KeyPage,
+		LayoutOrder         = 2,
+		Parent              = ContentGroup,
 		ThemeTag            = { BackgroundColor3 = "Input" },
 	}, {
 		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
@@ -10608,7 +10375,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	})
 
 	-- Paste button on the right
-	local pasteWidth = 72
 	local PasteBtn = New("TextButton", {
 		Size                = UDim2.new(0, 0, 0, 26),
 		AutomaticSize       = Enum.AutomaticSize.X,
@@ -10662,6 +10428,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.82) end)
 
 	-- The actual text box
+	local pasteWidth = 72
 	local KsInputBox = New("TextBox", {
 		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
 		TextSize            = 13,
@@ -10701,147 +10468,44 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- Paste button action
 	Creator.AddSignal(PasteBtn.MouseButton1Click, function()
-		local ok, text = pcall(function()
-			if type(getclipboard) == "function" then
-				return getclipboard()
-			elseif type(clgui) == "table" and type(clgui.getclipboard) == "function" then
-				return clgui.getclipboard()
-			elseif type(syn) == "table" and type(syn.get_clipboard) == "function" then
-				return syn.get_clipboard()
+			local ok, text = pcall(function()
+				if type(getclipboard) == "function" then
+					return getclipboard()
+				elseif type(clgui) == "table" and type(clgui.getclipboard) == "function" then
+					return clgui.getclipboard()
+				elseif type(syn) == "table" and type(syn.get_clipboard) == "function" then
+					return syn.get_clipboard()
+				end
+				return ""
+			end)
+			if ok and type(text) == "string" and text ~= "" then
+				KsInputBox.Text = text:match("^%s*(.-)%s*$")
 			end
-			return ""
 		end)
-		if ok and type(text) == "string" and text ~= "" then
-			KsInputBox.Text = text:match("^%s*(.-)%s*$")
-		end
-	end)
 
-	-- Submit button — always full-width in the Key tab.
-	-- (Get Key, if configured, lives on its own tab so we never share the row.)
-	local SubmitBtn = New("TextButton", {
-		Size                = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 0.9,
-		Text                = "",
-		Parent              = New("Frame", {
-			Size            = UDim2.new(1, 0, 0, 40),
-			BackgroundTransparency = 1,
-			LayoutOrder     = 2,
-			Parent          = KeyPage,
-		}),
-		ThemeTag            = { BackgroundColor3 = "Element" },
-	}, {
-		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-		New("UIStroke", {
-			Transparency    = 0.65,
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			ThemeTag        = { Color = "InElementBorder" },
-		}),
-		New("UIListLayout", {
-			FillDirection       = Enum.FillDirection.Horizontal,
-			VerticalAlignment   = Enum.VerticalAlignment.Center,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding             = UDim.new(0, 6),
-			SortOrder           = Enum.SortOrder.LayoutOrder,
-		}),
-	})
-
-	local SubmitIcon = New("ImageLabel", {
-		Image               = ICON_UNLOCK or "",
-		Size                = UDim2.fromOffset(14, 14),
+	-- ── Button row — half-width each, 10px gap ────────────────
+	local ButtonRow = New("Frame", {
+		Size                = UDim2.new(1, 0, 0, 40),
 		BackgroundTransparency = 1,
-		LayoutOrder         = 1,
-		Parent              = SubmitBtn,
-		ThemeTag            = { ImageColor3 = "Text" },
-	})
-	local SubmitLabel = New("TextLabel", {
-		Text                = "Submit Key",
-		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-		TextSize            = 13,
-		BackgroundTransparency = 1,
-		Size                = UDim2.fromScale(0, 1),
-		AutomaticSize       = Enum.AutomaticSize.X,
-		TextXAlignment      = Enum.TextXAlignment.Left,
-		LayoutOrder         = 2,
-		Parent              = SubmitBtn,
-		ThemeTag            = { TextColor3 = "Text" },
+		LayoutOrder         = 3,
+		Parent              = ContentGroup,
 	})
 
-	local _, SubmitSetTrans = Creator.SpringMotor(0.9, SubmitBtn, "BackgroundTransparency")
-	Creator.AddSignal(SubmitBtn.MouseEnter,       function() SubmitSetTrans(0.82) end)
-	Creator.AddSignal(SubmitBtn.MouseLeave,       function() SubmitSetTrans(0.9) end)
-	Creator.AddSignal(SubmitBtn.MouseButton1Down, function() SubmitSetTrans(0.95) end)
-	Creator.AddSignal(SubmitBtn.MouseButton1Up,   function() SubmitSetTrans(0.82) end)
+	-- Helper: build a key system button with icon + label
+	-- and expose refs to the inner icon ImageLabel and TextLabel for morph
+	local function MakeKsButton(parent, labelTxt, btnIcon, pos, size, isAccent)
+		local iconRef, labelRef
 
-	-- ── [TAB: getkey] — Dedicated Get Key page ────────────────
-	local GetKeyBtn, GetKeyIcon, GetKeyLabel
-
-	if GetKeyPage then
-		-- Description card
-		New("Frame", {
-			Size                = UDim2.new(1, 0, 0, 0),
-			AutomaticSize       = Enum.AutomaticSize.Y,
-			BackgroundTransparency = 0.9,
-			LayoutOrder         = 1,
-			Parent              = GetKeyPage,
-			ThemeTag            = { BackgroundColor3 = "Element" },
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-			New("UIStroke", {
-				Transparency    = 0.65,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				ThemeTag        = { Color = "InElementBorder" },
-			}),
-			New("UIListLayout", {
-				FillDirection       = Enum.FillDirection.Horizontal,
-				VerticalAlignment   = Enum.VerticalAlignment.Center,
-				SortOrder           = Enum.SortOrder.LayoutOrder,
-				Padding             = UDim.new(0, 10),
-			}),
-			New("UIPadding", {
-				PaddingLeft   = UDim.new(0, 14),
-				PaddingRight  = UDim.new(0, 12),
-				PaddingTop    = UDim.new(0, 12),
-				PaddingBottom = UDim.new(0, 12),
-			}),
-			New("ImageLabel", {
-				Image               = ICON_LINK or "",
-				Size                = UDim2.fromOffset(18, 18),
-				BackgroundTransparency = 1,
-				LayoutOrder         = 1,
-				ThemeTag            = { ImageColor3 = "Accent" },
-			}),
-			New("TextLabel", {
-				Text                = getKeyDesc,
-				FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-				TextSize            = 12,
-				BackgroundTransparency = 1,
-				Size                = UDim2.new(1, -42, 0, 0),
-				AutomaticSize       = Enum.AutomaticSize.Y,
-				TextXAlignment      = Enum.TextXAlignment.Left,
-				TextYAlignment      = Enum.TextYAlignment.Center,
-				TextWrapped         = true,
-				LayoutOrder         = 2,
-				ThemeTag            = { TextColor3 = "SubText" },
-			}),
-		})
-
-		-- Full-width Get Key button
-		local GkBtnFrame = New("Frame", {
-			Size            = UDim2.new(1, 0, 0, 40),
-			BackgroundTransparency = 1,
-			LayoutOrder     = 2,
-			Parent          = GetKeyPage,
-		})
-
-		local GkIconEl = New("ImageLabel", {
-			Image               = ICON_LINK or "",
+		local iconEl = btnIcon and New("ImageLabel", {
+			Image               = btnIcon,
 			Size                = UDim2.fromOffset(14, 14),
 			BackgroundTransparency = 1,
 			LayoutOrder         = 1,
 			ThemeTag            = { ImageColor3 = "Text" },
-		})
-		local GkLabelEl = New("TextLabel", {
-			Text                = getKeyLabel,
+		}) or nil
+
+		local labelEl = New("TextLabel", {
+			Text                = labelTxt,
 			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
 			TextSize            = 13,
 			BackgroundTransparency = 1,
@@ -10852,19 +10516,8 @@ local function _ks_Run(ksConfig, windowConfig)
 			ThemeTag            = { TextColor3 = "Text" },
 		})
 
-		GetKeyBtn = New("TextButton", {
-			Size                = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 0.9,
-			Text                = "",
-			Parent              = GkBtnFrame,
-			ThemeTag            = { BackgroundColor3 = "Element" },
-		}, {
+		local children = {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
-			New("UIStroke", {
-				Transparency    = 0.65,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				ThemeTag        = { Color = "InElementBorder" },
-			}),
 			New("UIListLayout", {
 				FillDirection       = Enum.FillDirection.Horizontal,
 				VerticalAlignment   = Enum.VerticalAlignment.Center,
@@ -10872,27 +10525,84 @@ local function _ks_Run(ksConfig, windowConfig)
 				Padding             = UDim.new(0, 6),
 				SortOrder           = Enum.SortOrder.LayoutOrder,
 			}),
-			GkIconEl,
-			GkLabelEl,
-		})
+			labelEl,
+		}
+		if iconEl then table.insert(children, iconEl) end
 
-		GetKeyIcon  = GkIconEl
-		GetKeyLabel = GkLabelEl
+		local btn = New("TextButton", {
+			Size                = size,
+			Position            = pos,
+			BackgroundTransparency = 0.9,
+			Text                = "",
+			Parent              = parent,
+			ThemeTag            = { BackgroundColor3 = "Element" },
+		}, children)
 
-		local _, GkSetTrans = Creator.SpringMotor(0.9, GetKeyBtn, "BackgroundTransparency")
-		Creator.AddSignal(GetKeyBtn.MouseEnter,       function() GkSetTrans(0.82) end)
-		Creator.AddSignal(GetKeyBtn.MouseLeave,       function() GkSetTrans(0.9) end)
-		Creator.AddSignal(GetKeyBtn.MouseButton1Down, function() GkSetTrans(0.95) end)
-		Creator.AddSignal(GetKeyBtn.MouseButton1Up,   function() GkSetTrans(0.82) end)
+		local _, SetTrans = Creator.SpringMotor(0.9, btn, "BackgroundTransparency")
+		Creator.AddSignal(btn.MouseEnter,       function() SetTrans(0.82) end)
+		Creator.AddSignal(btn.MouseLeave,       function() SetTrans(0.9) end)
+		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.95) end)
+		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.82) end)
+
+		return btn, iconEl, labelEl
 	end
 
-	-- ── [TAB: info] — Community / Discord ────────────────────
-	if InfoPage and discordEnabled and discordLink ~= "" then
+	local btnHalfW = UDim2.new(0.5, -5, 1, 0)
+
+	local SubmitBtn, SubmitIcon, SubmitLabel = MakeKsButton(
+		ButtonRow,
+		"Submit Key",
+		ICON_KEY,
+		UDim2.fromOffset(0, 0),
+		btnHalfW,
+		true
+	)
+
+	local GetKeyBtn, GetKeyIcon, GetKeyLabel
+	if getKeyFn then
+		GetKeyBtn, GetKeyIcon, GetKeyLabel = MakeKsButton(
+			ButtonRow,
+			getKeyLabel,
+			ICON_LINK,
+			UDim2.new(0.5, 5, 0, 0),
+			btnHalfW,
+			false
+		)
+	else
+		-- No GetKey configured — expand Submit to full width
+		SubmitBtn.Size = UDim2.fromScale(1, 1)
+		SubmitBtn.Position = UDim2.fromOffset(0, 0)
+	end
+
+	-- ── Button morph helper ───────────────────────────────────
+	-- Swaps icon + label on a button, pulses scale, then reverts after delay.
+	local function morphButton(iconRef, labelRef, newIcon, newLabel, revertIcon, revertLabel, revertDelay)
+		if iconRef  then iconRef.Image = newIcon  or "" end
+		if labelRef then labelRef.Text = newLabel or "" end
+
+		-- Revert icon and label after delay
+		task.delay(revertDelay or 1.8, function()
+			if iconRef  then iconRef.Image = revertIcon  or "" end
+			if labelRef then labelRef.Text = revertLabel or "" end
+		end)
+	end
+
+	-- ── Discord card ──────────────────────────────────────────
+	if discordEnabled and discordLink ~= "" then
+		-- Separator
+		New("Frame", {
+			Size                = UDim2.new(1, 0, 0, 1),
+			BackgroundTransparency = 0.6,
+			LayoutOrder         = 4,
+			Parent              = ContentGroup,
+			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
+		})
+
 		local DiscordCard = New("Frame", {
-			Size                = UDim2.new(1, 0, 0, 50),
+			Size                = UDim2.new(1, 0, 0, 44),
 			BackgroundTransparency = 0.9,
-			LayoutOrder         = 1,
-			Parent              = InfoPage,
+			LayoutOrder         = 5,
+			Parent              = ContentGroup,
 			ThemeTag            = { BackgroundColor3 = "Element" },
 		}, {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
@@ -10913,6 +10623,7 @@ local function _ks_Run(ksConfig, windowConfig)
 			}),
 		})
 
+		-- Discord icon (blurple tint via override after build)
 		local DiscordIcon = New("ImageLabel", {
 			Image               = ICON_DISCORD or "",
 			Size                = UDim2.fromOffset(16, 16),
@@ -10944,6 +10655,7 @@ local function _ks_Run(ksConfig, windowConfig)
 			LayoutOrder         = 1,
 			ThemeTag            = { ImageColor3 = "Text" },
 		})
+
 		local DiscordJoinLabel = New("TextLabel", {
 			Text                = "Join Server",
 			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
@@ -11061,15 +10773,12 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- Apply all theme tags now that every element is built
 	Creator.UpdateTheme()
 
-	-- ── Window height tracking ────────────────────────────────
-	-- Watches the active tab page's content size and resizes KsRoot.
-	local TITLE_BAR_H = CONTENT_Y   -- total fixed height above content area
-
-	updateKsSize = function()
-		local activePage = tabPageFrames[activeTabId]
-		if not activePage then return end
-		local layout   = activePage.layout
-		local contentH = layout.AbsoluteContentSize.Y + 8 + 14  -- paddingTop + paddingBottom
+	-- Drive KsRoot height from ContentGroup content size.
+	-- ContentGroup has AutomaticSize.Y but KsRoot cannot auto-size from
+	-- scale-based children, so we measure and apply manually.
+	local TITLE_BAR_H = 48
+	local function updateKsSize()
+		local contentH = ContentListLayout.AbsoluteContentSize.Y + 8 + 14 -- paddingTop + paddingBottom
 		local totalH   = TITLE_BAR_H + contentH
 		KsRoot.Size     = UDim2.fromOffset(ksW, totalH)
 		KsRoot.Position = UDim2.fromOffset(
@@ -11078,30 +10787,21 @@ local function _ks_Run(ksConfig, windowConfig)
 		)
 		KsRoot.AnchorPoint = Vector2.new(0, 0)
 	end
-
-	-- Connect size-change signals for every tab page
-	for _, tabDef in ipairs(ks_tabs) do
-		local data = tabPageFrames[tabDef.id]
-		Creator.AddSignal(data.layout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-			if tabDef.id == activeTabId then
-				updateKsSize()
-			end
-		end)
-	end
+	Creator.AddSignal(ContentListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), updateKsSize)
 	task.defer(updateKsSize)
 
 	-- ── Transition helpers ────────────────────────────────────
 	local fSetClipboard = setclipboard or toclipboard or function() end
 
+	-- Fade content out, show loader, animate progress, then destroy
 	local function runLoadingTransition(onComplete)
-		local activeFrame = tabPageFrames[activeTabId].frame
-		activeFrame.Visible = true
+		ContentGroup.Visible = true
 		local FadeOut = Flipper.SingleMotor.new(0)
-		FadeOut:onStep(function(v) activeFrame.GroupTransparency = v end)
+		FadeOut:onStep(function(v) ContentGroup.GroupTransparency = v end)
 		FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
 		FadeOut:start()
 		task.wait(0.22)
-		activeFrame.Visible  = false
+		ContentGroup.Visible  = false
 		LoadOverlay.Visible   = true
 		LoadOverlay.GroupTransparency = 0
 
@@ -11133,36 +10833,27 @@ local function _ks_Run(ksConfig, windowConfig)
 
 			if loaderMode == "instant" then
 				-- Totally invisible — check silently, no window shown
+				-- We already built the window; destroy it immediately and re-show only on failure
 				if Library.UseAcrylic and KsAcrylic.Model then
 					pcall(function() KsAcrylic.Model:Destroy() end)
 				end
-				KsRoot.Visible = false
-
-				task.spawn(function()
-					local ok, result = pcall(validateFn, savedKey)
-					if ok and result and result.valid then
-						Library._KeySystemTier   = result.tier or "free"
-						Library._KeySystemResult = result
-						Library._KeySystemKey    = savedKey
-						destroyKsWindow()
-					else
-						local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
-						if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
-						KsRoot.Visible = true
-						Library:Notify({
-							Title    = "Key System",
-							Content  = _ks_getErrorMsg(errCode, customErrors),
-							Icon     = "shield-alert",
-							Duration = 5,
-						})
-						KsInputBox.Text = (not _ks_hardFail[errCode]) and savedKey or ""
-					end
-				end)
+				KsRoot:Destroy()
+				local ok, result = pcall(validateFn, savedKey)
+				if ok and result and result.valid then
+					Library._KeySystemTier   = result.tier or "free"
+					Library._KeySystemResult = result
+					Library._KeySystemKey    = savedKey
+					return Library._KeySystemTier
+				else
+					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
+					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
+					-- Rebuild window for key entry (re-call recursively is clean)
+					return _ks_Run(ksConfig, windowConfig)
+				end
 
 			elseif loaderMode == "loading" then
 				-- Show loader immediately, check in background
-				local activeFrame = tabPageFrames[activeTabId].frame
-				activeFrame.Visible   = false
+				ContentGroup.Visible  = false
 				LoadOverlay.Visible   = true
 				LoadOverlay.GroupTransparency = 0
 
@@ -11170,12 +10861,14 @@ local function _ks_Run(ksConfig, windowConfig)
 				FillMotor:onStep(function(v)
 					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
 				end)
+				-- Start a slow crawl; we'll complete it if check passes
 				FillMotor:setGoal(Flipper.Spring.new(0.7, { frequency = 0.6, dampingRatio = 1 }))
 				FillMotor:start()
 
 				local ok, result = pcall(validateFn, savedKey)
 
 				if ok and result and result.valid then
+					-- Complete the bar then transition
 					FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.5, dampingRatio = 1 }))
 					task.wait(loaderDuration * 0.5)
 					Library._KeySystemTier   = result.tier or "free"
@@ -11186,9 +10879,10 @@ local function _ks_Run(ksConfig, windowConfig)
 				else
 					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
 					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
+					-- Hide loader, show entry UI with notification
 					LoadOverlay.Visible  = false
-					activeFrame.Visible  = true
-					activeFrame.GroupTransparency = 0
+					ContentGroup.Visible = true
+					ContentGroup.GroupTransparency = 0
 					Library:Notify({
 						Title    = "Key System",
 						Content  = _ks_getErrorMsg(errCode, customErrors),
@@ -11204,6 +10898,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- ── Close button ──────────────────────────────────────────
 	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
 		if Library.DialogOpen then return end
+		-- Use the library's own Dialog system, temporarily pointed at KsRootCanvas
 		local KsDialogModule = Components.Dialog:Init({ Root = KsRootCanvas })
 		local Dlg = KsDialogModule:Create()
 		Dlg.Title.Text = "Close"
@@ -11238,12 +10933,13 @@ local function _ks_Run(ksConfig, windowConfig)
 		end)
 		Dlg:Button("No")
 		Dlg:Open()
+		-- Restore Dialog.Window to the real window after KS resolves
 		if Library.Window then
 			Components.Dialog:Init(Library.Window)
 		end
 	end)
 
-	-- ── Get Key button (own tab) ──────────────────────────────
+	-- ── Get Key button ────────────────────────────────────────
 	if GetKeyBtn and getKeyFn then
 		local gkReverting = false
 
@@ -11253,20 +10949,18 @@ local function _ks_Run(ksConfig, windowConfig)
 			if rateLimitSecs then
 				local now = tick()
 				if (now - lastGetKeyTime) < rateLimitSecs then
+					-- Rate limit feedback
 					gkReverting = true
-					if GetKeyIcon  then GetKeyIcon.Image  = ICON_X or "" end
-					if GetKeyLabel then GetKeyLabel.Text  = "Rate Limited" end
+					morphButton(GetKeyIcon, GetKeyLabel,
+						ICON_X, "Rate Limited",
+						ICON_LINK, getKeyLabel, 2)
 					Library:Notify({
 						Title   = "Get Key",
 						Content = rateLimitMsg,
 						Icon    = "clock",
 						Duration = 4,
 					})
-					task.delay(2, function()
-						if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
-						if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
-						gkReverting = false
-					end)
+					task.delay(2, function() gkReverting = false end)
 					return
 				end
 				lastGetKeyTime = tick()
@@ -11276,34 +10970,28 @@ local function _ks_Run(ksConfig, windowConfig)
 			if ok and type(linkOrErr) == "string" and linkOrErr ~= "" then
 				pcall(function() fSetClipboard(linkOrErr) end)
 				gkReverting = true
-				if GetKeyIcon  then GetKeyIcon.Image  = ICON_CHECK or "" end
-				if GetKeyLabel then GetKeyLabel.Text  = "Copied!" end
+				morphButton(GetKeyIcon, GetKeyLabel,
+					ICON_CHECK, "Copied!",
+					ICON_LINK, getKeyLabel, 2)
 				Library:Notify({
 					Title   = "Get Key",
 					Content = "Key link copied to clipboard.",
 					Icon    = "link",
 					Duration = 3,
 				})
-				task.delay(2, function()
-					if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
-					if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
-					gkReverting = false
-				end)
+				task.delay(2, function() gkReverting = false end)
 			else
 				gkReverting = true
-				if GetKeyIcon  then GetKeyIcon.Image  = ICON_X or "" end
-				if GetKeyLabel then GetKeyLabel.Text  = "Failed" end
+				morphButton(GetKeyIcon, GetKeyLabel,
+					ICON_X, "Failed",
+					ICON_LINK, getKeyLabel, 2)
 				Library:Notify({
 					Title   = "Get Key",
 					Content = type(linkOrErr) == "string" and linkOrErr or "Failed to get link. Please try again.",
 					Icon    = "alert-circle",
 					Duration = 4,
 				})
-				task.delay(2, function()
-					if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
-					if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
-					gkReverting = false
-				end)
+				task.delay(2, function() gkReverting = false end)
 			end
 		end)
 	end
@@ -11315,12 +11003,9 @@ local function _ks_Run(ksConfig, windowConfig)
 		if submitting then return end
 		local key = (KsInputBox.Text or ""):match("^%s*(.-)%s*$")
 		if key == "" then
-			if SubmitIcon  then SubmitIcon.Image  = ICON_X or "" end
-			if SubmitLabel then SubmitLabel.Text  = "Enter a key" end
-			task.delay(2, function()
-				if SubmitIcon  then SubmitIcon.Image  = ICON_UNLOCK or "" end
-				if SubmitLabel then SubmitLabel.Text  = "Submit Key" end
-			end)
+			morphButton(SubmitIcon, SubmitLabel,
+				ICON_X, "Enter a key",
+				ICON_KEY, "Submit Key", 2)
 			return
 		end
 
@@ -11339,18 +11024,15 @@ local function _ks_Run(ksConfig, windowConfig)
 					return
 				end
 
-				if SubmitIcon  then SubmitIcon.Image  = ICON_X or "" end
-				if SubmitLabel then SubmitLabel.Text  = "Invalid Key" end
+				morphButton(SubmitIcon, SubmitLabel,
+					ICON_X, "Invalid Key",
+					ICON_KEY, "Submit Key", 2)
 				Library:Notify({
 					Title   = "Key System",
 					Content = _ks_getErrorMsg(errCode, customErrors),
 					Icon    = "shield-alert",
 					Duration = 5,
 				})
-				task.delay(2, function()
-					if SubmitIcon  then SubmitIcon.Image  = ICON_UNLOCK or "" end
-					if SubmitLabel then SubmitLabel.Text  = "Submit Key" end
-				end)
 				submitting = false
 				return
 			end
@@ -11366,8 +11048,9 @@ local function _ks_Run(ksConfig, windowConfig)
 			Library._KeySystemKey    = key
 
 			-- Success morph on submit button
-			if SubmitIcon  then SubmitIcon.Image  = ICON_CHECK or "" end
-			if SubmitLabel then SubmitLabel.Text  = "Success!" end
+			morphButton(SubmitIcon, SubmitLabel,
+				ICON_CHECK, "Success!",
+				ICON_KEY, "Submit Key", 99)
 
 			if loaderMode == "instant" then
 				task.wait(0.3)
@@ -11392,7 +11075,6 @@ local function _ks_Run(ksConfig, windowConfig)
 end
 
 
-
 -- ── Key System gate in CreateWindow (inserted below) ─────────────────────────
 
 	-- Key System gate
@@ -11413,7 +11095,7 @@ end
 	Library.Acrylic = Config.Acrylic or false
 
 
-	Library.Theme = (Config.Theme and Themes[Config.Theme]) and Config.Theme or "Dark"
+	Library.Theme = Config.Theme or "Dark"
 
 	if Config.BackgroundImage == nil then
 		Config.BackgroundImage = "rbxassetid://13196113628"
