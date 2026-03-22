@@ -1361,10 +1361,8 @@ function Creator.OverrideTag(Object, Properties)
 end
 
 function Creator.GetThemeProperty(Property)
-	if Themes[Library.Theme][Property] then
-		return Themes[Library.Theme][Property]
-	end
-	return Themes["Dark"][Property]
+	local theme = Themes[Library.Theme] or Themes["Dark"]
+	return theme[Property] or Themes["Dark"][Property]
 end
 
 local MiniMessageColors = {
@@ -3930,7 +3928,7 @@ Components.TitleBar = (function()
 				return Color3.fromRGB(r,g,b)
 			end
 		end
-		return Themes[Library.Theme].SubText or Color3.fromRGB(170,170,170)
+		return (Themes[Library.Theme] or Themes["Dark"]).SubText or Color3.fromRGB(170,170,170)
 	end
 
 	return function(Config)
@@ -4670,7 +4668,7 @@ Components.Window = (function()
 		if Config.UserInfo then
 			local function parseColor(value)
 				if typeof(value) == "Color3" then return value end
-				return Themes[Library.Theme].SubText or Color3.fromRGB(170,170,170)
+				return (Themes[Library.Theme] or Themes["Dark"]).SubText or Color3.fromRGB(170,170,170)
 			end
 
 			local userInfoHeight = 56
@@ -11415,7 +11413,7 @@ end
 	Library.Acrylic = Config.Acrylic or false
 
 
-	Library.Theme = Config.Theme or "Dark"
+	Library.Theme = (Config.Theme and Themes[Config.Theme]) and Config.Theme or "Dark"
 
 	if Config.BackgroundImage == nil then
 		Config.BackgroundImage = "rbxassetid://13196113628"
