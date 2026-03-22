@@ -56,18 +56,7 @@ local Themes = {
 		"Cloud",
 		"Grape",
 		"Bloody",
-		"Arctic",
-		-- ── New themes ─────────────────────────
-		"Crimson",
-		"Sakura",
-		"Latte",
-		"Obsidian",
-		"Neon",
-		"Dusk",
-		"Mocha",
-		"Slate",
-		"Mint",
-		"Void"
+		"Arctic"
 	},
 	Dark = {
 		Name = "Dark",
@@ -772,427 +761,7 @@ local Themes = {
 		SubText = Color3.fromRGB(180, 200, 220),
 		Hover = Color3.fromRGB(90, 140, 180),
 		HoverChange = 0.04
-	},
-
-	-- ══════════════════════════════════════════════════════════════════
-	-- NEW THEMES
-	-- ══════════════════════════════════════════════════════════════════
-
-	-- Crimson — darker, richer take on Bloody.
-	-- Near-black background with deep red mid-tones and a vivid crimson accent.
-	-- Redder than Bloody in the UI chrome, darker in the window shell.
-	Crimson = {
-		Name = "Crimson",
-		Accent = Color3.fromRGB(200, 30, 50),
-		AcrylicMain = Color3.fromRGB(22, 6, 8),
-		AcrylicBorder = Color3.fromRGB(60, 14, 18),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(18, 5, 7), Color3.fromRGB(28, 8, 11)),
-		AcrylicNoise = 0.93,
-		TitleBarLine = Color3.fromRGB(72, 18, 22),
-		Tab = Color3.fromRGB(110, 22, 30),
-		Element = Color3.fromRGB(90, 18, 24),
-		ElementBorder = Color3.fromRGB(38, 10, 13),
-		InElementBorder = Color3.fromRGB(68, 16, 20),
-		ElementTransparency = 0.86,
-		ToggleSlider = Color3.fromRGB(120, 28, 36),
-		ToggleToggled = Color3.fromRGB(28, 8, 10),
-		SliderRail = Color3.fromRGB(110, 22, 30),
-		DropdownFrame = Color3.fromRGB(130, 34, 44),
-		DropdownHolder = Color3.fromRGB(32, 9, 12),
-		DropdownBorder = Color3.fromRGB(58, 14, 18),
-		DropdownOption = Color3.fromRGB(110, 28, 36),
-		Keybind = Color3.fromRGB(110, 28, 36),
-		Input = Color3.fromRGB(100, 22, 28),
-		InputFocused = Color3.fromRGB(12, 4, 5),
-		InputIndicator = Color3.fromRGB(90, 20, 26),
-		InputIndicatorFocus = Color3.fromRGB(200, 30, 50),
-		Dialog = Color3.fromRGB(38, 10, 13),
-		DialogHolder = Color3.fromRGB(28, 8, 10),
-		DialogHolderLine = Color3.fromRGB(22, 6, 8),
-		DialogButton = Color3.fromRGB(50, 14, 18),
-		DialogButtonBorder = Color3.fromRGB(72, 18, 24),
-		DialogBorder = Color3.fromRGB(60, 14, 20),
-		DialogInput = Color3.fromRGB(44, 12, 16),
-		DialogInputLine = Color3.fromRGB(100, 24, 32),
-		Text = Color3.fromRGB(245, 235, 235),
-		SubText = Color3.fromRGB(160, 120, 122),
-		Hover = Color3.fromRGB(120, 28, 36),
-		HoverChange = 0.05,
-	},
-
-	-- Sakura — soft pastel pink, like Balloon but warmer and more feminine.
-	-- White-pink background, pink chrome, rose accent. Dreamy and delicate.
-	Sakura = {
-		Name = "Sakura",
-		Accent = Color3.fromRGB(230, 100, 148),
-		AcrylicMain = Color3.fromRGB(255, 232, 240),
-		AcrylicBorder = Color3.fromRGB(245, 192, 212),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(255, 240, 246), Color3.fromRGB(252, 228, 238)),
-		AcrylicNoise = 1,
-		TitleBarLine = Color3.fromRGB(238, 185, 205),
-		Tab = Color3.fromRGB(210, 140, 170),
-		Element = Color3.fromRGB(248, 210, 226),
-		ElementBorder = Color3.fromRGB(232, 178, 200),
-		InElementBorder = Color3.fromRGB(240, 192, 212),
-		ElementTransparency = 0.78,
-		ToggleSlider = Color3.fromRGB(222, 152, 180),
-		ToggleToggled = Color3.fromRGB(195, 110, 145),
-		SliderRail = Color3.fromRGB(238, 185, 210),
-		DropdownFrame = Color3.fromRGB(252, 220, 234),
-		DropdownHolder = Color3.fromRGB(255, 238, 246),
-		DropdownBorder = Color3.fromRGB(232, 178, 200),
-		DropdownOption = Color3.fromRGB(222, 160, 188),
-		Keybind = Color3.fromRGB(222, 160, 188),
-		Input = Color3.fromRGB(245, 204, 220),
-		InputFocused = Color3.fromRGB(180, 110, 140),
-		InputIndicator = Color3.fromRGB(238, 190, 210),
-		InputIndicatorFocus = Color3.fromRGB(230, 100, 148),
-		Dialog = Color3.fromRGB(255, 236, 244),
-		DialogHolder = Color3.fromRGB(255, 244, 249),
-		DialogHolderLine = Color3.fromRGB(248, 220, 234),
-		DialogButton = Color3.fromRGB(255, 236, 244),
-		DialogButtonBorder = Color3.fromRGB(232, 178, 200),
-		DialogBorder = Color3.fromRGB(238, 190, 212),
-		DialogInput = Color3.fromRGB(248, 214, 228),
-		DialogInputLine = Color3.fromRGB(232, 178, 200),
-		Text = Color3.fromRGB(48, 20, 32),
-		SubText = Color3.fromRGB(140, 80, 108),
-		Hover = Color3.fromRGB(240, 192, 212),
-		HoverChange = 0.03,
-	},
-
-	-- Latte — warm cafe au lait. Like SoftCream but darker and more saturated.
-	-- Espresso brown background with caramel chrome and a golden amber accent.
-	Latte = {
-		Name = "Latte",
-		Accent = Color3.fromRGB(196, 140, 70),
-		AcrylicMain = Color3.fromRGB(44, 30, 16),
-		AcrylicBorder = Color3.fromRGB(80, 55, 28),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(38, 26, 14), Color3.fromRGB(50, 34, 18)),
-		AcrylicNoise = 0.92,
-		TitleBarLine = Color3.fromRGB(90, 62, 32),
-		Tab = Color3.fromRGB(140, 96, 48),
-		Element = Color3.fromRGB(120, 82, 40),
-		ElementBorder = Color3.fromRGB(58, 40, 20),
-		InElementBorder = Color3.fromRGB(90, 62, 32),
-		ElementTransparency = 0.85,
-		ToggleSlider = Color3.fromRGB(150, 104, 52),
-		ToggleToggled = Color3.fromRGB(44, 30, 14),
-		SliderRail = Color3.fromRGB(150, 104, 52),
-		DropdownFrame = Color3.fromRGB(170, 120, 62),
-		DropdownHolder = Color3.fromRGB(56, 38, 20),
-		DropdownBorder = Color3.fromRGB(78, 54, 26),
-		DropdownOption = Color3.fromRGB(148, 102, 50),
-		Keybind = Color3.fromRGB(148, 102, 50),
-		Input = Color3.fromRGB(140, 96, 46),
-		InputFocused = Color3.fromRGB(28, 18, 8),
-		InputIndicator = Color3.fromRGB(130, 90, 42),
-		InputIndicatorFocus = Color3.fromRGB(196, 140, 70),
-		Dialog = Color3.fromRGB(58, 40, 20),
-		DialogHolder = Color3.fromRGB(48, 32, 16),
-		DialogHolderLine = Color3.fromRGB(40, 28, 12),
-		DialogButton = Color3.fromRGB(68, 46, 22),
-		DialogButtonBorder = Color3.fromRGB(96, 66, 32),
-		DialogBorder = Color3.fromRGB(84, 58, 28),
-		DialogInput = Color3.fromRGB(62, 42, 20),
-		DialogInputLine = Color3.fromRGB(140, 96, 48),
-		Text = Color3.fromRGB(248, 238, 220),
-		SubText = Color3.fromRGB(185, 155, 110),
-		Hover = Color3.fromRGB(150, 104, 52),
-		HoverChange = 0.05,
-	},
-
-	-- Obsidian — premium pure dark with a cool blue-black tint.
-	-- Sophisticated near-black with subtle blue undertones and a sharp white accent.
-	-- Think high-end software, dark mode done right.
-	Obsidian = {
-		Name = "Obsidian",
-		Accent = Color3.fromRGB(255, 255, 255),
-		AcrylicMain = Color3.fromRGB(12, 13, 16),
-		AcrylicBorder = Color3.fromRGB(28, 30, 38),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(10, 11, 14), Color3.fromRGB(14, 16, 20)),
-		AcrylicNoise = 0.95,
-		TitleBarLine = Color3.fromRGB(32, 35, 44),
-		Tab = Color3.fromRGB(55, 60, 74),
-		Element = Color3.fromRGB(42, 46, 58),
-		ElementBorder = Color3.fromRGB(20, 22, 28),
-		InElementBorder = Color3.fromRGB(38, 42, 52),
-		ElementTransparency = 0.88,
-		ToggleSlider = Color3.fromRGB(60, 66, 82),
-		ToggleToggled = Color3.fromRGB(18, 20, 26),
-		SliderRail = Color3.fromRGB(60, 66, 82),
-		DropdownFrame = Color3.fromRGB(75, 82, 100),
-		DropdownHolder = Color3.fromRGB(22, 24, 32),
-		DropdownBorder = Color3.fromRGB(30, 34, 44),
-		DropdownOption = Color3.fromRGB(60, 66, 82),
-		Keybind = Color3.fromRGB(60, 66, 82),
-		Input = Color3.fromRGB(55, 60, 74),
-		InputFocused = Color3.fromRGB(8, 9, 12),
-		InputIndicator = Color3.fromRGB(80, 88, 108),
-		InputIndicatorFocus = Color3.fromRGB(255, 255, 255),
-		Dialog = Color3.fromRGB(24, 26, 34),
-		DialogHolder = Color3.fromRGB(18, 20, 26),
-		DialogHolderLine = Color3.fromRGB(14, 16, 20),
-		DialogButton = Color3.fromRGB(30, 34, 44),
-		DialogButtonBorder = Color3.fromRGB(48, 52, 66),
-		DialogBorder = Color3.fromRGB(38, 42, 54),
-		DialogInput = Color3.fromRGB(28, 32, 40),
-		DialogInputLine = Color3.fromRGB(72, 80, 100),
-		Text = Color3.fromRGB(232, 236, 245),
-		SubText = Color3.fromRGB(130, 138, 160),
-		Hover = Color3.fromRGB(55, 60, 74),
-		HoverChange = 0.06,
-	},
-
-	-- Neon — electric cyberpunk. Near-black background, vivid green accent.
-	-- High contrast, sharp, energetic. The UI equivalent of a neon sign at night.
-	Neon = {
-		Name = "Neon",
-		Accent = Color3.fromRGB(0, 255, 140),
-		AcrylicMain = Color3.fromRGB(8, 10, 14),
-		AcrylicBorder = Color3.fromRGB(0, 60, 35),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(6, 8, 12), Color3.fromRGB(10, 14, 18)),
-		AcrylicNoise = 0.95,
-		TitleBarLine = Color3.fromRGB(0, 48, 28),
-		Tab = Color3.fromRGB(0, 90, 52),
-		Element = Color3.fromRGB(0, 70, 40),
-		ElementBorder = Color3.fromRGB(0, 36, 22),
-		InElementBorder = Color3.fromRGB(0, 56, 34),
-		ElementTransparency = 0.87,
-		ToggleSlider = Color3.fromRGB(0, 100, 58),
-		ToggleToggled = Color3.fromRGB(8, 16, 12),
-		SliderRail = Color3.fromRGB(0, 100, 58),
-		DropdownFrame = Color3.fromRGB(0, 120, 70),
-		DropdownHolder = Color3.fromRGB(10, 18, 14),
-		DropdownBorder = Color3.fromRGB(0, 50, 30),
-		DropdownOption = Color3.fromRGB(0, 100, 58),
-		Keybind = Color3.fromRGB(0, 100, 58),
-		Input = Color3.fromRGB(0, 80, 46),
-		InputFocused = Color3.fromRGB(4, 6, 8),
-		InputIndicator = Color3.fromRGB(0, 120, 70),
-		InputIndicatorFocus = Color3.fromRGB(0, 255, 140),
-		Dialog = Color3.fromRGB(12, 20, 16),
-		DialogHolder = Color3.fromRGB(8, 14, 10),
-		DialogHolderLine = Color3.fromRGB(0, 30, 18),
-		DialogButton = Color3.fromRGB(16, 28, 20),
-		DialogButtonBorder = Color3.fromRGB(0, 60, 36),
-		DialogBorder = Color3.fromRGB(0, 50, 30),
-		DialogInput = Color3.fromRGB(14, 24, 18),
-		DialogInputLine = Color3.fromRGB(0, 110, 64),
-		Text = Color3.fromRGB(220, 255, 238),
-		SubText = Color3.fromRGB(100, 170, 130),
-		Hover = Color3.fromRGB(0, 100, 58),
-		HoverChange = 0.05,
-	},
-
-	-- Dusk — warm purple-grey twilight. Premium and editorial.
-	-- Deep desaturated violet background with lavender chrome and a soft purple accent.
-	-- Calm, polished, distinctly premium.
-	Dusk = {
-		Name = "Dusk",
-		Accent = Color3.fromRGB(162, 130, 220),
-		AcrylicMain = Color3.fromRGB(22, 18, 32),
-		AcrylicBorder = Color3.fromRGB(52, 44, 72),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(18, 14, 26), Color3.fromRGB(26, 22, 38)),
-		AcrylicNoise = 0.93,
-		TitleBarLine = Color3.fromRGB(58, 48, 80),
-		Tab = Color3.fromRGB(90, 76, 128),
-		Element = Color3.fromRGB(72, 60, 104),
-		ElementBorder = Color3.fromRGB(34, 28, 50),
-		InElementBorder = Color3.fromRGB(58, 48, 82),
-		ElementTransparency = 0.86,
-		ToggleSlider = Color3.fromRGB(100, 84, 142),
-		ToggleToggled = Color3.fromRGB(26, 22, 38),
-		SliderRail = Color3.fromRGB(100, 84, 142),
-		DropdownFrame = Color3.fromRGB(120, 100, 165),
-		DropdownHolder = Color3.fromRGB(30, 24, 44),
-		DropdownBorder = Color3.fromRGB(52, 44, 72),
-		DropdownOption = Color3.fromRGB(100, 84, 142),
-		Keybind = Color3.fromRGB(100, 84, 142),
-		Input = Color3.fromRGB(88, 74, 124),
-		InputFocused = Color3.fromRGB(14, 10, 20),
-		InputIndicator = Color3.fromRGB(115, 96, 158),
-		InputIndicatorFocus = Color3.fromRGB(162, 130, 220),
-		Dialog = Color3.fromRGB(34, 28, 50),
-		DialogHolder = Color3.fromRGB(26, 22, 38),
-		DialogHolderLine = Color3.fromRGB(20, 16, 30),
-		DialogButton = Color3.fromRGB(44, 36, 64),
-		DialogButtonBorder = Color3.fromRGB(68, 56, 96),
-		DialogBorder = Color3.fromRGB(58, 48, 82),
-		DialogInput = Color3.fromRGB(38, 32, 56),
-		DialogInputLine = Color3.fromRGB(108, 90, 152),
-		Text = Color3.fromRGB(234, 228, 248),
-		SubText = Color3.fromRGB(152, 136, 188),
-		Hover = Color3.fromRGB(100, 84, 142),
-		HoverChange = 0.05,
-	},
-
-	-- Mocha — rich chocolate brown. Warm, cozy, and refined.
-	-- Deep cocoa background with milk-chocolate chrome and a warm amber accent.
-	-- The premium dark theme for people who want warmth instead of cold blue-blacks.
-	Mocha = {
-		Name = "Mocha",
-		Accent = Color3.fromRGB(210, 160, 90),
-		AcrylicMain = Color3.fromRGB(20, 13, 8),
-		AcrylicBorder = Color3.fromRGB(52, 34, 18),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(16, 10, 6), Color3.fromRGB(24, 16, 10)),
-		AcrylicNoise = 0.93,
-		TitleBarLine = Color3.fromRGB(60, 40, 22),
-		Tab = Color3.fromRGB(100, 66, 34),
-		Element = Color3.fromRGB(80, 52, 28),
-		ElementBorder = Color3.fromRGB(36, 24, 12),
-		InElementBorder = Color3.fromRGB(60, 40, 22),
-		ElementTransparency = 0.86,
-		ToggleSlider = Color3.fromRGB(110, 72, 38),
-		ToggleToggled = Color3.fromRGB(24, 16, 8),
-		SliderRail = Color3.fromRGB(110, 72, 38),
-		DropdownFrame = Color3.fromRGB(130, 86, 46),
-		DropdownHolder = Color3.fromRGB(30, 20, 10),
-		DropdownBorder = Color3.fromRGB(52, 34, 18),
-		DropdownOption = Color3.fromRGB(108, 72, 38),
-		Keybind = Color3.fromRGB(108, 72, 38),
-		Input = Color3.fromRGB(96, 62, 32),
-		InputFocused = Color3.fromRGB(10, 6, 3),
-		InputIndicator = Color3.fromRGB(118, 78, 40),
-		InputIndicatorFocus = Color3.fromRGB(210, 160, 90),
-		Dialog = Color3.fromRGB(36, 24, 12),
-		DialogHolder = Color3.fromRGB(28, 18, 9),
-		DialogHolderLine = Color3.fromRGB(20, 13, 7),
-		DialogButton = Color3.fromRGB(46, 30, 15),
-		DialogButtonBorder = Color3.fromRGB(70, 46, 24),
-		DialogBorder = Color3.fromRGB(58, 38, 20),
-		DialogInput = Color3.fromRGB(40, 26, 13),
-		DialogInputLine = Color3.fromRGB(110, 72, 36),
-		Text = Color3.fromRGB(245, 234, 218),
-		SubText = Color3.fromRGB(175, 145, 108),
-		Hover = Color3.fromRGB(108, 70, 36),
-		HoverChange = 0.05,
-	},
-
-	-- Slate — cool blue-grey. Professional, minimal, editorial.
-	-- Inspired by high-end design tools. Blue-washed neutral greys,
-	-- clean white text, and a sky-blue accent that feels corporate-premium.
-	Slate = {
-		Name = "Slate",
-		Accent = Color3.fromRGB(100, 180, 255),
-		AcrylicMain = Color3.fromRGB(16, 20, 26),
-		AcrylicBorder = Color3.fromRGB(38, 48, 62),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(13, 17, 22), Color3.fromRGB(18, 24, 30)),
-		AcrylicNoise = 0.94,
-		TitleBarLine = Color3.fromRGB(44, 56, 72),
-		Tab = Color3.fromRGB(70, 88, 112),
-		Element = Color3.fromRGB(54, 68, 88),
-		ElementBorder = Color3.fromRGB(26, 34, 44),
-		InElementBorder = Color3.fromRGB(44, 56, 72),
-		ElementTransparency = 0.87,
-		ToggleSlider = Color3.fromRGB(78, 98, 126),
-		ToggleToggled = Color3.fromRGB(20, 26, 34),
-		SliderRail = Color3.fromRGB(78, 98, 126),
-		DropdownFrame = Color3.fromRGB(96, 118, 150),
-		DropdownHolder = Color3.fromRGB(24, 30, 40),
-		DropdownBorder = Color3.fromRGB(40, 52, 66),
-		DropdownOption = Color3.fromRGB(78, 98, 126),
-		Keybind = Color3.fromRGB(78, 98, 126),
-		Input = Color3.fromRGB(68, 86, 110),
-		InputFocused = Color3.fromRGB(10, 12, 16),
-		InputIndicator = Color3.fromRGB(92, 115, 148),
-		InputIndicatorFocus = Color3.fromRGB(100, 180, 255),
-		Dialog = Color3.fromRGB(28, 36, 46),
-		DialogHolder = Color3.fromRGB(20, 26, 34),
-		DialogHolderLine = Color3.fromRGB(16, 20, 26),
-		DialogButton = Color3.fromRGB(36, 46, 60),
-		DialogButtonBorder = Color3.fromRGB(56, 70, 90),
-		DialogBorder = Color3.fromRGB(46, 58, 76),
-		DialogInput = Color3.fromRGB(32, 40, 52),
-		DialogInputLine = Color3.fromRGB(86, 108, 138),
-		Text = Color3.fromRGB(220, 230, 244),
-		SubText = Color3.fromRGB(130, 150, 178),
-		Hover = Color3.fromRGB(78, 98, 126),
-		HoverChange = 0.06,
-	},
-
-	-- Mint — fresh cool green. Like Balloon but green-toned and crisp.
-	-- Ice-mint background with teal-green chrome and a bright spring green accent.
-	Mint = {
-		Name = "Mint",
-		Accent = Color3.fromRGB(56, 210, 160),
-		AcrylicMain = Color3.fromRGB(210, 248, 238),
-		AcrylicBorder = Color3.fromRGB(166, 224, 206),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(228, 252, 244), Color3.fromRGB(210, 246, 234)),
-		AcrylicNoise = 1,
-		TitleBarLine = Color3.fromRGB(152, 212, 194),
-		Tab = Color3.fromRGB(80, 175, 148),
-		Element = Color3.fromRGB(168, 230, 210),
-		ElementBorder = Color3.fromRGB(138, 206, 184),
-		InElementBorder = Color3.fromRGB(152, 216, 196),
-		ElementTransparency = 0.78,
-		ToggleSlider = Color3.fromRGB(80, 190, 155),
-		ToggleToggled = Color3.fromRGB(50, 140, 114),
-		SliderRail = Color3.fromRGB(152, 220, 200),
-		DropdownFrame = Color3.fromRGB(190, 240, 222),
-		DropdownHolder = Color3.fromRGB(218, 248, 238),
-		DropdownBorder = Color3.fromRGB(138, 206, 184),
-		DropdownOption = Color3.fromRGB(100, 190, 162),
-		Keybind = Color3.fromRGB(120, 200, 172),
-		Input = Color3.fromRGB(160, 222, 202),
-		InputFocused = Color3.fromRGB(50, 120, 100),
-		InputIndicator = Color3.fromRGB(178, 232, 212),
-		InputIndicatorFocus = Color3.fromRGB(56, 210, 160),
-		Dialog = Color3.fromRGB(214, 248, 236),
-		DialogHolder = Color3.fromRGB(222, 250, 240),
-		DialogHolderLine = Color3.fromRGB(204, 240, 224),
-		DialogButton = Color3.fromRGB(220, 248, 236),
-		DialogButtonBorder = Color3.fromRGB(152, 212, 192),
-		DialogBorder = Color3.fromRGB(162, 218, 198),
-		DialogInput = Color3.fromRGB(172, 226, 206),
-		DialogInputLine = Color3.fromRGB(148, 208, 188),
-		Text = Color3.fromRGB(18, 52, 40),
-		SubText = Color3.fromRGB(60, 128, 104),
-		Hover = Color3.fromRGB(152, 216, 196),
-		HoverChange = 0.03,
-	},
-
-	-- Void — total blackout with a single electric violet accent.
-	-- Zero-noise, maximum contrast. The darkest, most dramatic theme in the library.
-	-- Inspired by OLED screensavers and high-end audio equipment UI.
-	Void = {
-		Name = "Void",
-		Accent = Color3.fromRGB(140, 80, 255),
-		AcrylicMain = Color3.fromRGB(0, 0, 0),
-		AcrylicBorder = Color3.fromRGB(18, 10, 34),
-		AcrylicGradient = ColorSequence.new(Color3.fromRGB(0, 0, 0), Color3.fromRGB(4, 2, 10)),
-		AcrylicNoise = 1,
-		TitleBarLine = Color3.fromRGB(24, 14, 44),
-		Tab = Color3.fromRGB(46, 26, 88),
-		Element = Color3.fromRGB(24, 14, 44),
-		ElementBorder = Color3.fromRGB(8, 4, 18),
-		InElementBorder = Color3.fromRGB(30, 18, 56),
-		ElementTransparency = 0.90,
-		ToggleSlider = Color3.fromRGB(54, 30, 102),
-		ToggleToggled = Color3.fromRGB(255, 255, 255),
-		SliderRail = Color3.fromRGB(46, 26, 88),
-		DropdownFrame = Color3.fromRGB(62, 36, 116),
-		DropdownHolder = Color3.fromRGB(8, 4, 18),
-		DropdownBorder = Color3.fromRGB(20, 12, 38),
-		DropdownOption = Color3.fromRGB(54, 30, 102),
-		Keybind = Color3.fromRGB(54, 30, 102),
-		Input = Color3.fromRGB(40, 22, 76),
-		InputFocused = Color3.fromRGB(0, 0, 0),
-		InputIndicator = Color3.fromRGB(60, 34, 112),
-		InputIndicatorFocus = Color3.fromRGB(140, 80, 255),
-		Dialog = Color3.fromRGB(8, 4, 18),
-		DialogHolder = Color3.fromRGB(4, 2, 10),
-		DialogHolderLine = Color3.fromRGB(16, 8, 30),
-		DialogButton = Color3.fromRGB(16, 8, 32),
-		DialogButtonBorder = Color3.fromRGB(32, 18, 60),
-		DialogBorder = Color3.fromRGB(26, 14, 50),
-		DialogInput = Color3.fromRGB(12, 6, 24),
-		DialogInputLine = Color3.fromRGB(52, 28, 98),
-		Text = Color3.fromRGB(240, 232, 255),
-		SubText = Color3.fromRGB(130, 100, 190),
-		Hover = Color3.fromRGB(46, 26, 88),
-		HoverChange = 0.04,
-	},
+	}
 
 }
 
@@ -5678,891 +5247,6 @@ Components.Window = (function()
 			Window.SelectorPosMotor:setGoal(Instant(TabModule:GetCurrentTabPos()))
 		end)
 
-		-- ══════════════════════════════════════════════════════════════════════
-		-- FLUENT PLUS+ — BUILT-IN HOME TAB DASHBOARD  (v4 premium, no scroll)
-		-- ══════════════════════════════════════════════════════════════════════
-		-- ══════════════════════════════════════════════════════════════════════
-		-- FLUENT PLUS+ — BUILT-IN HOME TAB DASHBOARD  (v4 premium, no scroll)
-		-- ══════════════════════════════════════════════════════════════════════
-		function Window:AddHomeTab(HomeTabConfig)
-			HomeTabConfig = HomeTabConfig or {}
-			local scriptName         = HomeTabConfig.ScriptName        or Config.Title or "Script"
-			local supportedExecutors = HomeTabConfig.SupportedExecutors or {}
-			local discordInvite      = HomeTabConfig.DiscordInvite      or nil
-			local discordLabel       = HomeTabConfig.DiscordLabel       or "Join our Discord"
-
-			-- ── Services ──────────────────────────────────────────────────────
-			local Players      = game:GetService("Players")
-			local LocalPlayer  = Players.LocalPlayer
-			local Localization = game:GetService("LocalizationService")
-			local Stats        = game:GetService("Stats")
-			local UIS          = game:GetService("UserInputService")
-
-			local homeIconResolved = Library:GetIcon("home") or "rbxassetid://9080449299"
-
-			-- ── Utilities ─────────────────────────────────────────────────────
-			local function getPing()
-				local ok, v = pcall(function()
-					return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-				end)
-				return ok and math.clamp(math.floor(v), 0, 9999) or 0
-			end
-
-			local function fmt2(n) return string.format("%02i", n) end
-
-			local function hms(secs)
-				secs = math.max(0, math.floor(secs))
-				local s = secs % 60
-				local m = math.floor(secs / 60) % 60
-				local h = math.floor(secs / 3600)
-				return fmt2(h) .. ":" .. fmt2(m) .. ":" .. fmt2(s)
-			end
-
-			local function getServerType()
-				local ok,  vip  = pcall(function() return game.VIPServerId     end)
-				local ok2, priv = pcall(function() return game.PrivateServerId end)
-				if ok  and vip  and vip  ~= "" then return "VIP" end
-				if ok2 and priv and priv ~= "" then return "Private" end
-				return "Public"
-			end
-
-			local function getPlatformName()
-				local ok, p = pcall(function() return UIS:GetPlatform() end)
-				if not ok then return "Unknown" end
-				local map = {
-					[Enum.Platform.Windows] = "Windows",
-					[Enum.Platform.OSX]     = "macOS",
-					[Enum.Platform.IOS]     = "iOS",
-					[Enum.Platform.Android] = "Android",
-					[Enum.Platform.XBoxOne] = "Xbox",
-					[Enum.Platform.PS4]     = "PlayStation",
-					[Enum.Platform.UWP]     = "Windows (UWP)",
-				}
-				return map[p] or tostring(p):gsub("Enum%.Platform%.", "")
-			end
-
-			-- Client FPS tracked via RenderStepped (updated every 0.5s)
-			local _fpsFrames, _fpsClock, _fpsValue = 0, tick(), 0
-			Creator.AddSignal(RunService.RenderStepped, function()
-				_fpsFrames += 1
-				local now = tick()
-				if now - _fpsClock >= 0.5 then
-					_fpsValue  = math.round(_fpsFrames / (now - _fpsClock))
-					_fpsFrames = 0
-					_fpsClock  = now
-				end
-			end)
-
-			-- Session start = the moment this tab was built (how long YOU'VE been in)
-			local sessionStart = tick()
-
-			-- ── Register Home tab at slot 1 ───────────────────────────────────
-			local savedCount = TabModule.TabCount
-			TabModule.TabCount = 0
-			local HomeTabObj = TabModule:New("Home", homeIconResolved, Window.TabHolder)
-			TabModule.TabCount = math.max(savedCount + 1, 1)
-			HomeTabObj.Frame.LayoutOrder = -999
-
-			local HomeContainer = HomeTabObj.ContainerFrame
-			HomeContainer.ScrollingEnabled    = false
-			HomeContainer.ScrollBarThickness  = 0
-			HomeContainer.AutomaticCanvasSize = Enum.AutomaticSize.None
-			HomeContainer.CanvasSize          = UDim2.fromScale(0, 0)
-
-			-- ────────────────────────────────────────────────────────────────
-			-- FONT ALIASES
-			-- ────────────────────────────────────────────────────────────────
-			local FONT_REG  = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular,  Enum.FontStyle.Normal)
-			local FONT_MED  = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium,   Enum.FontStyle.Normal)
-			local FONT_SEMI = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-			local FONT_BOLD = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold,     Enum.FontStyle.Normal)
-
-			-- ────────────────────────────────────────────────────────────────
-			-- LAYOUT CONSTANTS
-			--
-			-- Content area for a 600×480 window with 160px tab sidebar:
-			--   Width  ≈ 408px,  Height ≈ 378px
-			-- With PAD=8 each side: inner usable ≈ 390 × 362px
-			--
-			-- Structure (all absolutely positioned, nothing scrolls):
-			--
-			--  ┌──────────────────────────────────────────────┐  ← 0
-			--  │  HERO BANNER  (76px)                         │
-			--  ├──────────────────────────────────────────────┤  ← 82
-			--  │  [PING]      [FPS]      [PLAYERS]  (56px)    │
-			--  ├──────────────────────────────────────────────┤  ← 144
-			--  │  SERVER col  │  CLIENT col  (fills to …)     │
-			--  ├──────────────────────────────────────────────┤
-			--  │  FRIENDS strip  (44px)                       │
-			--  ├──────────────────────────────────────────────┤
-			--  │  DISCORD button  (36px, optional)            │
-			--  └──────────────────────────────────────────────┘
-			-- ────────────────────────────────────────────────────────────────
-			local PAD      = 8
-			local G        = 6
-			local HERO_H   = 76
-			local METRIC_H = 56
-			local FRIEND_H = 44
-			local DISC_H   = discordInvite and 36 or 0
-			local DISC_G   = discordInvite and G  or 0
-
-			-- fixed pixels (everything except the INFO section which gets what's left)
-			local fixedH    = PAD + HERO_H + G + METRIC_H + G + FRIEND_H + DISC_G + DISC_H + PAD
-			local infoH_off = -(fixedH)   -- used as UDim2 height offset so info = 1scale - fixedH
-
-			-- Outer root with padding
-			local Root = New("Frame", {
-				Size                   = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				ClipsDescendants       = true,
-				Parent                 = HomeContainer,
-			}, {
-				New("UIPadding", {
-					PaddingLeft   = UDim.new(0, PAD),
-					PaddingRight  = UDim.new(0, PAD + 3),
-					PaddingTop    = UDim.new(0, PAD),
-					PaddingBottom = UDim.new(0, PAD),
-				}),
-			})
-
-			-- ════════════════════════════════════════════════════════════════
-			-- 1.  HERO  ─ player identity banner
-			-- ════════════════════════════════════════════════════════════════
-			local hero = New("Frame", {
-				Size                   = UDim2.new(1, 0, 0, HERO_H),
-				BackgroundTransparency = 0.90,
-				BorderSizePixel        = 0,
-				ClipsDescendants       = true,
-				Parent                 = Root,
-				ThemeTag               = { BackgroundColor3 = "Element" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 10) }),
-				New("UIStroke", {
-					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-					Transparency    = 0.76,
-					Thickness       = 1,
-					ThemeTag        = { Color = "InElementBorder" },
-				}),
-			})
-
-			-- Accent wash (left → fade right)
-			New("Frame", {
-				Size                   = UDim2.fromScale(1, 1),
-				BorderSizePixel        = 0,
-				ZIndex                 = 2,
-				Parent                 = hero,
-				ThemeTag               = { BackgroundColor3 = "Accent" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 10) }),
-				New("UIGradient", {
-					Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0,    0.78),
-						NumberSequenceKeypoint.new(0.45, 0.94),
-						NumberSequenceKeypoint.new(1,    1),
-					}),
-					Rotation = 0,
-				}),
-			})
-
-			-- Left accent pill
-			New("Frame", {
-				Size                   = UDim2.new(0, 3, 0, 44),
-				Position               = UDim2.new(0, 0, 0.5, -22),
-				BackgroundTransparency = 0,
-				BorderSizePixel        = 0,
-				ZIndex                 = 6,
-				Parent                 = hero,
-				ThemeTag               = { BackgroundColor3 = "Accent" },
-			}, { New("UICorner", { CornerRadius = UDim.new(0, 4) }) })
-
-			-- Avatar
-			local avatarImg = New("ImageLabel", {
-				Size                   = UDim2.fromOffset(48, 48),
-				Position               = UDim2.new(0, 14, 0.5, 0),
-				AnchorPoint            = Vector2.new(0, 0.5),
-				BackgroundTransparency = 0.9,
-				Image                  = "rbxassetid://0",
-				ZIndex                 = 5,
-				Parent                 = hero,
-				ThemeTag               = { BackgroundColor3 = "AcrylicMain" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(1, 0) }),
-				New("UIStroke", {
-					Thickness       = 2,
-					Transparency    = 0.22,
-					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-					ThemeTag        = { Color = "Accent" },
-				}),
-			})
-
-			task.spawn(function()
-				local ok, img = pcall(function()
-					return Players:GetUserThumbnailAsync(
-						LocalPlayer.UserId,
-						Enum.ThumbnailType.HeadShot,
-						Enum.ThumbnailSize.Size420x420
-					)
-				end)
-				if ok and img then avatarImg.Image = img end
-			end)
-
-			-- Display name
-			New("TextLabel", {
-				Text                   = LocalPlayer.DisplayName,
-				FontFace               = FONT_SEMI,
-				TextSize               = 15,
-				TextXAlignment         = Enum.TextXAlignment.Left,
-				TextTruncate           = Enum.TextTruncate.AtEnd,
-				BackgroundTransparency = 1,
-				Size                   = UDim2.new(1, -130, 0, 20),
-				Position               = UDim2.new(0, 72, 0, 15),
-				ZIndex                 = 5,
-				Parent                 = hero,
-				ThemeTag               = { TextColor3 = "Text" },
-			})
-
-			-- @username
-			New("TextLabel", {
-				Text                   = "@" .. LocalPlayer.Name,
-				FontFace               = FONT_REG,
-				TextSize               = 11,
-				TextXAlignment         = Enum.TextXAlignment.Left,
-				TextTruncate           = Enum.TextTruncate.AtEnd,
-				BackgroundTransparency = 1,
-				Size                   = UDim2.new(1, -130, 0, 14),
-				Position               = UDim2.new(0, 72, 0, 38),
-				ZIndex                 = 5,
-				Parent                 = hero,
-				ThemeTag               = { TextColor3 = "SubText" },
-			})
-
-			-- Script name badge — top-right
-			New("Frame", {
-				Size                   = UDim2.new(0, 0, 0, 20),
-				AutomaticSize          = Enum.AutomaticSize.X,
-				Position               = UDim2.new(1, -12, 0, 10),
-				AnchorPoint            = Vector2.new(1, 0),
-				BackgroundTransparency = 0.74,
-				BorderSizePixel        = 0,
-				ZIndex                 = 6,
-				Parent                 = hero,
-				ThemeTag               = { BackgroundColor3 = "Accent" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 5) }),
-				New("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) }),
-				New("TextLabel", {
-					Text                   = scriptName,
-					FontFace               = FONT_SEMI,
-					TextSize               = 10,
-					TextColor3             = Color3.fromRGB(255, 255, 255),
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(0, 0, 1, 0),
-					AutomaticSize          = Enum.AutomaticSize.X,
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					TextYAlignment         = Enum.TextYAlignment.Center,
-					ZIndex                 = 7,
-				}),
-			})
-
-			-- ════════════════════════════════════════════════════════════════
-			-- 2.  METRICS STRIP  ─ 3 live-updating big-number tiles
-			-- ════════════════════════════════════════════════════════════════
-			local metricTop = HERO_H + G
-
-			local metricFrame = New("Frame", {
-				Size                   = UDim2.new(1, 0, 0, METRIC_H),
-				Position               = UDim2.new(0, 0, 0, metricTop),
-				BackgroundTransparency = 1,
-				Parent                 = Root,
-			})
-
-			-- Tile builder — returns the value TextLabel
-			local function makeMetricTile(parent, label, colIdx, totalCols)
-				local frac   = 1 / totalCols
-				local gapOff = math.ceil(G * (totalCols - 1) / totalCols)
-				local tile = New("Frame", {
-					Size                   = UDim2.new(frac, -gapOff, 1, 0),
-					Position               = UDim2.new(frac * (colIdx - 1), (colIdx - 1) * math.ceil(G * (colIdx - 1) / (totalCols - 1 + 0.001)), 0, 0),
-					BackgroundTransparency = 0.90,
-					BorderSizePixel        = 0,
-					ClipsDescendants       = true,
-					Parent                 = parent,
-					ThemeTag               = { BackgroundColor3 = "Element" },
-				}, {
-					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-					New("UIStroke", {
-						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-						Transparency    = 0.76,
-						Thickness       = 1,
-						ThemeTag        = { Color = "InElementBorder" },
-					}),
-				})
-
-				-- Accent top line
-				New("Frame", {
-					Size                   = UDim2.new(0.4, 0, 0, 2),
-					Position               = UDim2.new(0.5, 0, 0, 0),
-					AnchorPoint            = Vector2.new(0.5, 0),
-					BackgroundTransparency = 0.38,
-					BorderSizePixel        = 0,
-					ZIndex                 = 4,
-					Parent                 = tile,
-					ThemeTag               = { BackgroundColor3 = "Accent" },
-				}, { New("UICorner", { CornerRadius = UDim.new(0, 2) }) })
-
-				local valLbl = New("TextLabel", {
-					Text                   = "—",
-					FontFace               = FONT_BOLD,
-					TextSize               = 19,
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					TextYAlignment         = Enum.TextYAlignment.Center,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 0, 32),
-					Position               = UDim2.new(0, 0, 0, 6),
-					ZIndex                 = 5,
-					Parent                 = tile,
-					ThemeTag               = { TextColor3 = "Text" },
-				})
-
-				New("TextLabel", {
-					Text                   = label,
-					FontFace               = FONT_MED,
-					TextSize               = 9,
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 0, 12),
-					Position               = UDim2.new(0, 0, 0, 39),
-					ZIndex                 = 5,
-					Parent                 = tile,
-					ThemeTag               = { TextColor3 = "SubText" },
-				})
-
-				return valLbl
-			end
-
-			local valPingBig    = makeMetricTile(metricFrame, "PING",    1, 3)
-			local valFPSBig     = makeMetricTile(metricFrame, "FPS",     2, 3)
-			local valPlayersBig = makeMetricTile(metricFrame, "PLAYERS", 3, 3)
-
-			-- ════════════════════════════════════════════════════════════════
-			-- 3.  INFO SECTION  ─ Server | Client, two columns, no card boxes
-			-- ════════════════════════════════════════════════════════════════
-			local infoTop = metricTop + METRIC_H + G
-
-			local infoFrame = New("Frame", {
-				Size                   = UDim2.new(1, 0, 1, infoH_off),
-				Position               = UDim2.new(0, 0, 0, infoTop),
-				BackgroundTransparency = 0.90,
-				BorderSizePixel        = 0,
-				ClipsDescendants       = true,
-				Parent                 = Root,
-				ThemeTag               = { BackgroundColor3 = "Element" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-				New("UIStroke", {
-					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-					Transparency    = 0.76,
-					Thickness       = 1,
-					ThemeTag        = { Color = "InElementBorder" },
-				}),
-			})
-
-			-- Vertical divider between Server / Client
-			New("Frame", {
-				Size                   = UDim2.new(0, 1, 1, -18),
-				Position               = UDim2.new(0.5, 0, 0, 9),
-				BackgroundTransparency = 0.68,
-				BorderSizePixel        = 0,
-				Parent                 = infoFrame,
-				ThemeTag               = { BackgroundColor3 = "TitleBarLine" },
-			})
-
-			-- Column builder — returns an addRow function that yields each value TextLabel
-			local function makeInfoColumn(parent, title, iconName, isRight)
-				local colX = isRight and 0.5 or 0
-				local col  = New("Frame", {
-					Size                   = UDim2.new(0.5, 0, 1, 0),
-					Position               = UDim2.new(colX, 0, 0, 0),
-					BackgroundTransparency = 1,
-					Parent                 = parent,
-				})
-
-				-- Header row
-				local hdr = New("Frame", {
-					Size                   = UDim2.new(1, 0, 0, 26),
-					BackgroundTransparency = 1,
-					Parent                 = col,
-				}, {
-					New("UIListLayout", {
-						FillDirection     = Enum.FillDirection.Horizontal,
-						VerticalAlignment = Enum.VerticalAlignment.Center,
-						Padding           = UDim.new(0, 5),
-					}),
-					New("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 8) }),
-				})
-
-				local ico = iconName and Library:GetIcon(iconName)
-				if ico then
-					New("ImageLabel", {
-						Size                   = UDim2.fromOffset(11, 11),
-						BackgroundTransparency = 1,
-						Image                  = ico,
-						LayoutOrder            = 1,
-						ThemeTag               = { ImageColor3 = "Accent" },
-						Parent                 = hdr,
-					})
-				end
-				New("TextLabel", {
-					Text                   = title,
-					FontFace               = FONT_BOLD,
-					TextSize               = 9,
-					TextXAlignment         = Enum.TextXAlignment.Left,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 1, 0),
-					LayoutOrder            = 2,
-					ThemeTag               = { TextColor3 = "Accent" },
-					Parent                 = hdr,
-				})
-
-				-- Underline below header
-				New("Frame", {
-					Size                   = UDim2.new(1, -20, 0, 1),
-					Position               = UDim2.new(0, 10, 0, 26),
-					BackgroundTransparency = 0.68,
-					BorderSizePixel        = 0,
-					Parent                 = col,
-					ThemeTag               = { BackgroundColor3 = "TitleBarLine" },
-				})
-
-				local nextY = 32
-				local function addRow(lbl, default)
-					local row = New("Frame", {
-						Size                   = UDim2.new(1, 0, 0, 21),
-						Position               = UDim2.new(0, 0, 0, nextY),
-						BackgroundTransparency = 1,
-						Parent                 = col,
-					}, {
-						New("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 10) }),
-					})
-					nextY += 21
-
-					New("TextLabel", {
-						Text                   = lbl,
-						FontFace               = FONT_MED,
-						TextSize               = 10,
-						TextXAlignment         = Enum.TextXAlignment.Left,
-						TextYAlignment         = Enum.TextYAlignment.Center,
-						BackgroundTransparency = 1,
-						Size                   = UDim2.new(0.48, 0, 1, 0),
-						ThemeTag               = { TextColor3 = "SubText" },
-						Parent                 = row,
-					})
-
-					local val = New("TextLabel", {
-						Text                   = default or "—",
-						FontFace               = FONT_SEMI,
-						TextSize               = 10,
-						TextXAlignment         = Enum.TextXAlignment.Right,
-						TextYAlignment         = Enum.TextYAlignment.Center,
-						TextTruncate           = Enum.TextTruncate.AtEnd,
-						BackgroundTransparency = 1,
-						Size                   = UDim2.new(0.52, 0, 1, 0),
-						Position               = UDim2.new(0.48, 0, 0, 0),
-						ThemeTag               = { TextColor3 = "Text" },
-						Parent                 = row,
-					})
-					return val
-				end
-
-				return addRow
-			end
-
-			-- SERVER column
-			local addSrv  = makeInfoColumn(infoFrame, "SERVER", "server", false)
-			local valSession  = addSrv("Session",  "00:00:00")
-			local valSrvType  = addSrv("Type",     getServerType())
-			local valSrvPing  = addSrv("Latency",  "...")
-			local valRegion   = addSrv("Region",   "...")
-
-			task.spawn(function()
-				local ok, r = pcall(function()
-					return Localization:GetCountryRegionForPlayerAsync(LocalPlayer)
-				end)
-				valRegion.Text = (ok and r and r ~= "") and r or "N/A"
-			end)
-
-			-- CLIENT column
-			local addCli  = makeInfoColumn(infoFrame, "CLIENT", "cpu", true)
-			local valExec     = addCli("Executor",  "Detecting...")
-			local valSupport  = addCli("Support",   "...")
-			local valFPS      = addCli("FPS",       "...")
-			local valPlatform = addCli("Platform",  getPlatformName())
-
-			task.spawn(function()
-				local execName  = "Unknown"
-				local supported = "—"
-				pcall(function()
-					if RunService:IsStudio() then
-						execName  = "Roblox Studio"
-						supported = "Debug Mode"
-					else
-						local fn = identifyexecutor or getexecutorname
-						if fn then execName = fn() or "Unknown" end
-						if #supportedExecutors > 0 then
-							local found = false
-							for _, v in ipairs(supportedExecutors) do
-								if v == execName then found = true break end
-							end
-							supported = found and "✓ Supported" or "⚠ Not Listed"
-						end
-					end
-				end)
-				valExec.Text    = execName
-				valSupport.Text = supported
-			end)
-
-			-- ════════════════════════════════════════════════════════════════
-			-- 4.  FRIENDS STRIP  ─ 4 equal metric chips, pinned above Discord
-			-- ════════════════════════════════════════════════════════════════
-			local friendsTop = -(DISC_H + DISC_G + FRIEND_H)
-
-			local friendsFrame = New("Frame", {
-				Size                   = UDim2.new(1, 0, 0, FRIEND_H),
-				Position               = UDim2.new(0, 0, 1, friendsTop),
-				BackgroundTransparency = 0.90,
-				BorderSizePixel        = 0,
-				Parent                 = Root,
-				ThemeTag               = { BackgroundColor3 = "Element" },
-			}, {
-				New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-				New("UIStroke", {
-					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-					Transparency    = 0.76,
-					Thickness       = 1,
-					ThemeTag        = { Color = "InElementBorder" },
-				}),
-			})
-
-			-- "FRIENDS" label on the left
-			New("Frame", {
-				Size                   = UDim2.new(0, 72, 1, 0),
-				BackgroundTransparency = 1,
-				Parent                 = friendsFrame,
-			}, {
-				New("UIListLayout", {
-					FillDirection       = Enum.FillDirection.Vertical,
-					HorizontalAlignment = Enum.HorizontalAlignment.Center,
-					VerticalAlignment   = Enum.VerticalAlignment.Center,
-					Padding             = UDim.new(0, 3),
-				}),
-				New("ImageLabel", {
-					Size                   = UDim2.fromOffset(14, 14),
-					BackgroundTransparency = 1,
-					Image                  = Library:GetIcon("users") or "rbxassetid://0",
-					LayoutOrder            = 1,
-					ThemeTag               = { ImageColor3 = "Accent" },
-				}),
-				New("TextLabel", {
-					Text                   = "FRIENDS",
-					FontFace               = FONT_BOLD,
-					TextSize               = 8,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 0, 10),
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					LayoutOrder            = 2,
-					ThemeTag               = { TextColor3 = "Accent" },
-				}),
-			})
-
-			-- Vertical divider after label
-			New("Frame", {
-				Size                   = UDim2.new(0, 1, 1, -16),
-				Position               = UDim2.new(0, 72, 0, 8),
-				BackgroundTransparency = 0.68,
-				BorderSizePixel        = 0,
-				Parent                 = friendsFrame,
-				ThemeTag               = { BackgroundColor3 = "TitleBarLine" },
-			})
-
-			-- 4 chips filling the rest of the row
-			local chipLabels = { "Total", "Online", "Offline", "Here" }
-			local friendVals = {}
-			local CHIP_COUNT = #chipLabels
-			local CHIP_START = 78   -- px offset from left (after label + divider + gap)
-
-			for i, lbl in ipairs(chipLabels) do
-				local frac   = (1 - 0) / CHIP_COUNT
-				local gapTot = G * (CHIP_COUNT - 1)
-				local chipW  = frac
-				local chipOff = -math.ceil((CHIP_START + gapTot) / CHIP_COUNT)
-				local chipX   = frac * (i - 1)
-				local chipXOff = CHIP_START + (i - 1) * (G - chipOff)
-
-				local chip = New("Frame", {
-					Size                   = UDim2.new(chipW, chipOff, 1, -12),
-					Position               = UDim2.new(chipX, chipXOff, 0, 6),
-					BackgroundTransparency = 0.86,
-					BorderSizePixel        = 0,
-					Parent                 = friendsFrame,
-					ThemeTag               = { BackgroundColor3 = "Tab" },
-				}, {
-					New("UICorner", { CornerRadius = UDim.new(0, 5) }),
-				})
-
-				local v = New("TextLabel", {
-					Text                   = "—",
-					FontFace               = FONT_BOLD,
-					TextSize               = 14,
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					TextYAlignment         = Enum.TextYAlignment.Center,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 0, 20),
-					Position               = UDim2.new(0, 0, 0, 2),
-					ZIndex                 = 5,
-					Parent                 = chip,
-					ThemeTag               = { TextColor3 = "Text" },
-				})
-
-				New("TextLabel", {
-					Text                   = lbl,
-					FontFace               = FONT_MED,
-					TextSize               = 8,
-					TextXAlignment         = Enum.TextXAlignment.Center,
-					BackgroundTransparency = 1,
-					Size                   = UDim2.new(1, 0, 0, 10),
-					Position               = UDim2.new(0, 0, 1, -12),
-					ZIndex                 = 5,
-					Parent                 = chip,
-					ThemeTag               = { TextColor3 = "SubText" },
-				})
-
-				friendVals[i] = v
-			end
-
-			-- ════════════════════════════════════════════════════════════════
-			-- 5.  DISCORD BUTTON  ─ redesigned, Discord-branded
-			-- ════════════════════════════════════════════════════════════════
-			if discordInvite and discordInvite ~= "" then
-				local invite = discordInvite:match("discord%.gg/(.+)") or discordInvite
-
-				local disc = New("Frame", {
-					Size                   = UDim2.new(1, 0, 0, DISC_H),
-					Position               = UDim2.new(0, 0, 1, -DISC_H),
-					BackgroundColor3       = Color3.fromRGB(88, 101, 242),
-					BackgroundTransparency = 0,
-					BorderSizePixel        = 0,
-					ClipsDescendants       = true,
-					Parent                 = Root,
-				}, {
-					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-				})
-
-				-- Shine overlay
-				New("Frame", {
-					Size             = UDim2.fromScale(1, 1),
-					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-					BorderSizePixel  = 0,
-					ZIndex           = 2,
-					Parent           = disc,
-				}, {
-					New("UICorner", { CornerRadius = UDim.new(0, 8) }),
-					New("UIGradient", {
-						Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0,    0.86),
-							NumberSequenceKeypoint.new(0.5,  0.95),
-							NumberSequenceKeypoint.new(1,    0.82),
-						}),
-						Rotation = 130,
-					}),
-				})
-
-				-- Left: icon + label
-				New("Frame", {
-					Size                   = UDim2.new(0, 0, 1, 0),
-					AutomaticSize          = Enum.AutomaticSize.X,
-					Position               = UDim2.new(0, 14, 0, 0),
-					BackgroundTransparency = 1,
-					ZIndex                 = 5,
-					Parent                 = disc,
-				}, {
-					New("UIListLayout", {
-						FillDirection     = Enum.FillDirection.Horizontal,
-						VerticalAlignment = Enum.VerticalAlignment.Center,
-						Padding           = UDim.new(0, 8),
-					}),
-					New("ImageLabel", {
-						Size                   = UDim2.fromOffset(16, 16),
-						BackgroundTransparency = 1,
-						Image                  = Library:GetIcon("message-circle") or "rbxassetid://0",
-						ImageColor3            = Color3.fromRGB(255, 255, 255),
-						LayoutOrder            = 1,
-					}),
-					New("TextLabel", {
-						Text                   = discordLabel,
-						FontFace               = FONT_SEMI,
-						TextSize               = 12,
-						TextColor3             = Color3.fromRGB(255, 255, 255),
-						BackgroundTransparency = 1,
-						Size                   = UDim2.new(0, 0, 1, 0),
-						AutomaticSize          = Enum.AutomaticSize.X,
-						TextXAlignment         = Enum.TextXAlignment.Left,
-						TextYAlignment         = Enum.TextYAlignment.Center,
-						LayoutOrder            = 2,
-					}),
-				})
-
-				-- Right: url + arrow
-				New("Frame", {
-					Size                   = UDim2.new(0, 0, 1, 0),
-					AutomaticSize          = Enum.AutomaticSize.X,
-					Position               = UDim2.new(1, -14, 0, 0),
-					AnchorPoint            = Vector2.new(1, 0),
-					BackgroundTransparency = 1,
-					ZIndex                 = 5,
-					Parent                 = disc,
-				}, {
-					New("UIListLayout", {
-						FillDirection       = Enum.FillDirection.Horizontal,
-						VerticalAlignment   = Enum.VerticalAlignment.Center,
-						HorizontalAlignment = Enum.HorizontalAlignment.Right,
-						Padding             = UDim.new(0, 4),
-					}),
-					New("TextLabel", {
-						Text                   = "discord.gg/" .. invite,
-						FontFace               = FONT_REG,
-						TextSize               = 10,
-						TextColor3             = Color3.fromRGB(255, 255, 255),
-						TextTransparency       = 0.35,
-						BackgroundTransparency = 1,
-						Size                   = UDim2.new(0, 0, 1, 0),
-						AutomaticSize          = Enum.AutomaticSize.X,
-						TextXAlignment         = Enum.TextXAlignment.Right,
-						TextYAlignment         = Enum.TextYAlignment.Center,
-						LayoutOrder            = 1,
-					}),
-					New("TextLabel", {
-						Text                   = "→",
-						FontFace               = FONT_SEMI,
-						TextSize               = 14,
-						TextColor3             = Color3.fromRGB(255, 255, 255),
-						TextTransparency       = 0.2,
-						BackgroundTransparency = 1,
-						Size                   = UDim2.new(0, 16, 1, 0),
-						TextXAlignment         = Enum.TextXAlignment.Center,
-						TextYAlignment         = Enum.TextYAlignment.Center,
-						LayoutOrder            = 2,
-					}),
-				})
-
-				-- Clickable overlay + hover
-				local discBtn = New("TextButton", {
-					Size                   = UDim2.fromScale(1, 1),
-					BackgroundTransparency = 1,
-					Text                   = "",
-					ZIndex                 = 10,
-					Parent                 = disc,
-				})
-
-				local hoverOverlay = New("Frame", {
-					Size                   = UDim2.fromScale(1, 1),
-					BackgroundColor3       = Color3.fromRGB(255, 255, 255),
-					BackgroundTransparency = 1,
-					BorderSizePixel        = 0,
-					ZIndex                 = 8,
-					Parent                 = disc,
-				}, { New("UICorner", { CornerRadius = UDim.new(0, 8) }) })
-
-				local _, SetHover = Creator.SpringMotor(1, hoverOverlay, "BackgroundTransparency")
-				Creator.AddSignal(discBtn.MouseEnter,       function() SetHover(0.91) end)
-				Creator.AddSignal(discBtn.MouseLeave,       function() SetHover(1)    end)
-				Creator.AddSignal(discBtn.MouseButton1Down, function() SetHover(0.84) end)
-				Creator.AddSignal(discBtn.MouseButton1Up,   function() SetHover(0.91) end)
-
-				Creator.AddSignal(discBtn.MouseButton1Click, function()
-					pcall(setclipboard, "https://discord.gg/" .. invite)
-					Library:Notify({
-						Title    = "Discord",
-						Content  = "Invite copied!  discord.gg/" .. invite,
-						Duration = 4,
-					})
-					pcall(function()
-						if request then
-							request({
-								Url     = "http://127.0.0.1:6463/rpc?v=1",
-								Method  = "POST",
-								Headers = { ["Content-Type"] = "application/json", Origin = "https://discord.com" },
-								Body    = httpService:JSONEncode({
-									cmd   = "INVITE_BROWSER",
-									nonce = httpService:GenerateGUID(false),
-									args  = { code = invite },
-								}),
-							})
-						end
-					end)
-				end)
-			end
-
-			-- ════════════════════════════════════════════════════════════════
-			-- LIVE UPDATE LOOP  (1s tick)
-			-- ════════════════════════════════════════════════════════════════
-			local friendCooldown = 0
-
-			coroutine.wrap(function()
-				while HomeContainer and HomeContainer.Parent do
-
-					-- Metric tiles
-					local pingOk, pingVal = pcall(getPing)
-					local pingStr = (pingOk and pingVal) and (tostring(pingVal) .. "ms") or "N/A"
-					valPingBig.Text    = pingStr
-					valFPSBig.Text     = tostring(_fpsValue)
-					valPlayersBig.Text = tostring(#Players:GetPlayers())
-
-					-- Info rows
-					valSession.Text = hms(tick() - sessionStart)
-					valSrvPing.Text = pingStr
-					valFPS.Text     = tostring(_fpsValue) .. " fps"
-
-					-- Friends (throttled, every 30s)
-					if friendCooldown <= 0 then
-						friendCooldown = 30
-						task.spawn(function()
-							local total, online, inGame = 0, 0, 0
-							local serverNames = {}
-							for _, p in ipairs(Players:GetPlayers()) do
-								serverNames[p.Name] = true
-							end
-							pcall(function()
-								local pages = Players:GetFriendsAsync(LocalPlayer.UserId)
-								repeat
-									for _ in ipairs(pages:GetCurrentPage()) do total += 1 end
-									if not pages.IsFinished then pages:AdvanceToNextPageAsync() end
-								until pages.IsFinished
-							end)
-							pcall(function()
-								for _, info in ipairs(LocalPlayer:GetFriendsOnline()) do
-									online += 1
-									if serverNames[info.UserName] then inGame += 1 end
-								end
-							end)
-							friendVals[1].Text = tostring(total)
-							friendVals[2].Text = tostring(online)
-							friendVals[3].Text = tostring(total - online)
-							friendVals[4].Text = tostring(inGame)
-						end)
-					else
-						friendCooldown -= 1
-					end
-
-					task.wait(1)
-				end
-			end)()
-
-			TabModule:SelectTab(1)
-			return HomeTabObj
-		end
-		-- ══════════════════════════════════════════════════════════════════════
-		-- END HOME TAB DASHBOARD
-		-- ══════════════════════════════════════════════════════════════════════
 
 		return Window
 	end
@@ -11438,7 +10122,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	local discordEnabled = discordCfg and discordCfg.Enabled == true
 	local discordNote    = discordEnabled and (discordCfg.Note or "Join our Discord server.") or ""
 	local discordLink    = discordEnabled and (discordCfg.Link or "") or ""
-	-- Discord always copies the link to clipboard
 
 	-- Validate function
 	local validateFn
@@ -11453,6 +10136,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- GetKey config
 	local getKeyFn        = ksConfig.GetKey and type(ksConfig.GetKey.Action) == "function" and ksConfig.GetKey.Action or nil
 	local getKeyLabel     = (ksConfig.GetKey and ksConfig.GetKey.Label) or "Get Key"
+	local getKeyDesc      = (ksConfig.GetKey and ksConfig.GetKey.Description) or "Tap below to open the key link and copy it to your clipboard."
 	local rateLimitEnabled = ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Enabled
 	local rateLimitSecs   = rateLimitEnabled and (ksConfig.GetKey.RateLimit.Seconds or 300) or nil
 	local rateLimitMsg    = (ksConfig.GetKey and ksConfig.GetKey.RateLimit and ksConfig.GetKey.RateLimit.Message) or "Please wait before getting a new link."
@@ -11471,6 +10155,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	local ICON_CLIPBOARD = _ks_resolveIcon("clipboard")
 	local ICON_LOADER    = _ks_resolveIcon("loader")
 	local ICON_DISCORD   = _ks_resolveIcon("message-circle")
+	local ICON_UNLOCK    = _ks_resolveIcon("unlock")
 
 	-- Apply theme early so ThemeTags resolve correctly during build
 	Library.Theme      = windowConfig.Theme or "Dark"
@@ -11478,6 +10163,22 @@ local function _ks_Run(ksConfig, windowConfig)
 	Library.UseAcrylic = windowConfig.Acrylic or false
 	Library.Acrylic    = windowConfig.Acrylic or false
 	if windowConfig.Acrylic then Acrylic.init() end
+
+	-- ── Tab setup ─────────────────────────────────────────────
+	-- Tabs are built from what features are enabled. Only show the
+	-- tab bar when there is more than one section to display.
+	local ks_tabs = {}
+	table.insert(ks_tabs, { id = "key",    icon = ICON_KEY,     label = "Enter Key",  order = 1 })
+	if getKeyFn then
+		table.insert(ks_tabs, { id = "getkey", icon = ICON_LINK,    label = "Get Key",    order = 2 })
+	end
+	if discordEnabled and discordLink ~= "" then
+		table.insert(ks_tabs, { id = "info",   icon = ICON_DISCORD, label = "Community",  order = 3 })
+	end
+
+	local showTabs  = #ks_tabs > 1
+	local TABBAR_H  = showTabs and 46 or 0
+	local CONTENT_Y = 48 + TABBAR_H
 
 	-- ── Window sizing ─────────────────────────────────────────
 	local ksW    = 420
@@ -11579,8 +10280,9 @@ local function _ks_Run(ksConfig, windowConfig)
 				ThemeTag            = { TextColor3 = "Text" },
 			}) or nil,
 		}),
+		-- Title bar bottom separator (hidden when tab bar is present; tab bar has its own separator)
 		New("Frame", {
-			BackgroundTransparency = 0.5,
+			BackgroundTransparency = showTabs and 1 or 0.5,
 			Size                = UDim2.new(1, 0, 0, 1),
 			Position            = UDim2.new(0, 0, 1, 0),
 			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
@@ -11639,36 +10341,253 @@ local function _ks_Run(ksConfig, windowConfig)
 		end)
 	end
 
-	-- ── Content area ─────────────────────────────────────────
-	local ContentListLayout = New("UIListLayout", {
-		SortOrder           = Enum.SortOrder.LayoutOrder,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		Padding             = UDim.new(0, 10),
-	})
+	-- ── Tab bar (only when multiple sections exist) ───────────
+	-- Adopts the same pill-button style used by Fluent+'s SubTabs
+	-- for visual consistency with the rest of the library.
 
-	local ContentGroup = New("CanvasGroup", {
+	local activeTabId   = ks_tabs[1].id
+	local tabPageFrames = {}   -- [tabId] = { frame = CanvasGroup, layout = UIListLayout }
+	local tabBtnRefs    = {}   -- [tabId] = { setTrans, stroke }
+
+	-- Forward declaration so switchTab can call updateKsSize before it is defined
+	local updateKsSize
+
+	if showTabs then
+		local KsTabBar = New("Frame", {
+			Size                = UDim2.new(1, 0, 0, TABBAR_H),
+			Position            = UDim2.fromOffset(0, 42),
+			BackgroundTransparency = 1,
+			Parent              = KsRootCanvas,
+		}, {
+			-- Full-width separator at the bottom of the tab bar
+			New("Frame", {
+				Size                = UDim2.new(1, 0, 0, 1),
+				Position            = UDim2.new(0, 0, 1, -1),
+				BackgroundTransparency = 0.5,
+				ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
+			}),
+		})
+
+		-- Pill-tab row, horizontally centred with left gutter
+		local KsTabRow = New("Frame", {
+			Size                = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Parent              = KsTabBar,
+		}, {
+			New("UIListLayout", {
+				FillDirection       = Enum.FillDirection.Horizontal,
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
+				Padding             = UDim.new(0, 5),
+			}),
+			New("UIPadding", {
+				PaddingLeft  = UDim.new(0, 14),
+				PaddingRight = UDim.new(0, 14),
+			}),
+		})
+
+		for i, tabDef in ipairs(ks_tabs) do
+			local isActive = tabDef.id == activeTabId
+
+			-- Pill-style button matching SubTab buttons exactly
+			local TabPill = New("TextButton", {
+				Size                = UDim2.new(0, 0, 0, 30),
+				AutomaticSize       = Enum.AutomaticSize.X,
+				BackgroundTransparency = isActive and 0.78 or 0.93,
+				Text                = "",
+				LayoutOrder         = i,
+				Parent              = KsTabRow,
+				ThemeTag            = { BackgroundColor3 = "Tab" },
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+				New("UIStroke", {
+					Transparency        = isActive and 0 or 1,
+					Thickness           = 1,
+					ApplyStrokeMode     = Enum.ApplyStrokeMode.Border,
+					ThemeTag            = { Color = "Accent" },
+				}),
+				New("UIListLayout", {
+					Padding             = UDim.new(0, 6),
+					FillDirection       = Enum.FillDirection.Horizontal,
+					SortOrder           = Enum.SortOrder.LayoutOrder,
+					VerticalAlignment   = Enum.VerticalAlignment.Center,
+					HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				}),
+				New("UIPadding", {
+					PaddingLeft  = UDim.new(0, 12),
+					PaddingRight = UDim.new(0, 12),
+				}),
+				New("ImageLabel", {
+					Image               = tabDef.icon or "",
+					Size                = UDim2.fromOffset(14, 14),
+					BackgroundTransparency = 1,
+					LayoutOrder         = 1,
+					ImageTransparency   = isActive and 0 or 0.3,
+					ThemeTag            = { ImageColor3 = "Text" },
+				}),
+				New("TextLabel", {
+					Text                = tabDef.label,
+					FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+					TextSize            = 12,
+					TextXAlignment      = Enum.TextXAlignment.Left,
+					TextYAlignment      = Enum.TextYAlignment.Center,
+					Size                = UDim2.new(0, 0, 1, 0),
+					AutomaticSize       = Enum.AutomaticSize.X,
+					BackgroundTransparency = 1,
+					TextTransparency    = isActive and 0 or 0.3,
+					LayoutOrder         = 2,
+					ThemeTag            = { TextColor3 = "Text" },
+				}),
+			})
+
+			local pillStroke = TabPill:FindFirstChildOfClass("UIStroke")
+			local pillIcon   = TabPill:FindFirstChildOfClass("ImageLabel")
+			local pillLabel  = TabPill:FindFirstChildOfClass("TextLabel")
+
+			local _, TabSetTrans = Creator.SpringMotor(
+				isActive and 0.78 or 0.93,
+				TabPill,
+				"BackgroundTransparency"
+			)
+
+			local function applyActive(active)
+				TabSetTrans(active and 0.78 or 0.93)
+				if pillStroke then
+					TweenService:Create(pillStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Transparency = active and 0 or 1,
+					}):Play()
+				end
+				if pillIcon then
+					TweenService:Create(pillIcon, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						ImageTransparency = active and 0 or 0.3,
+					}):Play()
+				end
+				if pillLabel then
+					TweenService:Create(pillLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						TextTransparency = active and 0 or 0.3,
+					}):Play()
+				end
+			end
+
+			tabBtnRefs[tabDef.id] = {
+				pill       = TabPill,
+				setTrans   = TabSetTrans,
+				applyActive = applyActive,
+			}
+
+			-- Hover/press states (only when not the active tab)
+			Creator.AddSignal(TabPill.MouseEnter, function()
+				if activeTabId ~= tabDef.id then TabSetTrans(0.87) end
+			end)
+			Creator.AddSignal(TabPill.MouseLeave, function()
+				if activeTabId ~= tabDef.id then TabSetTrans(0.93) end
+			end)
+			Creator.AddSignal(TabPill.MouseButton1Down, function()
+				if activeTabId ~= tabDef.id then TabSetTrans(0.92) end
+			end)
+			Creator.AddSignal(TabPill.MouseButton1Up, function()
+				if activeTabId ~= tabDef.id then TabSetTrans(0.87) end
+			end)
+		end
+	end
+
+	-- ── Content wrapper — holds one CanvasGroup per tab page ──
+	local ContentWrapper = New("Frame", {
 		Size                = UDim2.new(1, 0, 0, 0),
 		AutomaticSize       = Enum.AutomaticSize.Y,
-		Position            = UDim2.fromOffset(0, 48),
+		Position            = UDim2.fromOffset(0, CONTENT_Y),
 		BackgroundTransparency = 1,
-		GroupTransparency   = 0,
 		Parent              = KsRootCanvas,
-	}, {
-		ContentListLayout,
-		New("UIPadding", {
-			PaddingLeft   = UDim.new(0, 18),
-			PaddingRight  = UDim.new(0, 18),
-			PaddingTop    = UDim.new(0, 8),
-			PaddingBottom = UDim.new(0, 14),
-		}),
 	})
 
-	-- ── Key input with icon + paste button ───────────────────
+	-- Build a CanvasGroup page per tab
+	for _, tabDef in ipairs(ks_tabs) do
+		local isActive = tabDef.id == activeTabId
+		local pageLayout = New("UIListLayout", {
+			SortOrder           = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Padding             = UDim.new(0, 10),
+		})
+		local page = New("CanvasGroup", {
+			Size                = UDim2.new(1, 0, 0, 0),
+			AutomaticSize       = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 1,
+			GroupTransparency   = 0,
+			Visible             = isActive,
+			Parent              = ContentWrapper,
+		}, {
+			pageLayout,
+			New("UIPadding", {
+				PaddingLeft   = UDim.new(0, 18),
+				PaddingRight  = UDim.new(0, 18),
+				PaddingTop    = UDim.new(0, 8),
+				PaddingBottom = UDim.new(0, 14),
+			}),
+		})
+		tabPageFrames[tabDef.id] = { frame = page, layout = pageLayout }
+	end
+
+	-- Convenience page references
+	local KeyPage    = tabPageFrames["key"].frame
+	local GetKeyPage = tabPageFrames["getkey"] and tabPageFrames["getkey"].frame or nil
+	local InfoPage   = tabPageFrames["info"]   and tabPageFrames["info"].frame   or nil
+
+	-- ── Tab switching ─────────────────────────────────────────
+	local function switchTab(newId)
+		if newId == activeTabId then return end
+
+		-- Deactivate old tab pill
+		local oldRef = tabBtnRefs[activeTabId]
+		if oldRef then oldRef.applyActive(false) end
+
+		-- Fade out old page
+		local oldPage = tabPageFrames[activeTabId].frame
+		local FadeOut = Flipper.SingleMotor.new(0)
+		FadeOut:onStep(function(v) if oldPage and oldPage.Parent then oldPage.GroupTransparency = v end end)
+		FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 10, dampingRatio = 1 }))
+		FadeOut:start()
+		task.delay(0.11, function() if oldPage and oldPage.Parent then oldPage.Visible = false end end)
+
+		-- Update active tracker
+		activeTabId = newId
+
+		-- Activate new tab pill
+		local newRef = tabBtnRefs[newId]
+		if newRef then newRef.applyActive(true) end
+
+		-- Fade in new page
+		local newData = tabPageFrames[newId]
+		newData.frame.Visible           = true
+		newData.frame.GroupTransparency = 1
+		local FadeIn = Flipper.SingleMotor.new(1)
+		FadeIn:onStep(function(v) if newData.frame and newData.frame.Parent then newData.frame.GroupTransparency = v end end)
+		FadeIn:setGoal(Flipper.Spring.new(0, { frequency = 10, dampingRatio = 1 }))
+		FadeIn:start()
+
+		-- Refit window height to new page's content
+		task.defer(function() if updateKsSize then updateKsSize() end end)
+	end
+
+	-- Wire tab-pill clicks
+	if showTabs then
+		for _, tabDef in ipairs(ks_tabs) do
+			local ref = tabBtnRefs[tabDef.id]
+			if ref then
+				Creator.AddSignal(ref.pill.MouseButton1Click, function()
+					switchTab(tabDef.id)
+				end)
+			end
+		end
+	end
+
+	-- ── [TAB: key] — Key input + Submit ───────────────────────
+
+	-- Key input with icon + paste button
 	local InputOuter = New("Frame", {
 		Size                = UDim2.new(1, 0, 0, 38),
 		BackgroundTransparency = 0.88,
-		LayoutOrder         = 2,
-		Parent              = ContentGroup,
+		LayoutOrder         = 1,
+		Parent              = KeyPage,
 		ThemeTag            = { BackgroundColor3 = "Input" },
 	}, {
 		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
@@ -11691,6 +10610,7 @@ local function _ks_Run(ksConfig, windowConfig)
 	})
 
 	-- Paste button on the right
+	local pasteWidth = 72
 	local PasteBtn = New("TextButton", {
 		Size                = UDim2.new(0, 0, 0, 26),
 		AutomaticSize       = Enum.AutomaticSize.X,
@@ -11744,7 +10664,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	Creator.AddSignal(PasteBtn.MouseButton1Up,   function() PasteSetTrans(0.82) end)
 
 	-- The actual text box
-	local pasteWidth = 72
 	local KsInputBox = New("TextBox", {
 		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
 		TextSize            = 13,
@@ -11784,44 +10703,147 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	-- Paste button action
 	Creator.AddSignal(PasteBtn.MouseButton1Click, function()
-			local ok, text = pcall(function()
-				if type(getclipboard) == "function" then
-					return getclipboard()
-				elseif type(clgui) == "table" and type(clgui.getclipboard) == "function" then
-					return clgui.getclipboard()
-				elseif type(syn) == "table" and type(syn.get_clipboard) == "function" then
-					return syn.get_clipboard()
-				end
-				return ""
-			end)
-			if ok and type(text) == "string" and text ~= "" then
-				KsInputBox.Text = text:match("^%s*(.-)%s*$")
+		local ok, text = pcall(function()
+			if type(getclipboard) == "function" then
+				return getclipboard()
+			elseif type(clgui) == "table" and type(clgui.getclipboard) == "function" then
+				return clgui.getclipboard()
+			elseif type(syn) == "table" and type(syn.get_clipboard) == "function" then
+				return syn.get_clipboard()
 			end
+			return ""
 		end)
+		if ok and type(text) == "string" and text ~= "" then
+			KsInputBox.Text = text:match("^%s*(.-)%s*$")
+		end
+	end)
 
-	-- ── Button row — half-width each, 10px gap ────────────────
-	local ButtonRow = New("Frame", {
-		Size                = UDim2.new(1, 0, 0, 40),
-		BackgroundTransparency = 1,
-		LayoutOrder         = 3,
-		Parent              = ContentGroup,
+	-- Submit button — always full-width in the Key tab.
+	-- (Get Key, if configured, lives on its own tab so we never share the row.)
+	local SubmitBtn = New("TextButton", {
+		Size                = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 0.9,
+		Text                = "",
+		Parent              = New("Frame", {
+			Size            = UDim2.new(1, 0, 0, 40),
+			BackgroundTransparency = 1,
+			LayoutOrder     = 2,
+			Parent          = KeyPage,
+		}),
+		ThemeTag            = { BackgroundColor3 = "Element" },
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+		New("UIStroke", {
+			Transparency    = 0.65,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			ThemeTag        = { Color = "InElementBorder" },
+		}),
+		New("UIListLayout", {
+			FillDirection       = Enum.FillDirection.Horizontal,
+			VerticalAlignment   = Enum.VerticalAlignment.Center,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Padding             = UDim.new(0, 6),
+			SortOrder           = Enum.SortOrder.LayoutOrder,
+		}),
 	})
 
-	-- Helper: build a key system button with icon + label
-	-- and expose refs to the inner icon ImageLabel and TextLabel for morph
-	local function MakeKsButton(parent, labelTxt, btnIcon, pos, size, isAccent)
-		local iconRef, labelRef
+	local SubmitIcon = New("ImageLabel", {
+		Image               = ICON_UNLOCK or "",
+		Size                = UDim2.fromOffset(14, 14),
+		BackgroundTransparency = 1,
+		LayoutOrder         = 1,
+		Parent              = SubmitBtn,
+		ThemeTag            = { ImageColor3 = "Text" },
+	})
+	local SubmitLabel = New("TextLabel", {
+		Text                = "Submit Key",
+		FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+		TextSize            = 13,
+		BackgroundTransparency = 1,
+		Size                = UDim2.fromScale(0, 1),
+		AutomaticSize       = Enum.AutomaticSize.X,
+		TextXAlignment      = Enum.TextXAlignment.Left,
+		LayoutOrder         = 2,
+		Parent              = SubmitBtn,
+		ThemeTag            = { TextColor3 = "Text" },
+	})
 
-		local iconEl = btnIcon and New("ImageLabel", {
-			Image               = btnIcon,
+	local _, SubmitSetTrans = Creator.SpringMotor(0.9, SubmitBtn, "BackgroundTransparency")
+	Creator.AddSignal(SubmitBtn.MouseEnter,       function() SubmitSetTrans(0.82) end)
+	Creator.AddSignal(SubmitBtn.MouseLeave,       function() SubmitSetTrans(0.9) end)
+	Creator.AddSignal(SubmitBtn.MouseButton1Down, function() SubmitSetTrans(0.95) end)
+	Creator.AddSignal(SubmitBtn.MouseButton1Up,   function() SubmitSetTrans(0.82) end)
+
+	-- ── [TAB: getkey] — Dedicated Get Key page ────────────────
+	local GetKeyBtn, GetKeyIcon, GetKeyLabel
+
+	if GetKeyPage then
+		-- Description card
+		New("Frame", {
+			Size                = UDim2.new(1, 0, 0, 0),
+			AutomaticSize       = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 0.9,
+			LayoutOrder         = 1,
+			Parent              = GetKeyPage,
+			ThemeTag            = { BackgroundColor3 = "Element" },
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+			New("UIStroke", {
+				Transparency    = 0.65,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				ThemeTag        = { Color = "InElementBorder" },
+			}),
+			New("UIListLayout", {
+				FillDirection       = Enum.FillDirection.Horizontal,
+				VerticalAlignment   = Enum.VerticalAlignment.Center,
+				SortOrder           = Enum.SortOrder.LayoutOrder,
+				Padding             = UDim.new(0, 10),
+			}),
+			New("UIPadding", {
+				PaddingLeft   = UDim.new(0, 14),
+				PaddingRight  = UDim.new(0, 12),
+				PaddingTop    = UDim.new(0, 12),
+				PaddingBottom = UDim.new(0, 12),
+			}),
+			New("ImageLabel", {
+				Image               = ICON_LINK or "",
+				Size                = UDim2.fromOffset(18, 18),
+				BackgroundTransparency = 1,
+				LayoutOrder         = 1,
+				ThemeTag            = { ImageColor3 = "Accent" },
+			}),
+			New("TextLabel", {
+				Text                = getKeyDesc,
+				FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+				TextSize            = 12,
+				BackgroundTransparency = 1,
+				Size                = UDim2.new(1, -42, 0, 0),
+				AutomaticSize       = Enum.AutomaticSize.Y,
+				TextXAlignment      = Enum.TextXAlignment.Left,
+				TextYAlignment      = Enum.TextYAlignment.Center,
+				TextWrapped         = true,
+				LayoutOrder         = 2,
+				ThemeTag            = { TextColor3 = "SubText" },
+			}),
+		})
+
+		-- Full-width Get Key button
+		local GkBtnFrame = New("Frame", {
+			Size            = UDim2.new(1, 0, 0, 40),
+			BackgroundTransparency = 1,
+			LayoutOrder     = 2,
+			Parent          = GetKeyPage,
+		})
+
+		local GkIconEl = New("ImageLabel", {
+			Image               = ICON_LINK or "",
 			Size                = UDim2.fromOffset(14, 14),
 			BackgroundTransparency = 1,
 			LayoutOrder         = 1,
 			ThemeTag            = { ImageColor3 = "Text" },
-		}) or nil
-
-		local labelEl = New("TextLabel", {
-			Text                = labelTxt,
+		})
+		local GkLabelEl = New("TextLabel", {
+			Text                = getKeyLabel,
 			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
 			TextSize            = 13,
 			BackgroundTransparency = 1,
@@ -11832,8 +10854,19 @@ local function _ks_Run(ksConfig, windowConfig)
 			ThemeTag            = { TextColor3 = "Text" },
 		})
 
-		local children = {
+		GetKeyBtn = New("TextButton", {
+			Size                = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 0.9,
+			Text                = "",
+			Parent              = GkBtnFrame,
+			ThemeTag            = { BackgroundColor3 = "Element" },
+		}, {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+			New("UIStroke", {
+				Transparency    = 0.65,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				ThemeTag        = { Color = "InElementBorder" },
+			}),
 			New("UIListLayout", {
 				FillDirection       = Enum.FillDirection.Horizontal,
 				VerticalAlignment   = Enum.VerticalAlignment.Center,
@@ -11841,84 +10874,27 @@ local function _ks_Run(ksConfig, windowConfig)
 				Padding             = UDim.new(0, 6),
 				SortOrder           = Enum.SortOrder.LayoutOrder,
 			}),
-			labelEl,
-		}
-		if iconEl then table.insert(children, iconEl) end
-
-		local btn = New("TextButton", {
-			Size                = size,
-			Position            = pos,
-			BackgroundTransparency = 0.9,
-			Text                = "",
-			Parent              = parent,
-			ThemeTag            = { BackgroundColor3 = "Element" },
-		}, children)
-
-		local _, SetTrans = Creator.SpringMotor(0.9, btn, "BackgroundTransparency")
-		Creator.AddSignal(btn.MouseEnter,       function() SetTrans(0.82) end)
-		Creator.AddSignal(btn.MouseLeave,       function() SetTrans(0.9) end)
-		Creator.AddSignal(btn.MouseButton1Down, function() SetTrans(0.95) end)
-		Creator.AddSignal(btn.MouseButton1Up,   function() SetTrans(0.82) end)
-
-		return btn, iconEl, labelEl
-	end
-
-	local btnHalfW = UDim2.new(0.5, -5, 1, 0)
-
-	local SubmitBtn, SubmitIcon, SubmitLabel = MakeKsButton(
-		ButtonRow,
-		"Submit Key",
-		ICON_KEY,
-		UDim2.fromOffset(0, 0),
-		btnHalfW,
-		true
-	)
-
-	local GetKeyBtn, GetKeyIcon, GetKeyLabel
-	if getKeyFn then
-		GetKeyBtn, GetKeyIcon, GetKeyLabel = MakeKsButton(
-			ButtonRow,
-			getKeyLabel,
-			ICON_LINK,
-			UDim2.new(0.5, 5, 0, 0),
-			btnHalfW,
-			false
-		)
-	else
-		-- No GetKey configured — expand Submit to full width
-		SubmitBtn.Size = UDim2.fromScale(1, 1)
-		SubmitBtn.Position = UDim2.fromOffset(0, 0)
-	end
-
-	-- ── Button morph helper ───────────────────────────────────
-	-- Swaps icon + label on a button, pulses scale, then reverts after delay.
-	local function morphButton(iconRef, labelRef, newIcon, newLabel, revertIcon, revertLabel, revertDelay)
-		if iconRef  then iconRef.Image = newIcon  or "" end
-		if labelRef then labelRef.Text = newLabel or "" end
-
-		-- Revert icon and label after delay
-		task.delay(revertDelay or 1.8, function()
-			if iconRef  then iconRef.Image = revertIcon  or "" end
-			if labelRef then labelRef.Text = revertLabel or "" end
-		end)
-	end
-
-	-- ── Discord card ──────────────────────────────────────────
-	if discordEnabled and discordLink ~= "" then
-		-- Separator
-		New("Frame", {
-			Size                = UDim2.new(1, 0, 0, 1),
-			BackgroundTransparency = 0.6,
-			LayoutOrder         = 4,
-			Parent              = ContentGroup,
-			ThemeTag            = { BackgroundColor3 = "TitleBarLine" },
+			GkIconEl,
+			GkLabelEl,
 		})
 
+		GetKeyIcon  = GkIconEl
+		GetKeyLabel = GkLabelEl
+
+		local _, GkSetTrans = Creator.SpringMotor(0.9, GetKeyBtn, "BackgroundTransparency")
+		Creator.AddSignal(GetKeyBtn.MouseEnter,       function() GkSetTrans(0.82) end)
+		Creator.AddSignal(GetKeyBtn.MouseLeave,       function() GkSetTrans(0.9) end)
+		Creator.AddSignal(GetKeyBtn.MouseButton1Down, function() GkSetTrans(0.95) end)
+		Creator.AddSignal(GetKeyBtn.MouseButton1Up,   function() GkSetTrans(0.82) end)
+	end
+
+	-- ── [TAB: info] — Community / Discord ────────────────────
+	if InfoPage and discordEnabled and discordLink ~= "" then
 		local DiscordCard = New("Frame", {
-			Size                = UDim2.new(1, 0, 0, 44),
+			Size                = UDim2.new(1, 0, 0, 50),
 			BackgroundTransparency = 0.9,
-			LayoutOrder         = 5,
-			Parent              = ContentGroup,
+			LayoutOrder         = 1,
+			Parent              = InfoPage,
 			ThemeTag            = { BackgroundColor3 = "Element" },
 		}, {
 			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
@@ -11939,7 +10915,6 @@ local function _ks_Run(ksConfig, windowConfig)
 			}),
 		})
 
-		-- Discord icon (blurple tint via override after build)
 		local DiscordIcon = New("ImageLabel", {
 			Image               = ICON_DISCORD or "",
 			Size                = UDim2.fromOffset(16, 16),
@@ -11971,7 +10946,6 @@ local function _ks_Run(ksConfig, windowConfig)
 			LayoutOrder         = 1,
 			ThemeTag            = { ImageColor3 = "Text" },
 		})
-
 		local DiscordJoinLabel = New("TextLabel", {
 			Text                = "Join Server",
 			FontFace            = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
@@ -12089,12 +11063,15 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- Apply all theme tags now that every element is built
 	Creator.UpdateTheme()
 
-	-- Drive KsRoot height from ContentGroup content size.
-	-- ContentGroup has AutomaticSize.Y but KsRoot cannot auto-size from
-	-- scale-based children, so we measure and apply manually.
-	local TITLE_BAR_H = 48
-	local function updateKsSize()
-		local contentH = ContentListLayout.AbsoluteContentSize.Y + 8 + 14 -- paddingTop + paddingBottom
+	-- ── Window height tracking ────────────────────────────────
+	-- Watches the active tab page's content size and resizes KsRoot.
+	local TITLE_BAR_H = CONTENT_Y   -- total fixed height above content area
+
+	updateKsSize = function()
+		local activePage = tabPageFrames[activeTabId]
+		if not activePage then return end
+		local layout   = activePage.layout
+		local contentH = layout.AbsoluteContentSize.Y + 8 + 14  -- paddingTop + paddingBottom
 		local totalH   = TITLE_BAR_H + contentH
 		KsRoot.Size     = UDim2.fromOffset(ksW, totalH)
 		KsRoot.Position = UDim2.fromOffset(
@@ -12103,21 +11080,30 @@ local function _ks_Run(ksConfig, windowConfig)
 		)
 		KsRoot.AnchorPoint = Vector2.new(0, 0)
 	end
-	Creator.AddSignal(ContentListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), updateKsSize)
+
+	-- Connect size-change signals for every tab page
+	for _, tabDef in ipairs(ks_tabs) do
+		local data = tabPageFrames[tabDef.id]
+		Creator.AddSignal(data.layout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+			if tabDef.id == activeTabId then
+				updateKsSize()
+			end
+		end)
+	end
 	task.defer(updateKsSize)
 
 	-- ── Transition helpers ────────────────────────────────────
 	local fSetClipboard = setclipboard or toclipboard or function() end
 
-	-- Fade content out, show loader, animate progress, then destroy
 	local function runLoadingTransition(onComplete)
-		ContentGroup.Visible = true
+		local activeFrame = tabPageFrames[activeTabId].frame
+		activeFrame.Visible = true
 		local FadeOut = Flipper.SingleMotor.new(0)
-		FadeOut:onStep(function(v) ContentGroup.GroupTransparency = v end)
+		FadeOut:onStep(function(v) activeFrame.GroupTransparency = v end)
 		FadeOut:setGoal(Flipper.Spring.new(1, { frequency = 6, dampingRatio = 1 }))
 		FadeOut:start()
 		task.wait(0.22)
-		ContentGroup.Visible  = false
+		activeFrame.Visible  = false
 		LoadOverlay.Visible   = true
 		LoadOverlay.GroupTransparency = 0
 
@@ -12149,27 +11135,36 @@ local function _ks_Run(ksConfig, windowConfig)
 
 			if loaderMode == "instant" then
 				-- Totally invisible — check silently, no window shown
-				-- We already built the window; destroy it immediately and re-show only on failure
 				if Library.UseAcrylic and KsAcrylic.Model then
 					pcall(function() KsAcrylic.Model:Destroy() end)
 				end
-				KsRoot:Destroy()
-				local ok, result = pcall(validateFn, savedKey)
-				if ok and result and result.valid then
-					Library._KeySystemTier   = result.tier or "free"
-					Library._KeySystemResult = result
-					Library._KeySystemKey    = savedKey
-					return Library._KeySystemTier
-				else
-					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
-					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
-					-- Rebuild window for key entry (re-call recursively is clean)
-					return _ks_Run(ksConfig, windowConfig)
-				end
+				KsRoot.Visible = false
+
+				task.spawn(function()
+					local ok, result = pcall(validateFn, savedKey)
+					if ok and result and result.valid then
+						Library._KeySystemTier   = result.tier or "free"
+						Library._KeySystemResult = result
+						Library._KeySystemKey    = savedKey
+						destroyKsWindow()
+					else
+						local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
+						if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
+						KsRoot.Visible = true
+						Library:Notify({
+							Title    = "Key System",
+							Content  = _ks_getErrorMsg(errCode, customErrors),
+							Icon     = "shield-alert",
+							Duration = 5,
+						})
+						KsInputBox.Text = (not _ks_hardFail[errCode]) and savedKey or ""
+					end
+				end)
 
 			elseif loaderMode == "loading" then
 				-- Show loader immediately, check in background
-				ContentGroup.Visible  = false
+				local activeFrame = tabPageFrames[activeTabId].frame
+				activeFrame.Visible   = false
 				LoadOverlay.Visible   = true
 				LoadOverlay.GroupTransparency = 0
 
@@ -12177,14 +11172,12 @@ local function _ks_Run(ksConfig, windowConfig)
 				FillMotor:onStep(function(v)
 					ProgressFill.Size = UDim2.new(math.clamp(v, 0, 1), 0, 1, 0)
 				end)
-				-- Start a slow crawl; we'll complete it if check passes
 				FillMotor:setGoal(Flipper.Spring.new(0.7, { frequency = 0.6, dampingRatio = 1 }))
 				FillMotor:start()
 
 				local ok, result = pcall(validateFn, savedKey)
 
 				if ok and result and result.valid then
-					-- Complete the bar then transition
 					FillMotor:setGoal(Flipper.Spring.new(1, { frequency = 1.5, dampingRatio = 1 }))
 					task.wait(loaderDuration * 0.5)
 					Library._KeySystemTier   = result.tier or "free"
@@ -12195,10 +11188,9 @@ local function _ks_Run(ksConfig, windowConfig)
 				else
 					local errCode = (not ok) and "ERROR" or (result and result.error or "ERROR")
 					if _ks_hardFail[errCode] then _ks_wipeKey(folder, fileName) end
-					-- Hide loader, show entry UI with notification
 					LoadOverlay.Visible  = false
-					ContentGroup.Visible = true
-					ContentGroup.GroupTransparency = 0
+					activeFrame.Visible  = true
+					activeFrame.GroupTransparency = 0
 					Library:Notify({
 						Title    = "Key System",
 						Content  = _ks_getErrorMsg(errCode, customErrors),
@@ -12214,7 +11206,6 @@ local function _ks_Run(ksConfig, windowConfig)
 	-- ── Close button ──────────────────────────────────────────
 	Creator.AddSignal(KsCloseBtn.MouseButton1Click, function()
 		if Library.DialogOpen then return end
-		-- Use the library's own Dialog system, temporarily pointed at KsRootCanvas
 		local KsDialogModule = Components.Dialog:Init({ Root = KsRootCanvas })
 		local Dlg = KsDialogModule:Create()
 		Dlg.Title.Text = "Close"
@@ -12249,13 +11240,12 @@ local function _ks_Run(ksConfig, windowConfig)
 		end)
 		Dlg:Button("No")
 		Dlg:Open()
-		-- Restore Dialog.Window to the real window after KS resolves
 		if Library.Window then
 			Components.Dialog:Init(Library.Window)
 		end
 	end)
 
-	-- ── Get Key button ────────────────────────────────────────
+	-- ── Get Key button (own tab) ──────────────────────────────
 	if GetKeyBtn and getKeyFn then
 		local gkReverting = false
 
@@ -12265,18 +11255,20 @@ local function _ks_Run(ksConfig, windowConfig)
 			if rateLimitSecs then
 				local now = tick()
 				if (now - lastGetKeyTime) < rateLimitSecs then
-					-- Rate limit feedback
 					gkReverting = true
-					morphButton(GetKeyIcon, GetKeyLabel,
-						ICON_X, "Rate Limited",
-						ICON_LINK, getKeyLabel, 2)
+					if GetKeyIcon  then GetKeyIcon.Image  = ICON_X or "" end
+					if GetKeyLabel then GetKeyLabel.Text  = "Rate Limited" end
 					Library:Notify({
 						Title   = "Get Key",
 						Content = rateLimitMsg,
 						Icon    = "clock",
 						Duration = 4,
 					})
-					task.delay(2, function() gkReverting = false end)
+					task.delay(2, function()
+						if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
+						if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
+						gkReverting = false
+					end)
 					return
 				end
 				lastGetKeyTime = tick()
@@ -12286,28 +11278,34 @@ local function _ks_Run(ksConfig, windowConfig)
 			if ok and type(linkOrErr) == "string" and linkOrErr ~= "" then
 				pcall(function() fSetClipboard(linkOrErr) end)
 				gkReverting = true
-				morphButton(GetKeyIcon, GetKeyLabel,
-					ICON_CHECK, "Copied!",
-					ICON_LINK, getKeyLabel, 2)
+				if GetKeyIcon  then GetKeyIcon.Image  = ICON_CHECK or "" end
+				if GetKeyLabel then GetKeyLabel.Text  = "Copied!" end
 				Library:Notify({
 					Title   = "Get Key",
 					Content = "Key link copied to clipboard.",
 					Icon    = "link",
 					Duration = 3,
 				})
-				task.delay(2, function() gkReverting = false end)
+				task.delay(2, function()
+					if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
+					if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
+					gkReverting = false
+				end)
 			else
 				gkReverting = true
-				morphButton(GetKeyIcon, GetKeyLabel,
-					ICON_X, "Failed",
-					ICON_LINK, getKeyLabel, 2)
+				if GetKeyIcon  then GetKeyIcon.Image  = ICON_X or "" end
+				if GetKeyLabel then GetKeyLabel.Text  = "Failed" end
 				Library:Notify({
 					Title   = "Get Key",
 					Content = type(linkOrErr) == "string" and linkOrErr or "Failed to get link. Please try again.",
 					Icon    = "alert-circle",
 					Duration = 4,
 				})
-				task.delay(2, function() gkReverting = false end)
+				task.delay(2, function()
+					if GetKeyIcon  then GetKeyIcon.Image  = ICON_LINK or "" end
+					if GetKeyLabel then GetKeyLabel.Text  = getKeyLabel end
+					gkReverting = false
+				end)
 			end
 		end)
 	end
@@ -12319,9 +11317,12 @@ local function _ks_Run(ksConfig, windowConfig)
 		if submitting then return end
 		local key = (KsInputBox.Text or ""):match("^%s*(.-)%s*$")
 		if key == "" then
-			morphButton(SubmitIcon, SubmitLabel,
-				ICON_X, "Enter a key",
-				ICON_KEY, "Submit Key", 2)
+			if SubmitIcon  then SubmitIcon.Image  = ICON_X or "" end
+			if SubmitLabel then SubmitLabel.Text  = "Enter a key" end
+			task.delay(2, function()
+				if SubmitIcon  then SubmitIcon.Image  = ICON_UNLOCK or "" end
+				if SubmitLabel then SubmitLabel.Text  = "Submit Key" end
+			end)
 			return
 		end
 
@@ -12340,15 +11341,18 @@ local function _ks_Run(ksConfig, windowConfig)
 					return
 				end
 
-				morphButton(SubmitIcon, SubmitLabel,
-					ICON_X, "Invalid Key",
-					ICON_KEY, "Submit Key", 2)
+				if SubmitIcon  then SubmitIcon.Image  = ICON_X or "" end
+				if SubmitLabel then SubmitLabel.Text  = "Invalid Key" end
 				Library:Notify({
 					Title   = "Key System",
 					Content = _ks_getErrorMsg(errCode, customErrors),
 					Icon    = "shield-alert",
 					Duration = 5,
 				})
+				task.delay(2, function()
+					if SubmitIcon  then SubmitIcon.Image  = ICON_UNLOCK or "" end
+					if SubmitLabel then SubmitLabel.Text  = "Submit Key" end
+				end)
 				submitting = false
 				return
 			end
@@ -12364,9 +11368,8 @@ local function _ks_Run(ksConfig, windowConfig)
 			Library._KeySystemKey    = key
 
 			-- Success morph on submit button
-			morphButton(SubmitIcon, SubmitLabel,
-				ICON_CHECK, "Success!",
-				ICON_KEY, "Submit Key", 99)
+			if SubmitIcon  then SubmitIcon.Image  = ICON_CHECK or "" end
+			if SubmitLabel then SubmitLabel.Text  = "Success!" end
 
 			if loaderMode == "instant" then
 				task.wait(0.3)
@@ -12389,6 +11392,7 @@ local function _ks_Run(ksConfig, windowConfig)
 
 	return Library._KeySystemTier or nil
 end
+
 
 
 -- ── Key System gate in CreateWindow (inserted below) ─────────────────────────
